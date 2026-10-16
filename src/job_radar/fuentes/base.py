@@ -10,15 +10,18 @@ Nada más del sistema sabe cómo es una fuente por dentro: solo conoce Intencion
 Busqueda, Bruto y Oferta. Diseño en docs/modelo.md.
 """
 
+import os
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Any, ClassVar, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from job_radar.preferencias import Modalidad
 
+RAIZ = Path(__file__).resolve().parents[3]
 UA = "job-radar/0.1 (radar personal de empleo; github.com/rubenhig/job-radar)"
 
 
@@ -168,3 +171,12 @@ def numero(v: Any) -> float | None:
     except (TypeError, ValueError):
         return None
     return n if n == n and n > 0 else None
+
+
+def cargar_env(ruta: Path = RAIZ / ".env") -> None:
+    """Claves de las fuentes desde `.env` (fuera del repo). Lo ya definido en el entorno manda."""
+    if ruta.exists():
+        for linea in ruta.read_text().splitlines():
+            if "=" in linea and not linea.lstrip().startswith("#"):
+                k, v = linea.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))

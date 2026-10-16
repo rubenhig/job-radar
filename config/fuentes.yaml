@@ -31,11 +31,15 @@ fuentes:
 
   linkedin:
     tipo: api_terceros
+    # Decisión (#35, 16-oct-2026): Apify. Hacen falta ~400-900 ofertas al mes (Málaga
+    # ~17 en 24 h, más remoto); el plan gratuito de RapidAPI da 250. Apify cobra desde
+    # 1,50 $ cada 1.000 ofertas (~1-1,5 $/mes, dentro de sus 5 $ de crédito mensual
+    # gratuito). Hasta tener el token de Apify (#40), RapidAPI gratuito y semanal.
     conector: linkedin-fantastic-rapidapi/1
     acceso: API de fantastic.jobs en RapidAPI, clave en .env (RAPIDAPI_KEY)
-    coste: Plan gratuito de RapidAPI, 25 llamadas y 250 ofertas al mes; en Apify, 1,50 $ cada 1.000 ofertas
+    coste: Plan gratuito de RapidAPI, 25 llamadas y 250 ofertas al mes; en Apify, desde 1,50 $ cada 1.000 ofertas
     terminos: Términos de RapidAPI y de fantastic.jobs. El scraping de LinkedIn lo hace el proveedor, no nosotros.
-    frecuencia_h: 168  # semanal con ventana de 7 días: cabe en el plan gratuito; se revisa en #35
+    frecuencia_h: 168  # semanal mientras siga en el plan gratuito; diaria con Apify
     plan_b:
       - La misma API en Apify (pago por oferta)
       - JobSpy con pausas largas
