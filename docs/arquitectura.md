@@ -118,8 +118,8 @@ flowchart LR
 |---|---|---|---|---|
 | 0 | Exploración ✅ | Datos reales de varias fuentes | `spikes/` con datos de 4 fuentes | — |
 | 0b | Estado del arte ✅ | Saber qué existe | `docs/estado-del-arte.md` | — |
-| **1** | **Fuentes** ← *en curso* | Saber de dónde salen las ofertas | Cada fuente candidata probada y marcada como ✅ o ❌. Lista de fuentes v1 cerrada. Campos comunes de una oferta definidos | ver tabla de abajo |
-| 2 | Perfil | El CV convertido en perfil | Fichero de perfil (competencias con evidencia + preferencias) extraído con Claude y **aprobado por Rubén**. Ubicaciones y modalidades son configurables | Claude con salida estructurada (Pydantic); ESCO v1.2.1 + capa propia de skills de IA |
+| 1 | Fuentes ✅ | Saber de dónde salen las ofertas | Cada fuente candidata probada y marcada como ✅ o ❌. Lista de fuentes v1 cerrada. Campos comunes de una oferta definidos | ver tabla de abajo |
+| **2** | **Perfil** ← *siguiente* | El CV convertido en perfil | Fichero de perfil (competencias con evidencia + preferencias) extraído con Claude y **aprobado por Rubén**. Ubicaciones y modalidades son configurables | Claude con salida estructurada (Pydantic); ESCO v1.2.1 + capa propia de skills de IA |
 | 3 | Ingesta | Ofertas guardadas sin duplicados | Un comando llena SQLite con las fuentes v1 a través de conectores con el mismo contrato (bruto + normalizado). La misma vacante en varias fuentes o consultoras es un solo Puesto. Métricas por fuente. 7 días seguidos sin errores en el Mac | `sqlite-utils`, `tenacity`, `rapidfuzz` + `cleanco`, Healthchecks, Datasette |
 | 4 | Puntuación | Claude decide qué es top | 30 ofertas etiquetadas por Rubén. Claude coincide en al menos un 80 % (top / no top). Coste diario medido | Claude Haiku con rúbrica (patrón de jobchecker); `pydantic-evals` + κ de Cohen |
 | 5 | Avisos | Llega a Telegram | Aviso inmediato de lo top y resumen semanal, recibidos durante una semana | aiogram 3 (modelo: JobNavigator); Apprise |
