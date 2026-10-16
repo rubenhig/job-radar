@@ -9,7 +9,7 @@ Puntúa empresas y ofertas con Claude y avisa por Telegram solo de lo que merece
 
 Pensado para correr en una Raspberry Pi 5. Primer caso de uso: un AI/LLM Engineer que busca trabajo en Málaga o en remoto desde España.
 
-> **Estado:** fase 1 (fuentes). Roadmap en el [tablero del proyecto](https://github.com/users/rubenhig/projects/1) y en [Milestones](../../milestones) (una por fase). Arquitectura en [`docs/arquitectura.md`](docs/arquitectura.md); entidades y conectores de fuentes en [`docs/modelo.md`](docs/modelo.md).
+> **Estado:** fase 2 (perfil desde el CV). Roadmap en el [tablero del proyecto](https://github.com/users/rubenhig/projects/1) y en [Milestones](../../milestones) (una por fase). Arquitectura en [`docs/arquitectura.md`](docs/arquitectura.md); entidades y conectores de fuentes en [`docs/modelo.md`](docs/modelo.md).
 
 ```mermaid
 flowchart LR
@@ -25,8 +25,8 @@ flowchart LR
 | Fase | Estado |
 |---|---|
 | 0 · Exploración y estado del arte | ✅ |
-| 1 · Fuentes | 🔄 en curso |
-| 2 · Perfil desde el CV | ⬜ |
+| 1 · Fuentes | ✅ |
+| 2 · Perfil desde el CV | 🔄 siguiente |
 | 3 · Ingesta | ⬜ |
 | 4 · Puntuación | ⬜ |
 | 5 · Avisos → **MVP** | ⬜ |
