@@ -146,6 +146,28 @@ MIGRACIONES: list[str] = [
         actualizada_en  TEXT NOT NULL
     );
     """,
+    # 4 · evaluaciones: el encaje de un puesto con el perfil, por versión de rúbrica (Fase 4)
+    """
+    CREATE TABLE evaluacion (
+        id              INTEGER PRIMARY KEY,
+        puesto_id       INTEGER NOT NULL REFERENCES puesto(id),
+        rubrica         TEXT NOT NULL,              -- 'rubrica/1'
+        perfil          TEXT NOT NULL,              -- huella del perfil y las preferencias usados
+        motor           TEXT NOT NULL,
+        modelo          TEXT NOT NULL,
+        resultado       TEXT NOT NULL,              -- JSON: veredictos del modelo + verificación de citas
+        nota            INTEGER NOT NULL,           -- 0-100, calculada en Python
+        vetado          INTEGER NOT NULL DEFAULT 0,
+        motivo_veto     TEXT,
+        marcas          TEXT,                       -- JSON: avisos que no vetan (p. ej. inglés C1)
+        coste_usd       REAL,
+        tokens_entrada  INTEGER,
+        tokens_salida   INTEGER,
+        duracion_ms     INTEGER,
+        creada_en       TEXT NOT NULL
+    );
+    CREATE INDEX evaluacion_puesto ON evaluacion (puesto_id, rubrica, creada_en);
+    """,
 ]
 
 

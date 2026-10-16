@@ -103,6 +103,42 @@ def cmd_resumen(args) -> int:
     return 0
 
 
+def cmd_puntuar(args) -> int:
+    from job_radar import puntuacion
+    from job_radar.llm import ClaudeCLI
+
+    db = almacen.abrir(args.db)
+    perfil_cv, prefs = puntuacion.cargar_perfil()
+    huella = puntuacion.huella_perfil(perfil_cv, prefs)
+    base = "SELECT p.id FROM puesto p WHERE p.estado = 'abierto'"
+    if args.etiquetados:
+        base += " AND p.id IN (SELECT puesto_id FROM etiqueta)"
+    if not args.rehacer:  # solo lo que no tiene evaluación con esta rúbrica y este perfil
+        base += " AND p.id NOT IN (SELECT puesto_id FROM evaluacion WHERE rubrica = ? AND perfil = ?)"
+    ids = [r[0] for r in db.execute(base, [] if args.rehacer else [puntuacion.RUBRICA, huella]).fetchall()]
+    if args.limite:
+        ids = ids[: args.limite]
+    log.info("puntuar: %d puestos con %s (%s)", len(ids), puntuacion.RUBRICA, args.modelo)
+
+    def informar(pid, ev, error):
+        if error:
+            log.warning("puesto %s: %s", pid, error)
+        else:
+            e = db["evaluacion"].get(ev)
+            log.info("puesto %-5s nota %3d%s", pid, e["nota"], f" · vetado: {e['motivo_veto']}" if e["vetado"] else "")
+
+    motor = ClaudeCLI(modelo=args.modelo, timeout_s=300)
+    puntuacion.evaluar_varios(db, ids, motor, perfil_cv, prefs, paralelo=args.paralelo, al_terminar=informar)
+    return 0
+
+
+def cmd_medir(args) -> int:
+    from job_radar import medir
+
+    print(medir.informe(almacen.abrir(args.db), args.rubrica))
+    return 0
+
+
 def cmd_salud(args) -> int:
     alertas = salud.comprobar(almacen.abrir(args.db), reg.cargar())
     print("\n".join(map(str, alertas)) or "Todas las fuentes, bien.")
@@ -122,6 +158,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--dias", type=int, default=7)
     p.set_defaults(func=cmd_resumen)
     sub.add_parser("salud", help="alertas de las fuentes").set_defaults(func=cmd_salud)
+    p = sub.add_parser("puntuar", help="evalúa puestos contra el perfil (Fase 4)")
+    p.add_argument("--etiquetados", action="store_true", help="solo los que Rubén ha etiquetado")
+    p.add_argument("--rehacer", action="store_true", help="también los ya evaluados con esta rúbrica")
+    p.add_argument("--modelo", default="sonnet")
+    p.add_argument("--paralelo", type=int, default=3)
+    p.add_argument("--limite", type=int)
+    p.set_defaults(func=cmd_puntuar)
+    p = sub.add_parser("medir", help="acuerdo de la puntuación con las etiquetas")
+    p.add_argument("--rubrica", default="rubrica/1")
+    p.set_defaults(func=cmd_medir)
     args = ap.parse_args(argv)
 
     cargar_env()
