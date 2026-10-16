@@ -26,7 +26,8 @@ flowchart LR
 
     subgraph FUENTES
         N1["N1 · ATS de empresas<br/>Greenhouse, Lever, Ashby,<br/>Workday, Teamtailor…"]
-        N2["N2 · Portales<br/>InfoJobs, Indeed, LinkedIn,<br/>Tecnoempleo, remoto"]
+        AG["Agregador · freehire<br/>92 ATS + ~100 portales<br/>(API pública)"]
+        N2["N2 · Portales directos<br/>InfoJobs, Indeed, LinkedIn,<br/>Tecnoempleo"]
         N3["N3 · Emails de alerta"]
     end
 
@@ -34,7 +35,7 @@ flowchart LR
         RAW[bruto inmutable] --> NORM[normalizar] --> DEDUP[deduplicar] --> MET[métricas por fuente]
     end
 
-    N1 & N2 & N3 --> RAW
+    N1 & AG & N2 & N3 --> RAW
     MET --> DB[(SQLite)]
 
     subgraph INTELIGENCIA
@@ -60,6 +61,7 @@ Además, a lo largo de todo el sistema: planificador, salud de fuentes, tope de 
 | Nivel | Fuentes | Acceso |
 |---|---|---|
 | **1. Canónica** | ATS de empresas (Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor, Personio, Workday, SuccessFactors…), Himalayas, Manfred | Endpoints públicos sin clave |
+| **Agregador** | [freehire](https://github.com/strelov1/freehire) (MIT): ~3M ofertas de 92 ATS y ~100 portales, deduplicadas y enriquecidas | API pública sin clave. Da amplitud (ATS de empresas de Málaga, remoto); las fuentes directas cubren lo que le falta o trae peor |
 | **2. Portales** | InfoJobs (adaptador `infojobs_es` con httpcloak), Indeed y Glassdoor vía JobSpy, Tecnoempleo | Scraping a baja frecuencia y con búsquedas acotadas. InfoJobs: decisión de Rubén (15-oct-2026), uso personal |
 | **3. Solo emails propios** | LinkedIn, Welcome to the Jungle, Wellfound | Alertas a un buzón dedicado |
 | **Excluidas** | LinkedIn con sesión, Google Jobs, auto-apply | Riesgo de cuenta, riesgo legal o sin datos |
@@ -108,6 +110,7 @@ Estados: ⬜ por probar · 🟡 probada a medias · ✅ aprobada · ❌ descarta
 | InfoJobs | Adaptador `infojobs_es` de ats-scrapers + `httpcloak`, con `listing_url` filtrado y `max_pages` bajo | Página 1 sin captcha, filtro respetado, descripción y modalidad rellenas → `spikes/prueba_infojobs.py` | ✅ 15-oct-2026, detalle abajo |
 | Indeed y Glassdoor | [JobSpy](https://github.com/speedyapply/JobSpy) `python-jobspy==1.3.0` (MIT) | Ofertas de la ubicación con descripción y URL directa | 🟡 Indeed bien en el spike; Glassdoor sin probar |
 | LinkedIn (búsqueda) | JobSpy sin `fetch_description` masivo, con pausas; `linkedin_company_ids` para empresas objetivo | 3 días seguidos sin 429 (comprobado con `jobs.attrs["errors"]`) | 🟡 429 en el spike por pedir todas las descripciones |
+| **freehire (agregador)** | API pública `freehire.me/api/v1` (`/jobs/facets`, `/agent/jobs/search`) | Cobertura de Málaga y de remoto, fuentes, completitud → `spikes/prueba_freehire.py` | ✅ 16-oct-2026, detalle abajo |
 | Remoto con elegibilidad | **API pública de [freehire](https://github.com/strelov1/freehire)** (agrega InfoJobs, Manfred, Get on Board, Himalayas, RemoteOK, Remotive…); adaptadores de ats-scrapers; API de Himalayas (`country=Spain`) | Ofertas remotas que admiten España, con descripción; medir cobertura y frescura frente a las fuentes directas | ⬜ |
 | ATS europeos y detección | Adaptadores de [maccydee/job-radar](https://github.com/maccydee/job-radar) (Personio, Teamtailor, Recruitee, Workable) + su `discover` + dataset de 17.814 boards | Resolver el ATS de una lista corta de empresas de Málaga | ⬜ |
 | Tecnoempleo | RSS (solo últimas 80) o búsqueda a baja frecuencia, **solo con código Python** (su robots.txt bloquea agentes LLM) | Ofertas filtradas por ubicación y tecnología | 🟡 RSS sin filtros en el spike |
@@ -130,3 +133,16 @@ Estados: ⬜ por probar · 🟡 probada a medias · ✅ aprobada · ❌ descarta
   - Empresa siempre visible.
 - `keyword=ia` mete ruido (Verisure, administrativos); es mejor filtrar por categoría y puntuar con Claude.
 - Las tarjetas promocionadas se repiten en la página, así que hay que deduplicar por `code`.
+
+**Detalle de freehire.**
+- **Málaga: 748 ofertas abiertas.** Unas 230 vienen de ATS de empresas (Teamtailor 63, SmartRecruiters 48, Workday 42, Workable 41, Greenhouse 25, Personio 12). Es una mina para descubrir empresas de Málaga (Fase 7).
+- **Remoto en España + IA: 772. Remoto en la UE + LLM: 382.** Cubre el remoto mucho mejor que cualquier fuente directa.
+- Descripción completa en el 100 % de la muestra.
+- Debilidades, que justifican mantener fuentes directas:
+  - **Salario casi nunca** (0–5 %, frente al ~55 % de InfoJobs directo).
+  - De InfoJobs solo tiene 35 ofertas de Málaga, frente a las 50 de nuestra búsqueda directa.
+  - La mitad de Málaga viene de `whatjobs-es`, un agregador que repite ofertas (Tecdata, Grupo Digital).
+  - El enriquecimiento es parcial (seniority 25–75 %, inglés 10–15 %).
+  - El filtro `countries=es` + `remote` deja pasar algunas ofertas de fuera.
+- **"Fantasma":** el 72 % de Málaga está marcado `stale`. Hay que entender qué significa antes de filtrar por ello.
+- Vocabulario: `countries=es`, `cities=Málaga`, `regions=eu`, `work_mode=remote|hybrid|onsite`, `q` para texto. `is_tech=true` no filtra (devuelve 0).
