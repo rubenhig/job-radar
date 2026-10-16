@@ -23,10 +23,10 @@ fuentes:
     conector: infojobs-ats-scrapers/1
     acceso: Listado web con httpcloak, vía el adaptador infojobs_es de ats-scrapers
     coste: gratis
-    terminos: Scraping de páginas públicas. Solo búsquedas acotadas, pocas páginas y pausas largas, para no quemar la IP de casa.
+    terminos: Scraping de páginas públicas. Solo búsquedas acotadas, ~4 peticiones al día con pausas largas; con ~8 en 20 minutos salta el captcha.
     frecuencia_h: 24
     plan_b:
-      - freehire (incluye InfoJobs, solo Informática)
+      - freehire (incluye InfoJobs, pero el 16-oct su copia iba 9 días por detrás)
       - Emails de alerta de InfoJobs (#10)
 
   linkedin:

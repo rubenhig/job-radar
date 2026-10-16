@@ -88,7 +88,7 @@ Las fuentes, su conector activo, su coste, sus términos de uso, su frecuencia y
 | Fuente | Herramienta | Plan B |
 |---|---|---|
 | freehire | API pública `freehire.me/api/v1` | Active Jobs DB (fantastic.jobs); autoalojar freehire |
-| infojobs | Adaptador `infojobs_es` de ats-scrapers + httpcloak | freehire (solo Informática); emails de alerta (#10) |
+| infojobs | Adaptador `infojobs_es` de ats-scrapers + httpcloak | freehire (incluye InfoJobs, pero el 16-oct su copia iba 9 días por detrás); emails de alerta (#10) |
 | linkedin | API de fantastic.jobs (RapidAPI o Apify) | El otro intermediario; JobSpy con pausas; emails de alerta |
 | indeed | JobSpy | JSearch (RapidAPI) |
 | ats | ats-scrapers (+ envolturas finas de Workday y Teamtailor) | Adaptadores de maccydee/job-radar; freehire |
