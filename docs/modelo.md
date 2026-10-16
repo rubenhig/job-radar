@@ -10,6 +10,8 @@ Las fuentes externas son la parte que menos controlamos: cambian de formato, cie
 
 ## Entidades
 
+Implementación del esquema: [`src/job_radar/almacen.py`](../src/job_radar/almacen.py) (SQL explícito con migraciones numeradas).
+
 ```mermaid
 erDiagram
     FUENTE ||--o{ BUSQUEDA : "tiene"
