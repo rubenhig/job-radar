@@ -14,7 +14,7 @@ El primer usuario es Rubén: AI/LLM Engineer y agentes en producción, en Málag
 
 Principios:
 1. **La calidad depende de las fuentes.** La ingesta es la parte más cuidada.
-2. **Integrar, no crear.** Para cada bloque se usa una herramienta existente que haya pasado una prueba verificable. El código propio es solo el pegamento, más lo que no exista.
+2. **Integrar, no crear.** Para cada bloque se usa una herramienta existente que haya pasado una prueba verificable. El código propio es solo el pegamento, más lo que no exista. Catálogo de candidatos: [`docs/repositorios.md`](repositorios.md).
 3. **La empresa es la unidad principal**, no la oferta (ver `docs/estado-del-arte.md`).
 4. **Poco a poco.** Cada fase termina con algo comprobable.
 
@@ -108,7 +108,8 @@ Estados: ⬜ por probar · 🟡 probada a medias · ✅ aprobada · ❌ descarta
 | InfoJobs | Adaptador `infojobs_es` de ats-scrapers + `httpcloak`, con `listing_url` filtrado y `max_pages` bajo | Página 1 sin captcha, filtro respetado, descripción y modalidad rellenas → `spikes/prueba_infojobs.py` | ✅ 15-oct-2026, detalle abajo |
 | Indeed y Glassdoor | [JobSpy](https://github.com/speedyapply/JobSpy) `python-jobspy==1.3.0` (MIT) | Ofertas de la ubicación con descripción y URL directa | 🟡 Indeed bien en el spike; Glassdoor sin probar |
 | LinkedIn (búsqueda) | JobSpy sin `fetch_description` masivo, con pausas; `linkedin_company_ids` para empresas objetivo | 3 días seguidos sin 429 (comprobado con `jobs.attrs["errors"]`) | 🟡 429 en el spike por pedir todas las descripciones |
-| Remoto con elegibilidad | Adaptadores de ats-scrapers (Manfred, Welcome to the Jungle, Wellfound, Get on Board, EURES); API de Himalayas (`country=Spain`) | Ofertas remotas que admiten España, con descripción | ⬜ |
+| Remoto con elegibilidad | **API pública de [freehire](https://github.com/strelov1/freehire)** (agrega InfoJobs, Manfred, Get on Board, Himalayas, RemoteOK, Remotive…); adaptadores de ats-scrapers; API de Himalayas (`country=Spain`) | Ofertas remotas que admiten España, con descripción; medir cobertura y frescura frente a las fuentes directas | ⬜ |
+| ATS europeos y detección | Adaptadores de [maccydee/job-radar](https://github.com/maccydee/job-radar) (Personio, Teamtailor, Recruitee, Workable) + su `discover` + dataset de 17.814 boards | Resolver el ATS de una lista corta de empresas de Málaga | ⬜ |
 | Tecnoempleo | RSS (solo últimas 80) o búsqueda a baja frecuencia, **solo con código Python** (su robots.txt bloquea agentes LLM) | Ofertas filtradas por ubicación y tecnología | 🟡 RSS sin filtros en el spike |
 | Emails de alerta (LinkedIn) | Por buscar: parsers existentes de alertas | Extraer ofertas de un email real | ⬜ |
 
