@@ -154,7 +154,7 @@ El seguimiento vivo está en GitHub: cada fase es un **milestone** y cada tarea 
 flowchart LR
     F0[0 · Exploración ✅] --> F1[1 · Fuentes ✅]
     F1 --> F3[3 · Ingesta]
-    F2[2 · Perfil] --> F4[4 · Puntuación]
+    F2[2 · Perfil ✅] --> F4[4 · Puntuación]
     F3 --> F4 --> F5[5 · Avisos]
     F5 --> MVP{{🎯 MVP}}
     F3 & F2 --> F8a["8a · /upskill"]
@@ -169,8 +169,8 @@ flowchart LR
 | 0 | Exploración ✅ | Datos reales de varias fuentes | `spikes/` con datos de 4 fuentes | — |
 | 0b | Estado del arte ✅ | Saber qué existe | `docs/estado-del-arte.md` | — |
 | 1 | Fuentes ✅ | Saber de dónde salen las ofertas | Cada fuente candidata probada y marcada como ✅ o ❌. Lista de fuentes v1 cerrada. Campos comunes de una oferta definidos | ver tabla de abajo |
-| **2** | **Perfil** ← *siguiente* | El CV convertido en perfil | Fichero de perfil (competencias con evidencia + preferencias) extraído con Claude y **aprobado por Rubén**. Ubicaciones y modalidades son configurables. *Pantalla de perfil y preferencias: llega con la base de la web (Fase 4).* | `claude -p` con la suscripción (conector LLM reemplazable); `pypdf`; ESCO + JobBERT-v3 (#14), con propuesta de aplazarlo a la Fase 4 |
-| 3 | Ingesta | Ofertas guardadas sin duplicados | Un comando llena SQLite con las fuentes v1 a través de conectores con el mismo contrato (bruto + normalizado). La misma vacante en varias fuentes o consultoras es un solo Puesto. Métricas por fuente. 7 días seguidos sin errores en el Mac. **Datasette** para ver fuentes, ejecuciones, ofertas y puestos | `sqlite-utils`, `tenacity`, `rapidfuzz` + `cleanco`, Healthchecks, Datasette |
+| 2 | Perfil ✅ | El CV convertido en perfil | Fichero de perfil (competencias con evidencia + preferencias) extraído con Claude y **aprobado por Rubén**. Ubicaciones y modalidades son configurables. *Pantalla de perfil y preferencias: llega con la base de la web (Fase 4).* | `claude -p` con la suscripción (conector LLM reemplazable); `pypdf`; ESCO + JobBERT-v3 (#14), con propuesta de aplazarlo a la Fase 4 |
+| **3** | **Ingesta** ← *en curso* | Ofertas guardadas sin duplicados | Un comando llena SQLite con las fuentes v1 a través de conectores con el mismo contrato (bruto + normalizado). La misma vacante en varias fuentes o consultoras es un solo Puesto. Métricas por fuente. 7 días seguidos sin errores en el Mac. **Datasette** para ver fuentes, ejecuciones, ofertas y puestos | `sqlite-utils`, `tenacity`, `rapidfuzz` + `cleanco`, Healthchecks, Datasette |
 | 4 | Puntuación | Claude decide qué es top | 30 ofertas etiquetadas por Rubén. Claude coincide en al menos un 80 % (top / no top). Coste diario medido. **Base de la web** (API de servicios + app) con las primeras pantallas: **etiquetar ofertas**, fichas de puesto con puntuación y citas, y perfil | Rúbrica basada en el marco de evaluación de ai-job-search (filtros de elegibilidad e idioma + 5 dimensiones con escalas ancladas) y el patrón de jobchecker; Claude Haiku por API, pagado con el crédito mensual de Max; `pydantic-evals` + κ de Cohen |
 | 5 | Avisos | Llega a Telegram | Aviso inmediato de lo top y resumen semanal, recibidos durante una semana. Cada aviso enlaza a su ficha en la web; **bandeja de avisos** en la web | aiogram 3 (modelo: JobNavigator); Apprise |
 | 🎯 | **MVP** | **Radar útil de punta a punta** | | |

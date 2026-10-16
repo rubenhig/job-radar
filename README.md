@@ -15,7 +15,7 @@ Tiene un núcleo y varias formas de usarlo, todas sobre los mismos datos:
 
 Pensado para correr en una Raspberry Pi 5. Primer caso de uso: un AI/LLM Engineer que busca trabajo en Málaga o en remoto desde España.
 
-> **Estado:** fase 2 (perfil desde el CV). Roadmap en el [tablero del proyecto](https://github.com/users/rubenhig/projects/1) y en [Milestones](../../milestones) (una por fase). Arquitectura en [`docs/arquitectura.md`](docs/arquitectura.md); entidades y conectores de fuentes en [`docs/modelo.md`](docs/modelo.md).
+> **Estado:** fase 3 (ingesta). Roadmap en el [tablero del proyecto](https://github.com/users/rubenhig/projects/1) y en [Milestones](../../milestones) (una por fase). Arquitectura en [`docs/arquitectura.md`](docs/arquitectura.md); entidades y conectores de fuentes en [`docs/modelo.md`](docs/modelo.md).
 
 ```mermaid
 flowchart LR
@@ -34,8 +34,8 @@ flowchart LR
 |---|---|
 | 0 · Exploración y estado del arte | ✅ |
 | 1 · Fuentes | ✅ |
-| 2 · Perfil desde el CV | 🔄 en curso |
-| 3 · Ingesta | ⬜ |
+| 2 · Perfil desde el CV | ✅ |
+| 3 · Ingesta | 🔄 en curso |
 | 4 · Puntuación | ⬜ |
 | 5 · Avisos → **MVP** | ⬜ |
 | 6 · Raspberry Pi | ⬜ |
