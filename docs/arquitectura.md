@@ -156,3 +156,17 @@ Estados: ⬜ por probar · 🟡 probada a medias · ✅ aprobada · ❌ descarta
 - **España + remoto + IA, 7 días: 50 (tope de la llamada)**, con un 22 % con salario. Hay ruido de plataformas de "AI trainer" (Alignerr, Jobgether), que se filtra con `organization_agency=exclude`, `exclude_organization` y la puntuación con Claude.
 - **Cuota del plan gratuito: 25 llamadas y 250 ofertas al mes.** La prueba gastó 3 llamadas y ~100 ofertas. Cubre una búsqueda semanal de Málaga, pero no un uso diario con remoto. Alternativas: el plan Pro de RapidAPI o el mismo proveedor en Apify (1,50 $ por cada 1.000 ofertas).
 - La API hermana **Active Jobs DB** (mismo proveedor) cubre ATS y webs de empleo de empresas, con filtro por dominio y ficha de LinkedIn. Es una alternativa o complemento de freehire.
+
+**Solapamiento en Málaga (16-oct-2026, últimos 7 días, puestos técnicos)** → `spikes/solapamiento.py`
+
+| Fuente | Ofertas | Exclusivas | % exclusivas | Exclusivas con IA |
+|---|---|---|---|---|
+| freehire | 32 | 23 | 72 % | 2 |
+| LinkedIn (fantastic.jobs) | 33 | 19 | 58 % | 4 |
+| InfoJobs | 20 | 19 | 95 % | 2 |
+| Indeed (JobSpy) | 14 | 4 | 29 % | 2 |
+
+- **80 ofertas técnicas distintas en una semana**, con muy poco solapamiento: casi cada fuente aporta ofertas que no tiene ninguna otra.
+- InfoJobs casi no comparte nada con las demás (1 oferta en común con LinkedIn); Indeed es la más redundante, porque casi todo lo suyo está ya en LinkedIn o freehire.
+- **El mismo puesto llega a través de varias consultoras** (*Senior Python Developer / Technical Lead – AI Agents*: Grupo Hasten en InfoJobs, Tecdata en Indeed y addSolutions en LinkedIn). La deduplicación por empresa no lo detecta, así que hace falta agrupar por puesto (título + ubicación + descripción) en la ingesta.
+- Límites de la medición: una sola semana, solo Málaga (el remoto no está medido) y comparación por empresa + título.
