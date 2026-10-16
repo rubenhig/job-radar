@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Ingesta diaria en el Mac (Fase 3, semana de prueba). Instalar:
+    cp deploy/launchd/com.rubenhig.job-radar.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.rubenhig.job-radar.plist
+  Quitar:
+    launchctl unload ~/Library/LaunchAgents/com.rubenhig.job-radar.plist
+  Si el Mac está dormido a la hora, launchd la lanza al despertar.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.rubenhig.job-radar</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/rubenhig/.local/bin/uv</string><string>run</string><string>job-radar</string><string>ingesta</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/rubenhig/projects/malaga</string>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>30</integer></dict>
+  <key>StandardOutPath</key><string>/Users/rubenhig/projects/malaga/data/logs/launchd.log</string>
+  <key>StandardErrorPath</key><string>/Users/rubenhig/projects/malaga/data/logs/launchd.log</string>
+</dict>
+</plist>
