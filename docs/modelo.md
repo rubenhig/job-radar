@@ -24,6 +24,8 @@ erDiagram
     EMPRESA ||--o{ EVALUACION : "evaluada en"
     PUESTO ||--o{ AVISO : "notificado en"
     AVISO ||--o| FEEDBACK : "recibe"
+    PUESTO ||--o| CANDIDATURA : "se solicita en"
+    CANDIDATURA ||--o{ FEEDBACK : "genera (resultado)"
 ```
 
 | Entidad | Qué es | Campos clave |
@@ -38,11 +40,13 @@ erDiagram
 | **Perfil** | El candidato: competencias con evidencia + preferencias | versión, competencias, ubicaciones, modalidades, roles, idiomas, umbrales |
 | **Evaluación** | El encaje de un puesto o una empresa con una versión del perfil | veredictos por criterio con cita, restricciones duras (pasa / no pasa / no se sabe), puntuación, modelo, coste |
 | **Aviso** | Un mensaje enviado | puesto, canal, tipo (inmediato o resumen), enviado en |
-| **Feedback** | La reacción de Rubén a un aviso | 👍/👎, motivo; alimenta la evaluación de la puntuación |
+| **Feedback** | Una señal de Rubén sobre un puesto: su reacción a un aviso o el resultado de una candidatura | origen (aviso o candidatura), 👍/👎 o resultado, motivo; alimenta la evaluación de la puntuación |
+| **Candidatura** | Una solicitud a un puesto, gestionada desde la mesa de trabajo (`/apply`, `/outcome`) | puesto, fecha, material enviado (CV y carta), estado (enviada, entrevista, oferta, rechazo, sin respuesta), notas de entrevistas |
 
 Decisiones:
 - **Se avisa y se puntúa por Puesto, no por Oferta.** El mismo puesto de *Technical Lead Python – AI Agents* llegó por tres consultoras y tres portales: es un aviso, con las tres vías listadas.
 - **Al fusionar, cada campo recuerda de dónde viene.** Por ejemplo, el salario se toma por orden de preferencia (InfoJobs > LinkedIn > freehire > Indeed) y se guarda de qué oferta salió.
+- **La mesa de trabajo (ai-job-search) no tiene datos propios:** lee el perfil y los puestos del SQLite y escribe ahí las candidaturas. Sus ficheros de perfil (`01-candidate-profile.md`…) se **generan** desde `perfil_cv.yaml`, nunca se editan a mano.
 - **La vivienda reutilizará Fuente, Búsqueda, Ejecución y Bruto** con su propia entidad (Anuncio).
 
 ## El conector: contrato de cada fuente

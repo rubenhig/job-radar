@@ -4,6 +4,10 @@
 
 Un radar personal de empleo **guiado por el CV**. A partir del CV y de las preferencias de la persona, encuentra las empresas y las ofertas que encajan con ella y avisa por Telegram solo de lo que merece la pena.
 
+Es un sistema con **dos caras** sobre los mismos datos:
+- **El motor (automático):** un servicio en Python que corre solo en la Raspberry Pi. Encuentra, deduplica, puntúa y avisa.
+- **La mesa de trabajo (interactiva):** dentro de este repo, con Claude Code y los comandos de [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) (MIT) integrados. Sobre los puestos y el perfil del motor: preparar candidaturas (`/apply`), entrevistas (`/interview`), seguimiento (`/outcome`) y análisis de skills que faltan (`/upskill`).
+
 Todo lo que depende de la persona es **configuración del perfil**, no código:
 - ubicaciones (p. ej. Málaga)
 - modalidades (presencial, híbrido, remoto desde España, remoto con empresa extranjera)
@@ -17,6 +21,7 @@ Principios:
 2. **Integrar, no crear.** Para cada bloque se usa una herramienta existente que haya pasado una prueba verificable. El código propio es solo el pegamento, más lo que no exista. Catálogo de candidatos: [`docs/repositorios.md`](repositorios.md).
 3. **La empresa es la unidad principal**, no la oferta (ver `docs/estado-del-arte.md`).
 4. **Poco a poco.** Cada fase termina con algo comprobable.
+5. **Un solo perfil y una sola base de datos.** El motor y la mesa de trabajo leen lo mismo; nada se mantiene dos veces.
 
 ## Arquitectura
 
@@ -47,19 +52,27 @@ flowchart TB
         PER["Perfil<br/>(CV + preferencias)"] --> PE[Encaje de empresa] --> PO["Encaje de puesto<br/>filtros duros + Claude"]
     end
 
-    subgraph SAL["⑤ Salidas"]
+    subgraph SAL["⑤ Avisos"]
         direction LR
         AV["Telegram<br/>aviso top · resumen"] --> FB["Feedback 👍/👎"]
+    end
+
+    subgraph MESA["⑥ Mesa de trabajo · Claude Code + ai-job-search · interactiva"]
+        direction LR
+        AP["/apply<br/>CV y carta"] ~~~ IV["/interview<br/>/outcome"] ~~~ UP["/upskill<br/>skills que faltan"]
     end
 
     REG -. configura .-> CON
     EXT --> CON --> ING --> DB --> INT --> SAL
     CON -. métricas .-> MON
     MON -. alertas .-> SAL
+    SAL -- "puesto top" --> MESA
+    DB -. "puestos y perfil" .-> MESA
 ```
 
-Dos bucles que no se dibujan para que el diagrama se lea de arriba abajo:
+Tres bucles que no se dibujan para que el diagrama se lea de arriba abajo:
 - **Feedback → Inteligencia:** tus 👍/👎 son las etiquetas con las que se mide y ajusta la puntuación.
+- **Candidaturas → Inteligencia:** lo que registra `/outcome` (entrevista, rechazo, oferta) es la etiqueta más valiosa de todas, y vuelve al SQLite como feedback.
 - **Encaje de empresa → Registro de fuentes:** las empresas que más encajan pasan a vigilarse, y su ATS se añade como búsqueda de la fuente `ats`.
 
 Transversal a todo: **planificador** (systemd timers), **configuración** (perfil y fuentes), **tope de gasto en LLM** y **panel** (Datasette sobre el SQLite).
@@ -72,10 +85,11 @@ Transversal a todo: **planificador** (systemd timers), **configuración** (perfi
 | **Monitor de fuentes** | Detectar caídas, cambios de formato silenciosos, falta de cuota y fuentes que dejan de aportar | [`docs/modelo.md`](modelo.md#monitorización) |
 | **Perfil** | CV → competencias con evidencia; preferencias configurables (ubicación, modalidad, roles, idiomas) | Fase 2 |
 | **Inteligencia** | Encaje de empresa (¿es para mí?) y de puesto (filtros duros + Claude con evidencias, ponderado por la empresa) | Fases 4 y 7 |
-| **Salidas** | Aviso inmediato de lo top, resumen semanal, feedback 👍/👎 que sirve para medir y mejorar la puntuación | Fase 5 |
-| **SQLite** | Única fuente de verdad: bruto, ofertas, puestos, empresas, evaluaciones, avisos, ejecuciones | Fase 3 |
+| **Avisos** | Aviso inmediato de lo top, resumen semanal, feedback 👍/👎 que sirve para medir y mejorar la puntuación | Fase 5 |
+| **Mesa de trabajo** | Comandos de ai-job-search en Claude Code, adaptados para leer el perfil y los puestos del SQLite: `/apply` (CV adaptado y carta con agente revisor), `/interview`, `/outcome` y `/upskill`. Su `/scrape` y su `/setup` no se usan: los sustituyen el motor y nuestro perfil | Fase 8 |
+| **SQLite** | Única fuente de verdad: bruto, ofertas, puestos, empresas, evaluaciones, avisos, candidaturas, ejecuciones | Fase 3 |
 
-Los nombres de entidades (Fuente, Búsqueda, Ejecución, Bruto, Oferta, Puesto, Empresa, Perfil, Evaluación, Aviso, Feedback) y los campos comunes de una oferta están en [`docs/modelo.md`](modelo.md).
+Los nombres de entidades (Fuente, Búsqueda, Ejecución, Bruto, Oferta, Puesto, Empresa, Perfil, Evaluación, Aviso, Feedback, Candidatura) y los campos comunes de una oferta están en [`docs/modelo.md`](modelo.md).
 
 ### Matching a dos niveles
 - **Empresa** (¿es una empresa para mí?): a qué se dedica, madurez en IA con evidencias, stack, presencia en las ubicaciones del perfil o remoto, momento de contratación. Se recalcula de forma mensual o cuando cambia el perfil. Decide qué empresas se vigilan y con qué frecuencia.
@@ -103,14 +117,15 @@ El seguimiento vivo está en GitHub: cada fase es un **milestone** y cada tarea 
 
 ```mermaid
 flowchart LR
-    F0[0 · Exploración ✅] --> F1[1 · Fuentes]
+    F0[0 · Exploración ✅] --> F1[1 · Fuentes ✅]
     F1 --> F3[3 · Ingesta]
     F2[2 · Perfil] --> F4[4 · Puntuación]
     F3 --> F4 --> F5[5 · Avisos]
     F5 --> MVP{{🎯 MVP}}
+    F3 & F2 --> F8a["8a · /upskill"]
     MVP --> F6[6 · Raspberry Pi]
     MVP --> F7[7 · Empresas]
-    F6 & F7 --> F8[8 · Extras]
+    MVP --> F8b["8b · /apply · /interview<br/>/outcome"]
     F6 --> F9[9 · Vivienda]
 ```
 
@@ -119,14 +134,15 @@ flowchart LR
 | 0 | Exploración ✅ | Datos reales de varias fuentes | `spikes/` con datos de 4 fuentes | — |
 | 0b | Estado del arte ✅ | Saber qué existe | `docs/estado-del-arte.md` | — |
 | 1 | Fuentes ✅ | Saber de dónde salen las ofertas | Cada fuente candidata probada y marcada como ✅ o ❌. Lista de fuentes v1 cerrada. Campos comunes de una oferta definidos | ver tabla de abajo |
-| **2** | **Perfil** ← *siguiente* | El CV convertido en perfil | Fichero de perfil (competencias con evidencia + preferencias) extraído con Claude y **aprobado por Rubén**. Ubicaciones y modalidades son configurables | Claude con salida estructurada (Pydantic); ESCO v1.2.1 + capa propia de skills de IA |
+| **2** | **Perfil** ← *siguiente* | El CV convertido en perfil | Fichero de perfil (competencias con evidencia + preferencias) extraído con Claude y **aprobado por Rubén**. Ubicaciones y modalidades son configurables | `claude -p` con la suscripción (conector LLM reemplazable); `pypdf`; ESCO + JobBERT-v3 (#14), con propuesta de aplazarlo a la Fase 4 |
 | 3 | Ingesta | Ofertas guardadas sin duplicados | Un comando llena SQLite con las fuentes v1 a través de conectores con el mismo contrato (bruto + normalizado). La misma vacante en varias fuentes o consultoras es un solo Puesto. Métricas por fuente. 7 días seguidos sin errores en el Mac | `sqlite-utils`, `tenacity`, `rapidfuzz` + `cleanco`, Healthchecks, Datasette |
-| 4 | Puntuación | Claude decide qué es top | 30 ofertas etiquetadas por Rubén. Claude coincide en al menos un 80 % (top / no top). Coste diario medido | Claude Haiku con rúbrica (patrón de jobchecker); `pydantic-evals` + κ de Cohen |
+| 4 | Puntuación | Claude decide qué es top | 30 ofertas etiquetadas por Rubén. Claude coincide en al menos un 80 % (top / no top). Coste diario medido | Rúbrica basada en el marco de evaluación de ai-job-search (filtros de elegibilidad e idioma + 5 dimensiones con escalas ancladas) y el patrón de jobchecker; Claude Haiku por API, pagado con el crédito mensual de Max; `pydantic-evals` + κ de Cohen |
 | 5 | Avisos | Llega a Telegram | Aviso inmediato de lo top y resumen semanal, recibidos durante una semana | aiogram 3 (modelo: JobNavigator); Apprise |
 | 🎯 | **MVP** | **Radar útil de punta a punta** | | |
 | 6 | Raspberry Pi | Funciona sola | 7 días en la Pi. Alerta si una fuente cae a 0 | timers de systemd o APScheduler; detección de anomalías de volumen |
 | 7 | Empresas | Encaje a nivel empresa | Lista viva de empresas puntuadas. Las mejores se vigilan solas | Empresas con ATS en freehire, ficha de LinkedIn, `discover` de maccydee/job-radar, PDF del PTA |
-| 8 | Extras | Bot, candidaturas, mercado | Por definir al llegar | — |
+| 8a | Mesa de trabajo: `/upskill` | Saber qué skills faltan para los puestos objetivo | `/upskill` de ai-job-search ejecutado sobre los puestos del SQLite y nuestro perfil; plan de aprendizaje revisado por Rubén. Puede hacerse en cuanto haya ingesta (Fase 3) | ai-job-search (MIT) |
+| 8b | Mesa de trabajo: candidaturas | Presentarse a un puesto top con buen material | `/apply`, `/interview` y `/outcome` funcionan sobre un Puesto del SQLite y el perfil exportado; los resultados de `/outcome` vuelven como feedback | ai-job-search (MIT); exportar `perfil_cv.yaml` → su `01-candidate-profile.md` |
 | 9 | Vivienda | Módulo secundario | Por definir al llegar | — |
 
 ## Fase 1 · Fuentes: pruebas

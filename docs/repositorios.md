@@ -22,6 +22,7 @@ Esto es lo que buscamos. Rubén investiga en paralelo y aporta ideas (como comen
 | 4 · Puntuación | Juez LLM y **medir su acuerdo con Rubén** | Patrón de jobchecker + `pydantic-evals` + κ de Cohen |
 | 5 · Avisos | Telegram con botones 👍/👎 y resumen semanal | aiogram 3 + modelo de JobNavigator; Apprise para avisos simples |
 | 7 · Empresas | Empresas tech de Málaga con web, ATS y señales de IA | Overture Places + OSM + Wikidata; `discover` de maccydee; PDF del PTA |
+| 8 · Mesa de trabajo | Candidaturas (CV adaptado, carta), entrevistas, seguimiento y análisis de skills | **[ai-job-search](https://github.com/MadsLorentzen/ai-job-search)** (47,7k★, MIT): integrado como mesa de trabajo en Claude Code (decisión 16-oct-2026) |
 | 9 · Vivienda | Anuncios de alquiler y venta en el centro de Málaga, histórico de precios | API oficial de idealista (pedir credenciales) + open-properties; [API de idealista en RapidAPI](https://rapidapi.com/kiwimaker/api/idealista-real-estate/pricing) (idea de Rubén, de un tercero: falta ver plan y datos) |
 
 ## Método
@@ -256,6 +257,13 @@ Lo que aprendimos en la primera ronda (16-oct-2026):
 
 **Recomendación:** pedir ya acceso a la **API oficial de idealista** y probar **open-properties** (o yagueto/idealista-api) con una búsqueda en Málaga, deduplicando y enviando a Telegram como hace idealiScrape. Mientras llegan las credenciales, el plan B legal es parsear los emails de alertas de idealista y Fotocasa, como hace idealista-tracker-ai. Fotocasa, Habitaclia y pisos.com solo tienen scrapers triviales o de pago (Apify o ScrapingAnt, 0–3★), sin API pública, así que no hay nada aprovechable. Para el contexto de precios no apareció ningún observatorio reutilizable; usaría los datos oficiales del INE o MIVAU, por ejemplo con los clientes de spanish-public-info-radar-mcp.
 **Búsquedas usadas:** `--topic idealista`; `--topic fotocasa`; `idealista scraper`; `idealista api`; `idealista --language python`; `fotocasa scraper`; `fotocasa --language python`; `habitaclia`; `pisos.com scraper`; `idealista telegram`; `idealista bot`; `"idealista" alerts`; `real estate spain scraper`; `inmobiliaria scraper spain` (sin resultados); `piso alquiler telegram bot` (sin resultados); `alquiler pisos bot` (sin resultados); `housing alert telegram bot`; `apartment hunting telegram bot`; `precio vivienda españa`; `valoracion inmueble`; `catastro python`; `hipoteca calculadora`; `mortgage calculator spain`. También una consulta directa a `flathunters/flathunter` y `numpy/numpy-financial` con `gh api repos/...`.
+
+## Fase 8 · Mesa de trabajo
+
+**[MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search)** (47,7k★, MIT, activo) — **usar, integrado** (decisión de Rubén, 16-oct-2026). Framework de comandos para Claude Code: `/setup`, `/scrape`, `/rank`, `/apply` (CV y carta con agente revisor), `/interview`, `/outcome`, `/upskill`, `/expand`. Es complementario del motor: el motor vigila y avisa; la mesa de trabajo ayuda a presentarse.
+- **Se usan:** `/apply`, `/interview`, `/outcome`, `/upskill`, adaptados para leer perfil y puestos del SQLite. Su marco de evaluación (`04-job-evaluation.md`: filtros de elegibilidad e idioma + 5 dimensiones con escalas ancladas) es la base de la rúbrica de la Fase 4.
+- **No se usan:** `/scrape` y `/rank` (los sustituye el motor), `/setup` (lo sustituye nuestro perfil, que se exporta a su formato).
+- **Aviso:** un fork de un repo público en GitHub es público; los datos personales (CV, candidaturas) van en `data/`, fuera del repo.
 
 ## Referencia · Sistemas completos
 
