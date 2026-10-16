@@ -49,6 +49,16 @@ flowchart LR
 - **Integrar, no crear.** Cada bloque usa una herramienta open source existente que ha pasado una prueba verificable. Por ejemplo, [JobSpy](https://github.com/speedyapply/JobSpy) y [ats-scrapers](https://github.com/kalil0321/ats-scrapers).
 - **Poco a poco.** Cada fase termina con algo comprobable.
 
+## Web
+
+```sh
+uv run uvicorn job_radar.api:crear --factory --reload   # API en http://127.0.0.1:8000 (docs en /api/docs)
+cd web && npm install && npm run dev                     # web en desarrollo, en http://localhost:5173
+docker compose up -d --build                             # o todo junto, como irá en la Pi, en http://127.0.0.1:8000
+```
+
+Pantallas: inicio, puestos, ficha de puesto, etiquetar, fuentes y perfil. Ver [`web/`](web/README.md).
+
 ## Ingesta
 
 ```sh
