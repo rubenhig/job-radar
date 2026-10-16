@@ -11,13 +11,16 @@ Diseño en docs/modelo.md.
 
 import hashlib
 import json
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 
 import sqlite_utils
 
 RAIZ = Path(__file__).resolve().parents[2]
-RUTA_DB = RAIZ / "data" / "job_radar.db"
+# Datos personales y resultados: fuera del repo. En Docker, un volumen.
+DATOS = Path(os.environ.get("JOB_RADAR_DATOS", RAIZ / "data"))
+RUTA_DB = DATOS / "job_radar.db"
 
 MIGRACIONES: list[str] = [
     # 1 · entidades de la ingesta
@@ -132,6 +135,16 @@ MIGRACIONES: list[str] = [
     """
     ALTER TABLE ejecucion ADD COLUMN completitud TEXT;   -- JSON: campo → % de ofertas con valor
     CREATE INDEX ejecucion_fuente ON ejecucion (fuente_id, inicio);
+    """,
+    # 3 · etiquetas de Rubén por puesto: la vara de medir de la puntuación (Fase 4)
+    """
+    CREATE TABLE etiqueta (
+        puesto_id       INTEGER PRIMARY KEY REFERENCES puesto(id),
+        valor           TEXT NOT NULL CHECK (valor IN ('top', 'no_top')),
+        motivo          TEXT,
+        creada_en       TEXT NOT NULL,
+        actualizada_en  TEXT NOT NULL
+    );
     """,
 ]
 

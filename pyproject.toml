@@ -13,6 +13,7 @@ dependencies = [
     "beautifulsoup4>=4.15.0",
     "cleanco>=2.3",
     "datasette>=0.65.5",
+    "fastapi>=0.143.3",
     "feedparser>=6.0.14",
     "html2text>=2025.4.15",
     "httpcloak>=1.7.3",
@@ -25,6 +26,7 @@ dependencies = [
     "rapidfuzz>=3.14.6",
     "sqlite-utils>=4.2.1",
     "tenacity>=9.2.1",
+    "uvicorn[standard]>=0.54.0",
 ]
 
 [project.scripts]

@@ -21,8 +21,8 @@ from job_radar.fuentes import registro as reg
 from job_radar.fuentes.base import Busqueda, cargar_env
 from job_radar.preferencias import cargar as cargar_preferencias
 
-RUTA_PREFERENCIAS = almacen.RAIZ / "data" / "perfil" / "preferencias.yaml"
-RUTA_LOG = almacen.RAIZ / "data" / "logs" / "ingesta.log"
+RUTA_PREFERENCIAS = almacen.DATOS / "perfil" / "preferencias.yaml"
+RUTA_LOG = almacen.DATOS / "logs" / "ingesta.log"
 HOLGURA_H = 2  # una ejecución diaria a hora fija no debe saltarse un día por unos minutos
 
 log = logging.getLogger("job_radar")

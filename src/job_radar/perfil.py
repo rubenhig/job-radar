@@ -22,10 +22,10 @@ from pydantic import BaseModel, Field
 from pypdf import PdfReader
 from rapidfuzz import fuzz
 
+from job_radar import almacen
 from job_radar.llm import ClaudeCLI, MotorLLM
 
-RAIZ = Path(__file__).resolve().parents[2]
-SALIDA = RAIZ / "data" / "perfil" / "perfil_cv.yaml"
+SALIDA = almacen.DATOS / "perfil" / "perfil_cv.yaml"
 
 Categoria = Literal[
     "lenguaje", "framework", "ia_llm", "datos", "cloud_devops", "arquitectura",
