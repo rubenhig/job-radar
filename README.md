@@ -59,7 +59,7 @@ uv run datasette data/job_radar.db --metadata config/datasette.yaml   # panel: f
 ```
 
 - Las fuentes y su conector se declaran en `config/fuentes.yaml`; las búsquedas salen de las preferencias.
-- Las claves van en `.env` (`RAPIDAPI_KEY`; opcional `HEALTHCHECKS_URL`).
+- Las claves van en `.env` (`APIFY_TOKEN` para LinkedIn; `RAPIDAPI_KEY` como plan B).
 - En el Mac corre a diario con launchd: ver [`deploy/launchd/`](deploy/launchd/com.rubenhig.job-radar.plist).
 
 ## Pruebas de fuentes (Fase 1)

@@ -48,5 +48,6 @@ def ejecutar(db, conector: Conector, busqueda: Busqueda) -> int:
         estado = "parcial"
     normalizadas = m["nuevos"] + m["actualizados"]
     completitud = {c: round(100 * rellenos[c] / normalizadas) for c in VIGILADOS} if normalizadas else None
-    almacen.cerrar_ejecucion(db, ejecucion, estado, error=error, cuota=conector.cuota, completitud=completitud, **m)
+    almacen.cerrar_ejecucion(db, ejecucion, estado, error=error, cuota=conector.cuota, completitud=completitud,
+                             coste_usd=getattr(conector, "coste_usd", None), **m)
     return ejecucion

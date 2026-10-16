@@ -155,6 +155,8 @@ class Conector(Protocol):
 
     # Lo que la fuente diga de su cuota en la última llamada a `traer` (cabeceras, créditos…).
     cuota: dict[str, Any] | None
+    # Opcional: lo que costó la última llamada a `traer`, si la fuente es de pago.
+    # coste_usd: float | None
 
     def parametros(self, intencion: Intencion) -> list[dict[str, Any]]:
         """Intención → parámetros de la fuente. Lista vacía si la fuente no la cubre."""

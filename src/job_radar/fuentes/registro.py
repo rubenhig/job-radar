@@ -30,6 +30,7 @@ class Fuente(BaseModel):
     coste: str
     terminos: str
     frecuencia_h: int = Field(gt=0)
+    frecuencia_remoto_h: int | None = Field(None, gt=0, description="Si las búsquedas en remoto van a otro ritmo")
     plan_b: list[str] = Field(min_length=1)
     activa: bool = True
 
@@ -77,8 +78,10 @@ def busquedas(p: Preferencias, registro: Registro, conectores: Mapping[str, Cone
             varias = conector.parametros(intencion)
             for n, parametros in enumerate(varias, start=1):
                 sufijo = f"-{n}" if len(varias) > 1 else ""
+                frecuencia = (fuente.frecuencia_remoto_h if intencion.remota and fuente.frecuencia_remoto_h
+                              else fuente.frecuencia_h)
                 salida.append(Busqueda(id=f"{fuente_id}:{intencion.id}{sufijo}", fuente=fuente_id,
-                                       parametros=parametros, frecuencia_h=fuente.frecuencia_h))
+                                       parametros=parametros, frecuencia_h=frecuencia))
     return salida
 
 
