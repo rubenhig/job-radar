@@ -1,0 +1,67 @@
+# Panel de la ingesta sobre el SQLite (solo lectura).
+#   uv run datasette data/job_radar.db --metadata config/datasette.yaml
+title: job-radar · ingesta
+description: Fuentes, ejecuciones, ofertas y puestos. Diseño en docs/modelo.md.
+databases:
+  job_radar:
+    queries:
+      fuentes:
+        title: Estado de las fuentes
+        description: Última ejecución de cada fuente y lo que trajo en 7 días
+        sql: |-
+          SELECT f.id AS fuente, f.conector, f.activa,
+                 (SELECT MAX(inicio) FROM ejecucion e WHERE e.fuente_id = f.id) AS ultima_ejecucion,
+                 (SELECT estado FROM ejecucion e WHERE e.fuente_id = f.id ORDER BY inicio DESC LIMIT 1) AS ultimo_estado,
+                 (SELECT SUM(recibidos) FROM ejecucion e WHERE e.fuente_id = f.id
+                    AND inicio >= datetime('now', '-7 days')) AS recibidas_7d,
+                 (SELECT SUM(nuevos) FROM ejecucion e WHERE e.fuente_id = f.id
+                    AND inicio >= datetime('now', '-7 days')) AS nuevas_7d,
+                 (SELECT MAX(publicada_en) FROM oferta o WHERE o.fuente_id = f.id) AS oferta_mas_reciente,
+                 (SELECT cuota FROM ejecucion e WHERE e.fuente_id = f.id ORDER BY inicio DESC LIMIT 1) AS cuota
+          FROM fuente f ORDER BY f.id
+      ejecuciones:
+        title: Ejecuciones recientes
+        sql: |-
+          SELECT id, fuente_id, busqueda_id, conector, inicio, estado, recibidos, nuevos, actualizados,
+                 errores_norm, completitud, error
+          FROM ejecucion ORDER BY inicio DESC LIMIT 200
+      ofertas_recientes:
+        title: Ofertas nuevas
+        sql: |-
+          SELECT o.id, o.fuente_id, o.titulo, o.empresa, o.ciudad, o.modalidad, o.salario_min, o.salario_max,
+                 o.publicada_en, o.vista_primera, o.puesto_id, o.url
+          FROM oferta o ORDER BY o.vista_primera DESC LIMIT 300
+      puestos_varias_vias:
+        title: Puestos que llegan por varias vías
+        description: La misma vacante por varias fuentes o consultoras
+        sql: |-
+          SELECT p.id, p.titulo, p.ciudad, p.modalidad, COUNT(*) AS ofertas,
+                 COUNT(DISTINCT o.fuente_id) AS fuentes,
+                 GROUP_CONCAT(DISTINCT o.empresa) AS empresas
+          FROM puesto p JOIN oferta o ON o.puesto_id = p.id
+          WHERE p.estado = 'abierto'
+          GROUP BY p.id HAVING ofertas > 1 ORDER BY ofertas DESC
+      exclusividad:
+        title: Exclusividad por fuente (30 días)
+        description: Puestos que solo trae cada fuente
+        sql: |-
+          WITH vias AS (
+            SELECT puesto_id, COUNT(DISTINCT fuente_id) AS fuentes FROM oferta
+            WHERE puesto_id IS NOT NULL GROUP BY puesto_id)
+          SELECT o.fuente_id, COUNT(DISTINCT o.puesto_id) AS puestos,
+                 COUNT(DISTINCT CASE WHEN v.fuentes = 1 THEN o.puesto_id END) AS exclusivos,
+                 ROUND(100.0 * COUNT(DISTINCT CASE WHEN v.fuentes = 1 THEN o.puesto_id END)
+                       / COUNT(DISTINCT o.puesto_id)) AS pct_exclusivos
+          FROM oferta o JOIN vias v ON v.puesto_id = o.puesto_id
+          WHERE o.vista_ultima >= datetime('now', '-30 days')
+          GROUP BY o.fuente_id ORDER BY o.fuente_id
+      trazar_oferta:
+        title: De una oferta a su origen
+        description: Bruto, ejecución, búsqueda y versión del conector de una oferta
+        sql: |-
+          SELECT o.id AS oferta, o.titulo, o.fuente_id, o.conector AS conector_oferta,
+                 b.id AS bruto, b.recibido_en, b.eliminados, e.id AS ejecucion, e.inicio, e.conector AS conector_ejecucion,
+                 s.id AS busqueda, s.parametros, b.payload
+          FROM oferta o JOIN bruto b ON b.id = o.bruto_id JOIN ejecucion e ON e.id = b.ejecucion_id
+          LEFT JOIN busqueda s ON s.id = e.busqueda_id
+          WHERE o.id = :oferta

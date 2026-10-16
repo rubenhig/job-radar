@@ -138,3 +138,11 @@ def test_ingesta_sobrevive_a_una_fuente_caida(db_falsa):
                          reg.Busqueda("falsa:x", "falsa", {}, 24))
     x = db_falsa["ejecucion"].get(e)
     assert x["estado"] == "parcial" and x["nuevos"] == 1 and "se cayó" in x["error"]
+
+
+def test_ingesta_registra_completitud_por_campo(db_falsa):
+    from job_radar import ingesta
+    e = ingesta.ejecutar(db_falsa, ConectorDePrueba([{"id": 1, "title": "a"}, {"id": 2, "title": "b"}]),
+                         reg.Busqueda("falsa:x", "falsa", {}, 24))
+    c = json.loads(db_falsa["ejecucion"].get(e)["completitud"])
+    assert c["titulo"] == 100 and c["descripcion"] == 0 and "fuente_id" not in c

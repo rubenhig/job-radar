@@ -128,6 +128,11 @@ MIGRACIONES: list[str] = [
     CREATE INDEX oferta_puesto ON oferta (puesto_id);
     CREATE INDEX oferta_publicada ON oferta (publicada_en);
     """,
+    # 2 · completitud por campo en cada ejecución: detecta cambios de formato silenciosos
+    """
+    ALTER TABLE ejecucion ADD COLUMN completitud TEXT;   -- JSON: campo → % de ofertas con valor
+    CREATE INDEX ejecucion_fuente ON ejecucion (fuente_id, inicio);
+    """,
 ]
 
 
@@ -179,8 +184,9 @@ def iniciar_ejecucion(db, fuente_id: str, conector: str, busqueda_id: str | None
 
 
 def cerrar_ejecucion(db, ejecucion_id: int, estado: str, **metricas) -> None:
-    if "cuota" in metricas and not isinstance(metricas["cuota"], str | None):
-        metricas["cuota"] = json.dumps(metricas["cuota"], ensure_ascii=False)
+    for campo in ("cuota", "completitud"):
+        if campo in metricas and not isinstance(metricas[campo], str | None):
+            metricas[campo] = json.dumps(metricas[campo], ensure_ascii=False)
     db["ejecucion"].update(ejecucion_id, {"fin": ahora(), "estado": estado, **metricas})
 
 

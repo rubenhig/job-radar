@@ -7,9 +7,13 @@ ejecución: se cuenta como error de normalización y se reprocesa más adelante.
 
 import logging
 import traceback
+from collections import Counter
 
 from job_radar import almacen
-from job_radar.fuentes.base import Busqueda, Conector
+from job_radar.fuentes.base import Busqueda, Conector, Oferta
+
+# Campos cuya completitud se vigila (los que no son de identificación).
+VIGILADOS = [c for c in Oferta.model_fields if c not in ("fuente_id", "id_externo", "derivados")]
 
 log = logging.getLogger(__name__)
 
@@ -20,6 +24,7 @@ def ejecutar(db, conector: Conector, busqueda: Busqueda) -> int:
     almacen.guardar_busqueda(db, busqueda.id, busqueda.fuente, busqueda.parametros, busqueda.frecuencia_h)
     ejecucion = almacen.iniciar_ejecucion(db, conector.fuente, conector.version, busqueda.id)
     m = {"recibidos": 0, "nuevos": 0, "actualizados": 0, "errores_norm": 0}
+    rellenos = Counter()
     estado, error = "ok", None
     try:
         for bruto in conector.traer(busqueda):
@@ -32,6 +37,7 @@ def ejecutar(db, conector: Conector, busqueda: Busqueda) -> int:
                 m["errores_norm"] += 1
                 log.warning("%s: no se pudo normalizar %s: %s", conector.fuente, bruto.id_externo, e)
                 continue
+            rellenos.update(c for c in VIGILADOS if getattr(oferta, c) not in (None, "", []))
             _, nueva = almacen.guardar_oferta(db, oferta.fila(), bruto_id, conector.version)
             m["nuevos" if nueva else "actualizados"] += 1
     except Exception as e:  # noqa: BLE001
@@ -40,5 +46,7 @@ def ejecutar(db, conector: Conector, busqueda: Busqueda) -> int:
         log.error("%s: %s", busqueda.id, error)
     if estado == "ok" and m["errores_norm"]:
         estado = "parcial"
-    almacen.cerrar_ejecucion(db, ejecucion, estado, error=error, cuota=conector.cuota, **m)
+    normalizadas = m["nuevos"] + m["actualizados"]
+    completitud = {c: round(100 * rellenos[c] / normalizadas) for c in VIGILADOS} if normalizadas else None
+    almacen.cerrar_ejecucion(db, ejecucion, estado, error=error, cuota=conector.cuota, completitud=completitud, **m)
     return ejecucion
