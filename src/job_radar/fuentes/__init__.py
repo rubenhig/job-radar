@@ -2,9 +2,10 @@
 
 from job_radar.fuentes.base import Bruto, Busqueda, Conector, Intencion, Oferta
 from job_radar.fuentes.freehire import Freehire
+from job_radar.fuentes.infojobs import InfoJobs
 
 # Versión del conector → clase. `config/fuentes.yaml` elige cuál usa cada fuente.
-CONECTORES: dict[str, type] = {c.version: c for c in (Freehire,)}
+CONECTORES: dict[str, type] = {c.version: c for c in (Freehire, InfoJobs)}
 
 
 def conector(version: str) -> Conector:
