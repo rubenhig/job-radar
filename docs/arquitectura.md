@@ -1,4 +1,4 @@
-# job-radar: mapa del sistema, roadmap y herramientas
+# job-radar: arquitectura, roadmap y fuentes
 
 ## Objetivo
 
@@ -18,56 +18,95 @@ Principios:
 3. **La empresa es la unidad principal**, no la oferta (ver `docs/estado-del-arte.md`).
 4. **Poco a poco.** Cada fase termina con algo comprobable.
 
-## Mapa global
+## Arquitectura
 
 ```mermaid
-flowchart LR
-    CV[CV] --> PERFIL["Perfil<br/>competencias + preferencias<br/>(ubicación, modalidad, roles)"]
-
-    subgraph FUENTES
-        N1["N1 · ATS de empresas<br/>Greenhouse, Lever, Ashby,<br/>Workday, Teamtailor…"]
-        AG["Agregador · freehire<br/>92 ATS + ~100 portales<br/>(API pública)"]
-        N2["N2 · Portales directos<br/>InfoJobs, Indeed, LinkedIn,<br/>Tecnoempleo"]
-        N3["N3 · Emails de alerta"]
+flowchart TB
+    subgraph EXT["Fuentes externas · no las controlamos"]
+        direction LR
+        FH[freehire]
+        IJ[InfoJobs]
+        LI["LinkedIn<br/>(fantastic.jobs)"]
+        IN["Indeed<br/>(JobSpy)"]
+        AT[ATS de empresas]
     end
 
-    subgraph INGESTA
-        RAW[bruto inmutable] --> NORM[normalizar] --> DEDUP[deduplicar] --> MET[métricas por fuente]
+    subgraph CON["Conectores · uno por fuente, mismo contrato"]
+        direction LR
+        C["traer() → Bruto<br/>normalizar() → Oferta"]
     end
 
-    N1 & AG & N2 & N3 --> RAW
-    MET --> DB[(SQLite)]
+    REG[["Registro de fuentes<br/>fuentes.yaml: herramienta,<br/>coste, términos, plan B"]]
 
-    subgraph INTELIGENCIA
-        EMP["Empresas<br/>descubrir · puntuar · vigilar"]
-        OF["Ofertas<br/>filtros duros + Claude<br/>con evidencias"]
+    subgraph ING["Ingesta"]
+        direction LR
+        BR[(Bruto<br/>inmutable)] --> NO[Oferta<br/>normalizada] --> PU["Puesto<br/>(agrupa fuentes<br/>y consultoras)"] --> EM[Empresa<br/>resuelta]
     end
 
-    PERFIL --> OF & EMP
-    DB <--> OF & EMP
-    OF --> TG["Telegram<br/>aviso top · resumen semanal"]
+    MON["Monitor de fuentes<br/>ejecuciones · volumen · completitud<br/>errores · frescura · cuota"]
+
+    CV[CV] --> PER["Perfil<br/>competencias con evidencia<br/>+ preferencias"]
+
+    subgraph INT["Inteligencia"]
+        direction LR
+        PE["Encaje de empresa"]
+        PO["Encaje de puesto<br/>filtros duros + Claude<br/>con evidencias"]
+        PE -. prior .-> PO
+    end
+
+    subgraph SAL["Salidas"]
+        direction LR
+        AV["Telegram<br/>aviso top · resumen semanal"] --> FB["Feedback 👍/👎"]
+    end
+
+    DB[(SQLite)]
+
+    EXT --> CON --> ING
+    REG -. configura .-> CON
+    CON -. métricas .-> MON
+    ING --> DB
+    DB --> INT
+    PER --> INT
+    INT --> SAL
+    FB -. etiquetas .-> INT
+    MON -. alertas .-> AV
+    PE -. empresas a vigilar .-> AT
 ```
 
-Además, a lo largo de todo el sistema: planificador, salud de fuentes, tope de gasto en LLM y configuración.
+Transversal a todo: **planificador** (systemd timers), **configuración** (perfil y fuentes), **tope de gasto en LLM** y **panel** (Datasette sobre el SQLite).
+
+| Pieza | Responsabilidad | Detalle |
+|---|---|---|
+| **Conectores** | Aislar cada fuente externa tras un contrato único (`traer` + `normalizar`). Lo único que cambia si cambia una fuente | [`docs/modelo.md`](modelo.md#el-conector-contrato-de-cada-fuente) |
+| **Registro de fuentes** | Qué fuentes hay, con qué herramienta, a qué coste, con qué términos y cuál es su plan B | [`docs/modelo.md`](modelo.md#el-conector-contrato-de-cada-fuente) |
+| **Ingesta** | Guardar el bruto, normalizar a `Oferta`, agrupar ofertas en `Puesto` (mismo puesto en varias fuentes o consultoras) y resolver la `Empresa` | [`docs/modelo.md`](modelo.md#entidades) |
+| **Monitor de fuentes** | Detectar caídas, cambios de formato silenciosos, falta de cuota y fuentes que dejan de aportar | [`docs/modelo.md`](modelo.md#monitorización) |
+| **Perfil** | CV → competencias con evidencia; preferencias configurables (ubicación, modalidad, roles, idiomas) | Fase 2 |
+| **Inteligencia** | Encaje de empresa (¿es para mí?) y de puesto (filtros duros + Claude con evidencias, ponderado por la empresa) | Fases 4 y 7 |
+| **Salidas** | Aviso inmediato de lo top, resumen semanal, feedback 👍/👎 que sirve para medir y mejorar la puntuación | Fase 5 |
+| **SQLite** | Única fuente de verdad: bruto, ofertas, puestos, empresas, evaluaciones, avisos, ejecuciones | Fase 3 |
+
+Los nombres de entidades (Fuente, Búsqueda, Ejecución, Bruto, Oferta, Puesto, Empresa, Perfil, Evaluación, Aviso, Feedback) y los campos comunes de una oferta están en [`docs/modelo.md`](modelo.md).
 
 ### Matching a dos niveles
 - **Empresa** (¿es una empresa para mí?): a qué se dedica, madurez en IA con evidencias, stack, presencia en las ubicaciones del perfil o remoto, momento de contratación. Se recalcula de forma mensual o cuando cambia el perfil. Decide qué empresas se vigilan y con qué frecuencia.
-- **Oferta** (¿es este puesto para mí?):
+- **Puesto** (¿es este puesto para mí?):
   - Primero, filtros duros deterministas.
   - Después, Claude da veredictos por criterio con una cita de la oferta. Las restricciones duras (modalidad, idioma, seniority) se marcan como pasa / no pasa / no se sabe.
   - Python calcula el porcentaje y lo pondera con el encaje de la empresa.
 
-### Niveles de fuente
-| Nivel | Fuentes | Acceso |
-|---|---|---|
-| **1. Canónica** | ATS de empresas (Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor, Personio, Workday, SuccessFactors…), Himalayas, Manfred | Endpoints públicos sin clave |
-| **Agregador** | [freehire](https://github.com/strelov1/freehire) (MIT): ~3M ofertas de 92 ATS y ~100 portales, deduplicadas y enriquecidas | API pública sin clave. Da amplitud (ATS de empresas de Málaga, remoto); las fuentes directas cubren lo que le falta o trae peor |
-| **2. Portales** | InfoJobs (adaptador `infojobs_es` con httpcloak), Indeed y Glassdoor vía JobSpy, Tecnoempleo | Scraping a baja frecuencia y con búsquedas acotadas. InfoJobs: decisión de Rubén (15-oct-2026), uso personal |
-| **3. Solo emails propios** | LinkedIn, Welcome to the Jungle, Wellfound | Alertas a un buzón dedicado |
-| **APIs de terceros** | LinkedIn vía fantastic.jobs (RapidAPI) | Ellos hacen el scraping; nosotros consumimos cuota. Sin 429 ni riesgo para nuestra IP |
-| **Excluidas** | LinkedIn con sesión, Google Jobs, auto-apply | Riesgo de cuenta, riesgo legal o sin datos |
+### Fuentes v1
+Validadas por Rubén el 16-oct-2026, con datos de las pruebas y del [solapamiento en Málaga](#fase-1--fuentes-pruebas).
 
-Métricas por fuente en cada ejecución: rendimiento, completitud, precisión, exclusividad, estabilidad y riesgo.
+| Fuente | Herramienta | Aporta | Frecuencia | Coste |
+|---|---|---|---|---|
+| **freehire** | API pública (MIT) | Amplitud: ATS de empresas y remoto; 72 % de exclusivas en Málaga | Diaria | Gratis |
+| **InfoJobs** | `infojobs_es` de ats-scrapers + httpcloak, búsquedas acotadas | Mercado español y **salario (~55 %)**; 95 % de exclusivas | Diaria | Gratis |
+| **LinkedIn** | API de fantastic.jobs (Apify o RapidAPI) | **Más ofertas de IA exclusivas**, ficha de empresa, modalidad y skills | Diaria | ≈1–3 $/mes |
+| **Indeed** | JobSpy | Complemento; 29 % de exclusivas | Cada 2–3 días | Gratis |
+| **ATS de empresas** | ats-scrapers (+ envolturas de Workday y Teamtailor) | La fuente original, para las empresas que vigilemos | Diaria (Fase 7) | Gratis |
+
+Aparcadas: emails de alerta (#9, #10) y Tecnoempleo (#8). Fuera: Glassdoor, Google Jobs, LinkedIn con sesión y auto-apply.
 
 ## Roadmap
 
@@ -92,30 +131,30 @@ flowchart LR
 | 0b | Estado del arte ✅ | Saber qué existe | `docs/estado-del-arte.md` | — |
 | **1** | **Fuentes** ← *en curso* | Saber de dónde salen las ofertas | Cada fuente candidata probada y marcada como ✅ o ❌. Lista de fuentes v1 cerrada. Campos comunes de una oferta definidos | ver tabla de abajo |
 | 2 | Perfil | El CV convertido en perfil | Fichero de perfil (competencias con evidencia + preferencias) extraído con Claude y **aprobado por Rubén**. Ubicaciones y modalidades son configurables | Claude con salida estructurada (Pydantic); ESCO v1.2.1 + capa propia de skills de IA |
-| 3 | Ingesta | Ofertas guardadas sin duplicados | Un comando llena SQLite con las fuentes v1 (bruto + normalizado). La misma oferta en dos fuentes cuenta una vez. Métricas por fuente. 7 días seguidos sin errores en el Mac | `sqlite-utils`; `tenacity`; EmbeddingGemma-300M (opcional, deduplicación) |
-| 4 | Puntuación | Claude decide qué es top | 30 ofertas etiquetadas por Rubén. Claude coincide en al menos un 80 % (top / no top). Coste diario medido | Claude Haiku con rúbrica (referencias: career-ops, JobSync; JobOps solo lectura) |
-| 5 | Avisos | Llega a Telegram | Aviso inmediato de lo top y resumen semanal, recibidos durante una semana | `python-telegram-bot` |
+| 3 | Ingesta | Ofertas guardadas sin duplicados | Un comando llena SQLite con las fuentes v1 a través de conectores con el mismo contrato (bruto + normalizado). La misma vacante en varias fuentes o consultoras es un solo Puesto. Métricas por fuente. 7 días seguidos sin errores en el Mac | `sqlite-utils`, `tenacity`, `rapidfuzz` + `cleanco`, Healthchecks, Datasette |
+| 4 | Puntuación | Claude decide qué es top | 30 ofertas etiquetadas por Rubén. Claude coincide en al menos un 80 % (top / no top). Coste diario medido | Claude Haiku con rúbrica (patrón de jobchecker); `pydantic-evals` + κ de Cohen |
+| 5 | Avisos | Llega a Telegram | Aviso inmediato de lo top y resumen semanal, recibidos durante una semana | aiogram 3 (modelo: JobNavigator); Apprise |
 | 🎯 | **MVP** | **Radar útil de punta a punta** | | |
 | 6 | Raspberry Pi | Funciona sola | 7 días en la Pi. Alerta si una fuente cae a 0 | timers de systemd o APScheduler; detección de anomalías de volumen |
-| 7 | Empresas | Encaje a nivel empresa | Lista viva de empresas puntuadas. Las mejores se vigilan solas | PDF del PTA, Promálaga/Dealroom; detección de ATS (patrones + CDX de Common Crawl) |
+| 7 | Empresas | Encaje a nivel empresa | Lista viva de empresas puntuadas. Las mejores se vigilan solas | Empresas con ATS en freehire, ficha de LinkedIn, `discover` de maccydee/job-radar, PDF del PTA |
 | 8 | Extras | Bot, candidaturas, mercado | Por definir al llegar | — |
 | 9 | Vivienda | Módulo secundario | Por definir al llegar | — |
 
 ## Fase 1 · Fuentes: pruebas
 
-Estados: ⬜ por probar · 🟡 probada a medias · ✅ aprobada · ❌ descartada.
+Estados: ⬜ por probar · 🟡 probada a medias · ✅ aprobada · ❌ descartada · ⏸️ aparcada · ➡️ movida a otra fase.
 
 | Fuente | Herramienta | Prueba verificable | Estado |
 |---|---|---|---|
 | ATS de empresas | [`ats-scrapers`](https://github.com/kalil0321/ats-scrapers) 0.3.0 (MIT) con `beautifulsoup4`, `html2text` y `aiohttp` | Leer las ofertas de Ebury (Greenhouse EU), Freepik (Teamtailor) y Accenture Málaga (Workday) → `spikes/prueba_ats.py` | ✅ 15-oct-2026, detalle abajo |
 | InfoJobs | Adaptador `infojobs_es` de ats-scrapers + `httpcloak`, con `listing_url` filtrado y `max_pages` bajo | Página 1 sin captcha, filtro respetado, descripción y modalidad rellenas → `spikes/prueba_infojobs.py` | ✅ 15-oct-2026, detalle abajo |
-| Indeed y Glassdoor | [JobSpy](https://github.com/speedyapply/JobSpy) `python-jobspy==1.3.0` (MIT) | Ofertas de la ubicación con descripción y URL directa | 🟡 Indeed bien en el spike; Glassdoor sin probar |
+| Indeed y Glassdoor | [JobSpy](https://github.com/speedyapply/JobSpy) `python-jobspy==1.3.0` (MIT) | Ofertas de la ubicación con descripción y URL directa | ✅ Indeed como fuente secundaria (29 % de exclusivas en Málaga); ❌ Glassdoor fuera |
 | LinkedIn (búsqueda) | **API de LinkedIn de fantastic.jobs vía RapidAPI** (v4, `/active-jb`); plan B: JobSpy con pausas | Ofertas de Málaga y remoto con descripción → `spikes/prueba_linkedin_api.py` | ✅ 16-oct-2026, detalle abajo |
 | **freehire (agregador)** | API pública `freehire.me/api/v1` (`/jobs/facets`, `/agent/jobs/search`) | Cobertura de Málaga y de remoto, fuentes, completitud → `spikes/prueba_freehire.py` | ✅ 16-oct-2026, detalle abajo |
-| Remoto con elegibilidad | **API pública de [freehire](https://github.com/strelov1/freehire)** (agrega InfoJobs, Manfred, Get on Board, Himalayas, RemoteOK, Remotive…); adaptadores de ats-scrapers; API de Himalayas (`country=Spain`) | Ofertas remotas que admiten España, con descripción; medir cobertura y frescura frente a las fuentes directas | ⬜ |
-| ATS europeos y detección | Adaptadores de [maccydee/job-radar](https://github.com/maccydee/job-radar) (Personio, Teamtailor, Recruitee, Workable) + su `discover` + dataset de 17.814 boards | Resolver el ATS de una lista corta de empresas de Málaga | ⬜ |
-| Tecnoempleo | RSS (solo últimas 80) o búsqueda a baja frecuencia, **solo con código Python** (su robots.txt bloquea agentes LLM) | Ofertas filtradas por ubicación y tecnología | 🟡 RSS sin filtros en el spike |
-| Emails de alerta (LinkedIn) | Por buscar: parsers existentes de alertas | Extraer ofertas de un email real | ⬜ |
+| Remoto con elegibilidad | **API pública de [freehire](https://github.com/strelov1/freehire)** (agrega InfoJobs, Manfred, Get on Board, Himalayas, RemoteOK, Remotive…); adaptadores de ats-scrapers; API de Himalayas (`country=Spain`) | Ofertas remotas que admiten España, con descripción; medir cobertura y frescura frente a las fuentes directas | ✅ Cubierto por freehire + LinkedIn; la elegibilidad desde España se decide al puntuar |
+| ATS europeos y detección | Adaptadores de [maccydee/job-radar](https://github.com/maccydee/job-radar) (Personio, Teamtailor, Recruitee, Workable) + su `discover` + dataset de 17.814 boards | Resolver el ATS de una lista corta de empresas de Málaga | ➡️ Pasa a la Fase 7 (#25) |
+| Tecnoempleo | RSS (solo últimas 80) o búsqueda a baja frecuencia, **solo con código Python** (su robots.txt bloquea agentes LLM) | Ofertas filtradas por ubicación y tecnología | ⏸️ Aparcado (#8) |
+| Emails de alerta (LinkedIn) | Por buscar: parsers existentes de alertas | Extraer ofertas de un email real | ⏸️ Aparcado (#9, #10): LinkedIn e InfoJobs llegan directos |
 
 **Detalle de ATS.**
 - Ebury: 149 ofertas con descripción en menos de 1 s.

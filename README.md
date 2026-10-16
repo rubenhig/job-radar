@@ -9,7 +9,7 @@ Puntúa empresas y ofertas con Claude y avisa por Telegram solo de lo que merece
 
 Pensado para correr en una Raspberry Pi 5. Primer caso de uso: un AI/LLM Engineer que busca trabajo en Málaga o en remoto desde España.
 
-> **Estado:** fase 1 (fuentes). Roadmap en el [tablero del proyecto](https://github.com/users/rubenhig/projects/1) y en [Milestones](../../milestones) (una por fase). Mapa completo en [`docs/arquitectura.md`](docs/arquitectura.md).
+> **Estado:** fase 1 (fuentes). Roadmap en el [tablero del proyecto](https://github.com/users/rubenhig/projects/1) y en [Milestones](../../milestones) (una por fase). Arquitectura en [`docs/arquitectura.md`](docs/arquitectura.md); entidades y conectores de fuentes en [`docs/modelo.md`](docs/modelo.md).
 
 ```mermaid
 flowchart LR
