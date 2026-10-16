@@ -1,0 +1,41 @@
+# Preferencias del candidato (plantilla).
+# Copia este fichero a data/perfil/preferencias.yaml y ajústalo: data/ no sube al repo.
+version: 1
+
+# Dónde se acepta trabajar en persona.
+ubicaciones:
+  - ciudad: Málaga
+    pais: ES
+    modalidades: [presencial, hibrido]
+
+# Remoto: desde qué país y para qué empresas.
+remoto:
+  acepta: true
+  desde_pais: ES
+  empresa_local: true        # empresa española
+  empresa_extranjera: true   # empresa de fuera que contrate en España
+
+roles:
+  principales:
+    - AI Engineer
+    - LLM Engineer
+    - Agentes de IA en producción
+  secundarios:
+    - Software Engineer      # puntúa más si el puesto tiene componente de IA
+  excluir: []
+
+# Si un puesto pide más nivel: "marcar" (avisa igual, con la advertencia) o "excluir".
+idiomas:
+  ingles:
+    nivel: B2
+    efecto: marcar
+
+# Se guardan y se muestran, pero no filtran.
+salario:
+  filtra: false
+tipo_empresa:
+  filtra: false
+
+avisos:
+  inmediato_desde: 85   # puntuación (0-100) para avisar al momento; el resto va al resumen
+  resumen: semanal
