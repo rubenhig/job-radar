@@ -96,3 +96,45 @@ def test_fixtures_reales_sin_datos_personales(fuente, personales):
     items = json.loads((FIXTURES / f"{fuente}.json").read_text())
     assert len(items) >= 3
     assert not any(c in i for i in items for c in personales)
+
+
+class ConectorDePrueba(ConectorFalso):
+    def __init__(self, items, fallar_en=None):
+        self.items, self.fallar_en = items, fallar_en
+
+    def traer(self, busqueda):
+        for n, item in enumerate(self.items):
+            if n == self.fallar_en:
+                raise ConnectionError("se cayó la fuente")
+            yield Bruto.de(item["id"], item, self.personales)
+
+    def normalizar(self, p):
+        return Oferta(fuente_id="falsa", id_externo=str(p["id"]), titulo=p["title"])
+
+
+@pytest.fixture
+def db_falsa(tmp_path):
+    db = almacen.abrir(tmp_path / "x.db")
+    almacen.registrar_fuente(db, "falsa", "portal", "falsa/1")
+    return db
+
+
+def test_ingesta_registra_metricas_y_errores_de_normalizacion(db_falsa):
+    from job_radar import ingesta
+    busqueda = reg.Busqueda("falsa:x", "falsa", {}, 24)
+    items = [{"id": 1, "title": "AI Engineer", "email": "x@y.z"}, {"id": 2, "title": ""}]
+    e = ingesta.ejecutar(db_falsa, ConectorDePrueba(items), busqueda)
+    x = db_falsa["ejecucion"].get(e)
+    assert (x["estado"], x["recibidos"], x["nuevos"], x["errores_norm"]) == ("parcial", 2, 1, 1)
+    assert db_falsa["bruto"].count == 2  # el que no se entiende también se guarda, para reprocesar
+    assert "x@y.z" not in json.dumps([r["payload"] for r in db_falsa["bruto"].rows])
+    e = ingesta.ejecutar(db_falsa, ConectorDePrueba(items[:1]), busqueda)
+    assert db_falsa["ejecucion"].get(e)["actualizados"] == 1
+
+
+def test_ingesta_sobrevive_a_una_fuente_caida(db_falsa):
+    from job_radar import ingesta
+    e = ingesta.ejecutar(db_falsa, ConectorDePrueba([{"id": 1, "title": "a"}, {"id": 2, "title": "b"}], fallar_en=1),
+                         reg.Busqueda("falsa:x", "falsa", {}, 24))
+    x = db_falsa["ejecucion"].get(e)
+    assert x["estado"] == "parcial" and x["nuevos"] == 1 and "se cayó" in x["error"]

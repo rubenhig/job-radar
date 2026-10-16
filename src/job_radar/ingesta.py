@@ -1,0 +1,44 @@
+"""Ingesta: lanza una búsqueda de una fuente y lo deja todo trazado en el almacén.
+
+Por cada búsqueda: una Ejecución; por cada respuesta, su Bruto (inmutable) y,
+si se entiende, su Oferta. Un bruto que no se puede normalizar no para la
+ejecución: se cuenta como error de normalización y se reprocesa más adelante.
+"""
+
+import logging
+import traceback
+
+from job_radar import almacen
+from job_radar.fuentes.base import Busqueda, Conector
+
+log = logging.getLogger(__name__)
+
+
+def ejecutar(db, conector: Conector, busqueda: Busqueda) -> int:
+    """Devuelve el id de la Ejecución. No lanza: un fallo de la fuente queda registrado en ella."""
+    # Se guarda la búsqueda tal como se lanza: la ejecución apunta a sus parámetros exactos.
+    almacen.guardar_busqueda(db, busqueda.id, busqueda.fuente, busqueda.parametros, busqueda.frecuencia_h)
+    ejecucion = almacen.iniciar_ejecucion(db, conector.fuente, conector.version, busqueda.id)
+    m = {"recibidos": 0, "nuevos": 0, "actualizados": 0, "errores_norm": 0}
+    estado, error = "ok", None
+    try:
+        for bruto in conector.traer(busqueda):
+            m["recibidos"] += 1
+            bruto_id, _ = almacen.guardar_bruto(db, ejecucion, conector.fuente, bruto.id_externo,
+                                                bruto.payload, bruto.eliminados)
+            try:
+                oferta = conector.normalizar(bruto.payload)
+            except Exception as e:  # noqa: BLE001 — el bruto queda guardado para reprocesar
+                m["errores_norm"] += 1
+                log.warning("%s: no se pudo normalizar %s: %s", conector.fuente, bruto.id_externo, e)
+                continue
+            _, nueva = almacen.guardar_oferta(db, oferta.fila(), bruto_id, conector.version)
+            m["nuevos" if nueva else "actualizados"] += 1
+    except Exception as e:  # noqa: BLE001
+        estado = "parcial" if m["recibidos"] else "error"
+        error = "".join(traceback.format_exception_only(e)).strip()[:2000]
+        log.error("%s: %s", busqueda.id, error)
+    if estado == "ok" and m["errores_norm"]:
+        estado = "parcial"
+    almacen.cerrar_ejecucion(db, ejecucion, estado, error=error, cuota=conector.cuota, **m)
+    return ejecucion
