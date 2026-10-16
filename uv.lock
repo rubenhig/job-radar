@@ -458,6 +458,15 @@ wheels = [
 ]
 
 [[package]]
+name = "cleanco"
+version = "2.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e9/e1/0b7b567c915ef1d619713b0caee14041536814767bad0c30b5e6542a40c9/cleanco-2.3.tar.gz", hash = "sha256:26b899b2be871be288408205686c5a1dd5f3ab085b709d041a77f3e3049d2961", size = 12311, upload-time = "2024-05-15T16:18:19.314Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f8/4e/e4a24eec01fbfda0df23582bc9be5d8c32b324d79481edf6d1ff52b03733/cleanco-2.3-py3-none-any.whl", hash = "sha256:7ab4672cdfdabe2375a608686da86005b33df6f347ebf7849c9d0e2651f27e01", size = 11139, upload-time = "2024-05-15T16:18:18.032Z" },
+]
+
+[[package]]
 name = "click"
 version = "8.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -714,6 +723,7 @@ dependencies = [
     { name = "aiohttp" },
     { name = "ats-scrapers" },
     { name = "beautifulsoup4" },
+    { name = "cleanco" },
     { name = "feedparser" },
     { name = "html2text" },
     { name = "httpcloak" },
@@ -737,6 +747,7 @@ requires-dist = [
     { name = "aiohttp", specifier = ">=3.14.5" },
     { name = "ats-scrapers", specifier = ">=0.3.0" },
     { name = "beautifulsoup4", specifier = ">=4.15.0" },
+    { name = "cleanco", specifier = ">=2.3" },
     { name = "feedparser", specifier = ">=6.0.14" },
     { name = "html2text", specifier = ">=2025.4.15" },
     { name = "httpcloak", specifier = ">=1.7.3" },
