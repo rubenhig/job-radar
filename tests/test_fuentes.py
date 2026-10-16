@@ -146,3 +146,10 @@ def test_ingesta_registra_completitud_por_campo(db_falsa):
                          reg.Busqueda("falsa:x", "falsa", {}, 24))
     c = json.loads(db_falsa["ejecucion"].get(e)["completitud"])
     assert c["titulo"] == 100 and c["descripcion"] == 0 and "fuente_id" not in c
+
+
+def test_frecuencia_distinta_en_remoto(prefs):
+    r = reg.Registro.model_validate({"fuentes": {"falsa": {
+        "tipo": "portal", "conector": "falsa/1", "acceso": "-", "coste": "-", "terminos": "-",
+        "frecuencia_h": 24, "frecuencia_remoto_h": 168, "plan_b": ["otra"]}}})
+    assert [b.frecuencia_h for b in reg.busquedas(prefs, r, {"falsa": ConectorFalso()})] == [24, 168]

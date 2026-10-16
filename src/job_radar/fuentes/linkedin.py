@@ -52,7 +52,8 @@ def _primero(valores: list | None, mapa: dict) -> Any:
 
 class _LinkedIn:
     fuente = "linkedin"
-    personales = ("ai_hiring_manager_name", "ai_hiring_manager_email_address")
+    personales = ("ai_hiring_manager_name", "ai_hiring_manager_email_address",
+                  "recruiter_name", "recruiter_title", "recruiter_url")
     # Datos de la empresa que cambian con el tiempo sin que cambie la oferta.
     volatiles = ("org_linkedin_followers", "org_linkedin_headcount")
 
@@ -156,6 +157,81 @@ class LinkedInRapidAPI(_LinkedIn):
 @reintentar
 def _get(cli: httpx.Client, url: str, parametros: dict) -> httpx.Response:
     r = cli.get(url, params=parametros)
+    if r.status_code >= 500:
+        r.raise_for_status()
+    return r
+
+
+class LinkedInApify(_LinkedIn):
+    """El actor de fantastic.jobs en Apify: misma base de datos y mismos campos que la API de RapidAPI.
+
+    Precio en el plan gratuito de Apify (comprobado el 16-oct-2026 en su API): 0,005 $ por
+    oferta y 0,01 $ por ejecución, con un tope duro de 5 $ al mes. Cada ejecución se limita
+    a lo que queda del presupuesto (`maxTotalChargeUsd`), así que nunca se pasa.
+    """
+
+    version = "linkedin-fantastic-apify/1"
+    ACTOR = "fantastic-jobs~advanced-linkedin-job-search-api"
+    API = "https://api.apify.com/v2"
+    PRECIO_OFERTA = 0.005
+    PRECIO_EJECUCION = 0.01
+    PRESUPUESTO_MES = 4.8   # el plan gratuito corta en 5 $
+    TOPE_EJECUCION = 1.0
+    LIMITE = {"ciudad": 60, "remoto": 250}  # ofertas por ejecución
+
+    def __init__(self, cliente: httpx.Client | None = None):
+        self.cliente = cliente
+        self.cuota = None
+        self.coste_usd = None
+
+    def parametros(self, i: Intencion) -> list[dict[str, Any]]:
+        pais = NOMBRE_PAIS.get(i.pais)
+        if pais is None:
+            return []
+        if i.remota:
+            return [{"titleSearch": list(i.terminos), "locationSearch": [pais], "removeAgency": True,
+                     "aiWorkArrangementFilter": ["Remote OK", "Remote Solely"], "limit": self.LIMITE["remoto"]}]
+        sin_acento = i.ciudad.translate(str.maketrans("áéíóúÁÉÍÓÚ", "aeiouAEIOU"))
+        return [{"titleSearch": list(i.terminos), "locationSearch": sorted({i.ciudad, sin_acento}),
+                 "limit": self.LIMITE["ciudad"]}]
+
+    def traer(self, busqueda: Busqueda) -> Iterator[Bruto]:
+        cargar_env()
+        token = os.environ.get("APIFY_TOKEN")
+        if self.cliente is None and not token:
+            raise ErrorFuente("LinkedIn: falta APIFY_TOKEN en .env")
+        cli = self.cliente or httpx.Client(headers={"Authorization": f"Bearer {token}"}, timeout=330)
+        try:
+            gastado = _json(_get(cli, f"{self.API}/users/me/limits", {}))["data"]["current"]["monthlyUsageUsd"]
+            queda = round(self.PRESUPUESTO_MES - gastado, 4)
+            self.cuota = {"usd-limit": str(self.PRESUPUESTO_MES), "usd-remaining": str(max(queda, 0))}
+            if queda < self.PRECIO_EJECUCION + 10 * self.PRECIO_OFERTA:
+                raise ErrorFuente(f"LinkedIn (Apify): presupuesto del mes agotado ({gastado:.2f} $ gastados)")
+            entrada = {**busqueda.parametros, "timeRange": ventana(busqueda.frecuencia_h), "descriptionType": "text"}
+            r = _post(cli, f"{self.API}/acts/{self.ACTOR}/runs", entrada,
+                      {"waitForFinish": 300, "maxTotalChargeUsd": min(self.TOPE_EJECUCION, queda)})
+            ejecucion = _json(r)["data"]
+            if ejecucion["status"] != "SUCCEEDED":
+                raise ErrorFuente(f"LinkedIn (Apify): la ejecución {ejecucion['id']} acabó en {ejecucion['status']}")
+            trabajos = _json(_get(cli, f"{self.API}/datasets/{ejecucion['defaultDatasetId']}/items", {}))
+            # Apify factura los eventos con retraso: el coste se calcula con sus precios.
+            self.coste_usd = round(self.PRECIO_EJECUCION + self.PRECIO_OFERTA * len(trabajos), 4)
+            for j in trabajos:
+                yield Bruto.de(j["id"], j, self.personales, self.volatiles)
+        finally:
+            if self.cliente is None:
+                cli.close()
+
+
+def _json(r: httpx.Response) -> Any:
+    if r.status_code >= 400:
+        raise ErrorFuente(f"Apify: HTTP {r.status_code}: {r.text[:300]}")
+    return r.json()
+
+
+@reintentar
+def _post(cli: httpx.Client, url: str, cuerpo: dict, parametros: dict) -> httpx.Response:
+    r = cli.post(url, json=cuerpo, params=parametros)
     if r.status_code >= 500:
         r.raise_for_status()
     return r

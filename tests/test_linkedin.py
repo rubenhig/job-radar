@@ -73,3 +73,53 @@ def test_traer_error_http_conserva_la_cuota():
     with pytest.raises(ErrorFuente):
         list(c.traer(Busqueda("linkedin:x", "linkedin", {}, 24)))
     assert c.cuota["x-ratelimit-requests-remaining"] == "0"
+
+
+from job_radar.fuentes.linkedin import LinkedInApify  # noqa: E402
+
+
+def apify(gastado=0.0, estado="SUCCEEDED"):
+    pedidos = []
+
+    def manejar(req):
+        pedidos.append(req)
+        if req.url.path.endswith("/users/me/limits"):
+            return httpx.Response(200, json={"data": {"current": {"monthlyUsageUsd": gastado}}})
+        if req.url.path.endswith("/runs"):
+            return httpx.Response(201, json={"data": {"id": "r1", "status": estado, "defaultDatasetId": "d1"}})
+        trabajo = dict(FIXTURE[0], recruiter_name="Ana Pérez", recruiter_url="https://linkedin.com/in/ana")
+        return httpx.Response(200, json=[trabajo, FIXTURE[1]])
+
+    return httpx.Client(transport=httpx.MockTransport(manejar)), pedidos
+
+
+def test_apify_parametros():
+    c = LinkedInApify()
+    [local] = c.parametros(Intencion("malaga-es", ("AI", "machine learning"), "ES", (), ciudad="Málaga"))
+    assert local["titleSearch"] == ["AI", "machine learning"] and local["locationSearch"] == ["Malaga", "Málaga"]
+    [remoto] = c.parametros(Intencion("remoto-es", ("LLM",), "ES", (Modalidad.REMOTO,)))
+    assert remoto["locationSearch"] == ["Spain"] and remoto["removeAgency"] is True
+
+
+def test_apify_traer_con_presupuesto_coste_y_sin_datos_del_reclutador():
+    cli, pedidos = apify(gastado=1.0)
+    c = LinkedInApify(cli)
+    brutos = list(c.traer(Busqueda("linkedin:malaga-es", "linkedin", {"locationSearch": ["Málaga"]}, 24)))
+    run = next(p for p in pedidos if p.url.path.endswith("/runs"))
+    assert json.loads(run.content)["timeRange"] == "24h" and run.url.params["maxTotalChargeUsd"] == "1.0"
+    assert "Ana Pérez" not in json.dumps([b.payload for b in brutos]) and "recruiter_name" in brutos[0].eliminados
+    assert c.coste_usd == 0.02 and c.cuota == {"usd-limit": "4.8", "usd-remaining": "3.8"}
+    assert c.normalizar(brutos[0].payload).titulo == FIXTURE[0]["title"]
+
+
+def test_apify_no_gasta_sin_presupuesto():
+    cli, pedidos = apify(gastado=4.79)
+    with pytest.raises(ErrorFuente, match="presupuesto"):
+        list(LinkedInApify(cli).traer(Busqueda("linkedin:x", "linkedin", {}, 24)))
+    assert not any(p.url.path.endswith("/runs") for p in pedidos)
+
+
+def test_apify_ejecucion_fallida():
+    cli, _ = apify(estado="FAILED")
+    with pytest.raises(ErrorFuente, match="FAILED"):
+        list(LinkedInApify(cli).traer(Busqueda("linkedin:x", "linkedin", {}, 24)))
