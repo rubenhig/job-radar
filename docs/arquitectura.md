@@ -22,56 +22,45 @@ Principios:
 
 ```mermaid
 flowchart TB
-    subgraph EXT["Fuentes externas · no las controlamos"]
+    subgraph EXT["① Fuentes externas · no las controlamos"]
         direction LR
-        FH[freehire]
-        IJ[InfoJobs]
-        LI["LinkedIn<br/>(fantastic.jobs)"]
-        IN["Indeed<br/>(JobSpy)"]
-        AT[ATS de empresas]
+        FH[freehire] ~~~ IJ[InfoJobs] ~~~ LI["LinkedIn<br/>(fantastic.jobs)"] ~~~ IN["Indeed<br/>(JobSpy)"] ~~~ AT["ATS de<br/>empresas"]
     end
 
-    subgraph CON["Conectores · uno por fuente, mismo contrato"]
+    subgraph CON["② Conectores · uno por fuente, mismo contrato"]
         direction LR
-        C["traer() → Bruto<br/>normalizar() → Oferta"]
+        TR["traer()<br/>→ Bruto"] ~~~ NZ["normalizar()<br/>→ Oferta"]
     end
 
-    REG[["Registro de fuentes<br/>fuentes.yaml: herramienta,<br/>coste, términos, plan B"]]
+    REG[["Registro de fuentes<br/>coste · términos · plan B"]]
+    MON["Monitor de fuentes<br/>volumen · completitud<br/>errores · cuota"]
 
-    subgraph ING["Ingesta"]
+    subgraph ING["③ Ingesta"]
         direction LR
-        BR[(Bruto<br/>inmutable)] --> NO[Oferta<br/>normalizada] --> PU["Puesto<br/>(agrupa fuentes<br/>y consultoras)"] --> EM[Empresa<br/>resuelta]
-    end
-
-    MON["Monitor de fuentes<br/>ejecuciones · volumen · completitud<br/>errores · frescura · cuota"]
-
-    CV[CV] --> PER["Perfil<br/>competencias con evidencia<br/>+ preferencias"]
-
-    subgraph INT["Inteligencia"]
-        direction LR
-        PE["Encaje de empresa"]
-        PO["Encaje de puesto<br/>filtros duros + Claude<br/>con evidencias"]
-        PE -. prior .-> PO
-    end
-
-    subgraph SAL["Salidas"]
-        direction LR
-        AV["Telegram<br/>aviso top · resumen semanal"] --> FB["Feedback 👍/👎"]
+        BR[(Bruto<br/>inmutable)] --> NO[Oferta] --> PU["Puesto<br/>(misma vacante en<br/>varias fuentes)"] --> EM[Empresa]
     end
 
     DB[(SQLite)]
 
-    EXT --> CON --> ING
+    subgraph INT["④ Inteligencia"]
+        direction LR
+        PER["Perfil<br/>(CV + preferencias)"] --> PE[Encaje de empresa] --> PO["Encaje de puesto<br/>filtros duros + Claude"]
+    end
+
+    subgraph SAL["⑤ Salidas"]
+        direction LR
+        AV["Telegram<br/>aviso top · resumen"] --> FB["Feedback 👍/👎"]
+    end
+
     REG -. configura .-> CON
+    EXT --> CON --> ING --> DB --> INT --> SAL
     CON -. métricas .-> MON
-    ING --> DB
-    DB --> INT
-    PER --> INT
-    INT --> SAL
-    FB -. etiquetas .-> INT
-    MON -. alertas .-> AV
-    PE -. empresas a vigilar .-> AT
+    MON -. alertas .-> SAL
 ```
+
+Dos bucles que no se dibujan para que el diagrama se lea de arriba abajo:
+- **Feedback → Inteligencia:** tus 👍/👎 son las etiquetas con las que se mide y ajusta la puntuación.
+- **Encaje de empresa → Registro de fuentes:** las empresas que más encajan pasan a vigilarse, y su ATS se añade como búsqueda de la fuente `ats`.
 
 Transversal a todo: **planificador** (systemd timers), **configuración** (perfil y fuentes), **tope de gasto en LLM** y **panel** (Datasette sobre el SQLite).
 
