@@ -1,0 +1,377 @@
+import { useEffect, useState } from 'react'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { Link, getRouteApi } from '@tanstack/react-router'
+import type { PuestoResumen } from '@/api'
+import { ChevronLeft, ChevronRight, Filter, X } from 'lucide-react'
+import { puestosListarOptions } from '@/api/@tanstack/react-query.gen'
+import { FUENTES, MODALIDADES, haceCuanto, lugar, salario } from '@/lib/formato'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Cabecera } from '@/components/layout/cabecera'
+import { Main } from '@/components/layout/main'
+import { InsigniaEtiqueta } from './componentes/etiqueta'
+import { Vias } from './componentes/vias'
+
+const ruta = getRouteApi('/_app/puestos/')
+const POR_PAGINA = 25
+
+const ETIQUETAS = {
+  todas: 'Todas',
+  sin: 'Sin etiquetar',
+  top: 'Top',
+  no_top: 'No top',
+} as const
+const ORDENES = {
+  recientes: 'Más recientes',
+  publicadas: 'Fecha de publicación',
+  vias: 'Más vías',
+} as const
+
+export function Puestos() {
+  const busqueda = ruta.useSearch()
+  const navegar = ruta.useNavigate()
+  const cambiar = (cambios: Partial<typeof busqueda>) =>
+    navegar({
+      search: (prev) => ({ ...prev, pagina: 1, ...cambios }),
+      replace: true,
+    })
+
+  // El texto se busca al dejar de escribir.
+  const [texto, setTexto] = useState(busqueda.q ?? '')
+  useEffect(() => {
+    const t = setTimeout(
+      () => texto !== (busqueda.q ?? '') && cambiar({ q: texto || undefined }),
+      350
+    )
+    return () => clearTimeout(t)
+  })
+
+  const pagina = busqueda.pagina ?? 1
+  const { data, isLoading } = useQuery({
+    ...puestosListarOptions({
+      query: {
+        q: busqueda.q,
+        fuente: busqueda.fuente,
+        modalidad: busqueda.modalidad,
+        etiqueta: busqueda.etiqueta === 'todas' ? undefined : busqueda.etiqueta,
+        dias: busqueda.dias,
+        orden: busqueda.orden,
+        limite: POR_PAGINA,
+        desde: (pagina - 1) * POR_PAGINA,
+      },
+    }),
+    placeholderData: keepPreviousData,
+  })
+  const paginas = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA))
+  const filtrado = Boolean(
+    busqueda.q ||
+    busqueda.fuente?.length ||
+    busqueda.modalidad?.length ||
+    (busqueda.etiqueta && busqueda.etiqueta !== 'todas') ||
+    busqueda.dias
+  )
+
+  return (
+    <>
+      <Cabecera />
+      <Main className='flex flex-1 flex-col gap-4'>
+        <div className='flex flex-wrap items-end justify-between gap-2'>
+          <div>
+            <h2 className='text-2xl font-bold tracking-tight'>Puestos</h2>
+            <p className='text-muted-foreground'>
+              {data ? `${data.total} puestos` : 'Cargando…'}: la misma vacante,
+              venga de la fuente o la consultora que venga.
+            </p>
+          </div>
+        </div>
+
+        <div className='flex flex-wrap items-center gap-2'>
+          <Input
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            placeholder='Buscar en título, empresa o descripción…'
+            className='h-9 w-full sm:w-72'
+          />
+          <Multiple
+            titulo='Fuente'
+            opciones={FUENTES}
+            valores={busqueda.fuente ?? []}
+            onChange={(v) => cambiar({ fuente: v.length ? v : undefined })}
+          />
+          <Multiple
+            titulo='Modalidad'
+            opciones={MODALIDADES}
+            valores={busqueda.modalidad ?? []}
+            onChange={(v) => cambiar({ modalidad: v.length ? v : undefined })}
+          />
+          <Select
+            value={busqueda.etiqueta ?? 'todas'}
+            onValueChange={(v) =>
+              cambiar({ etiqueta: v as keyof typeof ETIQUETAS })
+            }
+          >
+            <SelectTrigger className='h-9 w-36'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(ETIQUETAS).map(([k, v]) => (
+                <SelectItem key={k} value={k}>
+                  {v}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={String(busqueda.dias ?? 0)}
+            onValueChange={(v) => cambiar({ dias: Number(v) || undefined })}
+          >
+            <SelectTrigger className='h-9 w-40'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='0'>Cualquier fecha</SelectItem>
+              <SelectItem value='1'>Últimas 24 h</SelectItem>
+              <SelectItem value='7'>Última semana</SelectItem>
+              <SelectItem value='30'>Último mes</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={busqueda.orden ?? 'recientes'}
+            onValueChange={(v) => cambiar({ orden: v as keyof typeof ORDENES })}
+          >
+            <SelectTrigger className='h-9 w-44'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(ORDENES).map(([k, v]) => (
+                <SelectItem key={k} value={k}>
+                  {v}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {filtrado && (
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={() => {
+                setTexto('')
+                navegar({ search: {} })
+              }}
+            >
+              Quitar filtros <X />
+            </Button>
+          )}
+        </div>
+
+        {/* Ordenador: tabla. Móvil: tarjetas. */}
+        <div className='hidden overflow-hidden rounded-md border md:block'>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Puesto</TableHead>
+                <TableHead>Lugar</TableHead>
+                <TableHead>Salario</TableHead>
+                <TableHead>Vías</TableHead>
+                <TableHead className='text-end'>Visto</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading &&
+                [...Array(8)].map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell colSpan={5}>
+                      <Skeleton className='h-8' />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              {data?.items.map((p) => (
+                <Fila key={p.id} puesto={p} />
+              ))}
+              {data && !data.items.length && (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className='h-24 text-center text-muted-foreground'
+                  >
+                    Ningún puesto con estos filtros.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <div className='flex flex-col gap-2 md:hidden'>
+          {isLoading &&
+            [...Array(5)].map((_, i) => <Skeleton key={i} className='h-24' />)}
+          {data?.items.map((p) => (
+            <Tarjeta key={p.id} puesto={p} />
+          ))}
+        </div>
+
+        <div className='flex items-center justify-between gap-2'>
+          <span className='text-sm text-muted-foreground'>
+            Página {pagina} de {paginas}
+          </span>
+          <div className='flex gap-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              disabled={pagina <= 1}
+              onClick={() =>
+                navegar({ search: (prev) => ({ ...prev, pagina: pagina - 1 }) })
+              }
+            >
+              <ChevronLeft /> Anterior
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              disabled={pagina >= paginas}
+              onClick={() =>
+                navegar({ search: (prev) => ({ ...prev, pagina: pagina + 1 }) })
+              }
+            >
+              Siguiente <ChevronRight />
+            </Button>
+          </div>
+        </div>
+      </Main>
+    </>
+  )
+}
+
+function Multiple({
+  titulo,
+  opciones,
+  valores,
+  onChange,
+}: {
+  titulo: string
+  opciones: Record<string, string>
+  valores: string[]
+  onChange: (v: string[]) => void
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant='outline' size='sm' className='h-9 border-dashed'>
+          <Filter /> {titulo}
+          {valores.length > 0 && (
+            <Badge variant='secondary' className='rounded-sm px-1'>
+              {valores.length}
+            </Badge>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align='start'>
+        <DropdownMenuLabel>{titulo}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {Object.entries(opciones).map(([k, v]) => (
+          <DropdownMenuCheckboxItem
+            key={k}
+            checked={valores.includes(k)}
+            onSelect={(e) => e.preventDefault()}
+            onCheckedChange={(c) =>
+              onChange(c ? [...valores, k] : valores.filter((x) => x !== k))
+            }
+          >
+            {v}
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function Fila({ puesto: p }: { puesto: PuestoResumen }) {
+  return (
+    <TableRow className='relative'>
+      <TableCell className='max-w-md whitespace-normal'>
+        <Link
+          to='/puestos/$puestoId'
+          params={{ puestoId: String(p.id) }}
+          className='font-medium after:absolute after:inset-0 hover:underline'
+        >
+          {p.titulo}
+        </Link>
+        <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+          {p.empresa ?? '—'} <InsigniaEtiqueta etiqueta={p.etiqueta} />
+        </div>
+      </TableCell>
+      <TableCell className='text-sm whitespace-normal'>
+        {lugar(p.ciudad, p.pais)}
+        {p.modalidad && (
+          <div className='text-muted-foreground'>
+            {MODALIDADES[p.modalidad]}
+          </div>
+        )}
+      </TableCell>
+      <TableCell className='text-sm whitespace-nowrap'>
+        {salario(p.salario) ?? '—'}
+      </TableCell>
+      <TableCell>
+        <Vias vias={p.vias} />
+      </TableCell>
+      <TableCell className='text-end text-sm whitespace-nowrap text-muted-foreground'>
+        {haceCuanto(p.vista_primera)}
+      </TableCell>
+    </TableRow>
+  )
+}
+
+function Tarjeta({ puesto: p }: { puesto: PuestoResumen }) {
+  return (
+    <Link
+      to='/puestos/$puestoId'
+      params={{ puestoId: String(p.id) }}
+      className='flex flex-col gap-2 rounded-lg border p-3 active:bg-accent'
+    >
+      <div className='flex items-start justify-between gap-2'>
+        <span className='leading-snug font-medium'>{p.titulo}</span>
+        <InsigniaEtiqueta etiqueta={p.etiqueta} />
+      </div>
+      <div className='text-sm text-muted-foreground'>
+        {[
+          p.empresa,
+          lugar(p.ciudad, p.pais),
+          p.modalidad && MODALIDADES[p.modalidad],
+          salario(p.salario),
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+      </div>
+      <div className='flex items-center justify-between'>
+        <Vias vias={p.vias} />
+        <span className='text-xs text-muted-foreground'>
+          {haceCuanto(p.vista_primera)}
+        </span>
+      </div>
+    </Link>
+  )
+}

@@ -1,0 +1,25 @@
+# job-radar con Docker Compose: igual en el Mac que en la Raspberry Pi.
+#   docker compose up -d --build      → http://127.0.0.1:8000
+# En la Pi, por delante: `tailscale serve --bg 8000` (HTTPS en la red privada).
+#
+# Ojo en el Mac: SQLite en modo WAL comparte memoria entre procesos, y eso no
+# funciona entre el Mac y la máquina virtual de Docker Desktop. No mezclar
+# procesos dentro y fuera de Docker escribiendo en la misma base: o todo dentro
+# (api + worker) o todo fuera (uv). En la Pi todo va dentro.
+name: job-radar
+
+services:
+  api:
+    build: .
+    image: job-radar
+    ports:
+      - "127.0.0.1:8000:8000"   # solo local: el acceso desde fuera lo da Tailscale
+    volumes:
+      - ./data:/app/data        # SQLite, perfil y logs: nunca dentro de la imagen
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+
+  # worker: la cola de tareas (huey) y la ingesta programada. Llega al cerrar la
+  # semana de prueba de la Fase 3; hasta entonces la ingesta sigue en launchd.

@@ -16,3 +16,4 @@ data/
 # Investigación en bruto (el informe final está en docs/estado-del-arte.md)
 research_notes/
 reports/
+.playwright-mcp/

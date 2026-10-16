@@ -1,0 +1,1638 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "job-radar",
+  "version": "0.1.0"
+ },
+ "paths": {
+  "/api/puestos": {
+   "get": {
+    "tags": [
+     "puestos"
+    ],
+    "summary": "Listar",
+    "operationId": "puestos-listar",
+    "parameters": [
+     {
+      "name": "q",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Q"
+      }
+     },
+     {
+      "name": "fuente",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Fuente"
+      }
+     },
+     {
+      "name": "modalidad",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Modalidad"
+      }
+     },
+     {
+      "name": "ciudad",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Ciudad"
+      }
+     },
+     {
+      "name": "etiqueta",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "enum": [
+          "top",
+          "no_top",
+          "sin"
+         ],
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Etiqueta"
+      }
+     },
+     {
+      "name": "dias",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "exclusiveMinimum": 0
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Dias"
+      }
+     },
+     {
+      "name": "orden",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "recientes",
+        "publicadas",
+        "vias"
+       ],
+       "type": "string",
+       "default": "recientes",
+       "title": "Orden"
+      }
+     },
+     {
+      "name": "limite",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "exclusiveMinimum": 0,
+       "default": 50,
+       "title": "Limite"
+      }
+     },
+     {
+      "name": "desde",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Desde"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PaginaPuestos"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/puestos/{puesto_id}": {
+   "get": {
+    "tags": [
+     "puestos"
+    ],
+    "summary": "Ficha",
+    "operationId": "puestos-ficha",
+    "parameters": [
+     {
+      "name": "puesto_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Puesto Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PuestoDetalle"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/puestos/{puesto_id}/etiqueta": {
+   "put": {
+    "tags": [
+     "puestos"
+    ],
+    "summary": "Etiquetar",
+    "operationId": "puestos-etiquetar",
+    "parameters": [
+     {
+      "name": "puesto_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Puesto Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EtiquetaEntrada"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Etiqueta"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "puestos"
+    ],
+    "summary": "Quitar Etiqueta",
+    "operationId": "puestos-quitar_etiqueta",
+    "parameters": [
+     {
+      "name": "puesto_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Puesto Id"
+      }
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/resumen": {
+   "get": {
+    "tags": [
+     "sistema"
+    ],
+    "summary": "Resumen",
+    "operationId": "sistema-resumen",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Resumen"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/fuentes": {
+   "get": {
+    "tags": [
+     "sistema"
+    ],
+    "summary": "Fuentes",
+    "operationId": "sistema-fuentes",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Fuentes"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/perfil": {
+   "get": {
+    "tags": [
+     "perfil"
+    ],
+    "summary": "Perfil",
+    "description": "El perfil extraído del CV (`perfil_cv.yaml`): meta y competencias con sus citas.",
+    "operationId": "perfil-perfil",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "type": "object",
+         "title": "Response Perfil-Perfil"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/preferencias": {
+   "get": {
+    "tags": [
+     "perfil"
+    ],
+    "summary": "Leer Preferencias",
+    "operationId": "perfil-leer_preferencias",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Preferencias"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "perfil"
+    ],
+    "summary": "Guardar Preferencias",
+    "description": "Guarda las preferencias (ya validadas). La versión anterior queda en `preferencias.anterior.yaml`.",
+    "operationId": "perfil-guardar_preferencias",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Preferencias"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Preferencias"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "Alerta": {
+    "properties": {
+     "fuente": {
+      "type": "string",
+      "title": "Fuente"
+     },
+     "senal": {
+      "type": "string",
+      "title": "Senal"
+     },
+     "mensaje": {
+      "type": "string",
+      "title": "Mensaje"
+     }
+    },
+    "type": "object",
+    "required": [
+     "fuente",
+     "senal",
+     "mensaje"
+    ],
+    "title": "Alerta"
+   },
+   "Avisos": {
+    "properties": {
+     "inmediato_desde": {
+      "type": "integer",
+      "maximum": 100.0,
+      "minimum": 0.0,
+      "title": "Inmediato Desde",
+      "description": "Puntuación mínima para avisar al momento",
+      "default": 85
+     },
+     "resumen": {
+      "type": "string",
+      "enum": [
+       "diario",
+       "semanal"
+      ],
+      "title": "Resumen",
+      "default": "semanal"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "Avisos"
+   },
+   "CampoFusionado": {
+    "properties": {
+     "valor": {
+      "title": "Valor"
+     },
+     "oferta_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Oferta Id"
+     },
+     "fuente": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fuente"
+     }
+    },
+    "type": "object",
+    "required": [
+     "valor"
+    ],
+    "title": "CampoFusionado",
+    "description": "Un campo del puesto y de qué oferta sale."
+   },
+   "EstadoFuente": {
+    "properties": {
+     "id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "tipo": {
+      "type": "string",
+      "title": "Tipo"
+     },
+     "conector": {
+      "type": "string",
+      "title": "Conector"
+     },
+     "activa": {
+      "type": "boolean",
+      "title": "Activa"
+     },
+     "ultima_ejecucion": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ultima Ejecucion"
+     },
+     "ultimo_estado": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ultimo Estado"
+     },
+     "recibidas_7d": {
+      "type": "integer",
+      "title": "Recibidas 7D",
+      "default": 0
+     },
+     "nuevas_7d": {
+      "type": "integer",
+      "title": "Nuevas 7D",
+      "default": 0
+     },
+     "oferta_mas_reciente": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Oferta Mas Reciente"
+     },
+     "cuota": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cuota"
+     },
+     "coste_mes_usd": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Coste Mes Usd"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "tipo",
+     "conector",
+     "activa"
+    ],
+    "title": "EstadoFuente"
+   },
+   "Etiqueta": {
+    "properties": {
+     "valor": {
+      "type": "string",
+      "enum": [
+       "top",
+       "no_top"
+      ],
+      "title": "Valor"
+     },
+     "motivo": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Motivo"
+     },
+     "actualizada_en": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actualizada En"
+     }
+    },
+    "type": "object",
+    "required": [
+     "valor"
+    ],
+    "title": "Etiqueta"
+   },
+   "EtiquetaEntrada": {
+    "properties": {
+     "valor": {
+      "type": "string",
+      "enum": [
+       "top",
+       "no_top"
+      ],
+      "title": "Valor"
+     },
+     "motivo": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 1000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Motivo"
+     }
+    },
+    "type": "object",
+    "required": [
+     "valor"
+    ],
+    "title": "EtiquetaEntrada"
+   },
+   "Fuentes": {
+    "properties": {
+     "fuentes": {
+      "items": {
+       "$ref": "#/components/schemas/EstadoFuente"
+      },
+      "type": "array",
+      "title": "Fuentes"
+     },
+     "alertas": {
+      "items": {
+       "$ref": "#/components/schemas/Alerta"
+      },
+      "type": "array",
+      "title": "Alertas"
+     }
+    },
+    "type": "object",
+    "required": [
+     "fuentes",
+     "alertas"
+    ],
+    "title": "Fuentes"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "type": "array",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+   },
+   "Idioma": {
+    "properties": {
+     "nivel": {
+      "type": "string",
+      "enum": [
+       "A1",
+       "A2",
+       "B1",
+       "B2",
+       "C1",
+       "C2",
+       "nativo"
+      ],
+      "title": "Nivel"
+     },
+     "efecto": {
+      "type": "string",
+      "enum": [
+       "marcar",
+       "excluir"
+      ],
+      "title": "Efecto",
+      "description": "Si un puesto pide más nivel: marcarlo o descartarlo",
+      "default": "marcar"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "nivel"
+    ],
+    "title": "Idioma"
+   },
+   "Informativo": {
+    "properties": {
+     "filtra": {
+      "type": "boolean",
+      "const": false,
+      "title": "Filtra",
+      "default": false
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "Informativo",
+    "description": "Datos que se guardan y se muestran, pero no filtran."
+   },
+   "Modalidad": {
+    "type": "string",
+    "enum": [
+     "presencial",
+     "hibrido",
+     "remoto"
+    ],
+    "title": "Modalidad"
+   },
+   "Oferta": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "fuente_id": {
+      "type": "string",
+      "title": "Fuente Id"
+     },
+     "id_externo": {
+      "type": "string",
+      "title": "Id Externo"
+     },
+     "conector": {
+      "type": "string",
+      "title": "Conector"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     },
+     "titulo": {
+      "type": "string",
+      "title": "Titulo"
+     },
+     "empresa": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Empresa"
+     },
+     "ciudad": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ciudad"
+     },
+     "region": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Region"
+     },
+     "pais": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pais"
+     },
+     "modalidad": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Modalidad"
+     },
+     "salario": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Salario"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "descripcion": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Descripcion"
+     },
+     "publicada_en": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Publicada En"
+     },
+     "experiencia": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Experiencia"
+     },
+     "contrato": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Contrato"
+     },
+     "skills": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Skills"
+     },
+     "ingles": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ingles"
+     },
+     "es_agencia": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Es Agencia"
+     },
+     "derivados": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Derivados"
+     },
+     "vista_primera": {
+      "type": "string",
+      "title": "Vista Primera"
+     },
+     "vista_ultima": {
+      "type": "string",
+      "title": "Vista Ultima"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "fuente_id",
+     "id_externo",
+     "conector",
+     "titulo",
+     "vista_primera",
+     "vista_ultima"
+    ],
+    "title": "Oferta"
+   },
+   "PaginaPuestos": {
+    "properties": {
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/PuestoResumen"
+      },
+      "type": "array",
+      "title": "Items"
+     }
+    },
+    "type": "object",
+    "required": [
+     "total",
+     "items"
+    ],
+    "title": "PaginaPuestos"
+   },
+   "Preferencias": {
+    "properties": {
+     "version": {
+      "type": "integer",
+      "title": "Version",
+      "default": 1
+     },
+     "ubicaciones": {
+      "items": {
+       "$ref": "#/components/schemas/Ubicacion"
+      },
+      "type": "array",
+      "title": "Ubicaciones",
+      "default": []
+     },
+     "remoto": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Remoto"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "roles": {
+      "$ref": "#/components/schemas/Roles"
+     },
+     "idiomas": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/Idioma"
+      },
+      "type": "object",
+      "title": "Idiomas",
+      "default": {}
+     },
+     "salario": {
+      "$ref": "#/components/schemas/Informativo",
+      "default": {
+       "filtra": false
+      }
+     },
+     "tipo_empresa": {
+      "$ref": "#/components/schemas/Informativo",
+      "default": {
+       "filtra": false
+      }
+     },
+     "avisos": {
+      "$ref": "#/components/schemas/Avisos",
+      "default": {
+       "inmediato_desde": 85,
+       "resumen": "semanal"
+      }
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "roles"
+    ],
+    "title": "Preferencias"
+   },
+   "PuestoDetalle": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "titulo": {
+      "type": "string",
+      "title": "Titulo"
+     },
+     "empresa": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Empresa"
+     },
+     "ciudad": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ciudad"
+     },
+     "pais": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pais"
+     },
+     "modalidad": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Modalidad"
+     },
+     "salario": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Salario"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "publicada_en": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Publicada En"
+     },
+     "vista_primera": {
+      "type": "string",
+      "title": "Vista Primera"
+     },
+     "vista_ultima": {
+      "type": "string",
+      "title": "Vista Ultima"
+     },
+     "vias": {
+      "items": {
+       "$ref": "#/components/schemas/Via"
+      },
+      "type": "array",
+      "title": "Vias"
+     },
+     "ofertas": {
+      "type": "integer",
+      "title": "Ofertas"
+     },
+     "etiqueta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Etiqueta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "estado": {
+      "type": "string",
+      "title": "Estado"
+     },
+     "fusion": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/CampoFusionado"
+      },
+      "type": "object",
+      "title": "Fusion"
+     },
+     "lista_ofertas": {
+      "items": {
+       "$ref": "#/components/schemas/Oferta"
+      },
+      "type": "array",
+      "title": "Lista Ofertas"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "titulo",
+     "vista_primera",
+     "vista_ultima",
+     "vias",
+     "ofertas",
+     "estado",
+     "fusion",
+     "lista_ofertas"
+    ],
+    "title": "PuestoDetalle"
+   },
+   "PuestoResumen": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "titulo": {
+      "type": "string",
+      "title": "Titulo"
+     },
+     "empresa": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Empresa"
+     },
+     "ciudad": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ciudad"
+     },
+     "pais": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pais"
+     },
+     "modalidad": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Modalidad"
+     },
+     "salario": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Salario"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "publicada_en": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Publicada En"
+     },
+     "vista_primera": {
+      "type": "string",
+      "title": "Vista Primera"
+     },
+     "vista_ultima": {
+      "type": "string",
+      "title": "Vista Ultima"
+     },
+     "vias": {
+      "items": {
+       "$ref": "#/components/schemas/Via"
+      },
+      "type": "array",
+      "title": "Vias"
+     },
+     "ofertas": {
+      "type": "integer",
+      "title": "Ofertas"
+     },
+     "etiqueta": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Etiqueta"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "titulo",
+     "vista_primera",
+     "vista_ultima",
+     "vias",
+     "ofertas"
+    ],
+    "title": "PuestoResumen"
+   },
+   "Remoto": {
+    "properties": {
+     "acepta": {
+      "type": "boolean",
+      "title": "Acepta",
+      "default": true
+     },
+     "desde_pais": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "title": "Desde Pais",
+      "description": "País desde el que se trabajaría"
+     },
+     "empresa_local": {
+      "type": "boolean",
+      "title": "Empresa Local",
+      "default": true
+     },
+     "empresa_extranjera": {
+      "type": "boolean",
+      "title": "Empresa Extranjera",
+      "default": true
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "desde_pais"
+    ],
+    "title": "Remoto",
+    "description": "Trabajo en remoto: desde qué país y para qué empresas."
+   },
+   "Resumen": {
+    "properties": {
+     "puestos": {
+      "type": "integer",
+      "title": "Puestos"
+     },
+     "puestos_nuevos_24h": {
+      "type": "integer",
+      "title": "Puestos Nuevos 24H"
+     },
+     "puestos_nuevos_7d": {
+      "type": "integer",
+      "title": "Puestos Nuevos 7D"
+     },
+     "ofertas": {
+      "type": "integer",
+      "title": "Ofertas"
+     },
+     "varias_vias": {
+      "type": "integer",
+      "title": "Varias Vias"
+     },
+     "etiquetados": {
+      "type": "integer",
+      "title": "Etiquetados"
+     },
+     "etiquetados_top": {
+      "type": "integer",
+      "title": "Etiquetados Top"
+     },
+     "por_fuente": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "type": "object",
+      "title": "Por Fuente"
+     },
+     "alertas": {
+      "type": "integer",
+      "title": "Alertas"
+     }
+    },
+    "type": "object",
+    "required": [
+     "puestos",
+     "puestos_nuevos_24h",
+     "puestos_nuevos_7d",
+     "ofertas",
+     "varias_vias",
+     "etiquetados",
+     "etiquetados_top",
+     "por_fuente",
+     "alertas"
+    ],
+    "title": "Resumen",
+    "description": "La portada: lo que ha pasado y lo que queda por hacer."
+   },
+   "Roles": {
+    "properties": {
+     "principales": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "minItems": 1,
+      "title": "Principales"
+     },
+     "secundarios": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Secundarios",
+      "default": []
+     },
+     "excluir": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Excluir",
+      "description": "Términos que descartan un puesto",
+      "default": []
+     },
+     "terminos": {
+      "$ref": "#/components/schemas/Terminos",
+      "default": {
+       "principales": [],
+       "amplios": []
+      }
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "principales"
+    ],
+    "title": "Roles"
+   },
+   "Salario": {
+    "properties": {
+     "salario_min": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Salario Min"
+     },
+     "salario_max": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Salario Max"
+     },
+     "salario_moneda": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Salario Moneda"
+     },
+     "salario_periodo": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Salario Periodo"
+     }
+    },
+    "type": "object",
+    "title": "Salario"
+   },
+   "Terminos": {
+    "properties": {
+     "principales": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Principales",
+      "description": "Se buscan en todas partes, también en remoto",
+      "default": []
+     },
+     "amplios": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Amplios",
+      "description": "Solo en las ubicaciones presenciales, donde el volumen es menor",
+      "default": []
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "Terminos",
+    "description": "Con qué palabras se buscan los roles en las fuentes. Vacío → los nombres de los roles."
+   },
+   "Ubicacion": {
+    "properties": {
+     "ciudad": {
+      "type": "string",
+      "title": "Ciudad"
+     },
+     "pais": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "title": "Pais",
+      "description": "ISO 3166-1 alfa-2, p. ej. ES"
+     },
+     "modalidades": {
+      "items": {
+       "$ref": "#/components/schemas/Modalidad"
+      },
+      "type": "array",
+      "title": "Modalidades",
+      "default": [
+       "presencial",
+       "hibrido"
+      ]
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "required": [
+     "ciudad",
+     "pais"
+    ],
+    "title": "Ubicacion",
+    "description": "Un sitio donde se acepta trabajar en persona (presencial o híbrido)."
+   },
+   "ValidationError": {
+    "properties": {
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Location"
+     },
+     "msg": {
+      "type": "string",
+      "title": "Message"
+     },
+     "type": {
+      "type": "string",
+      "title": "Error Type"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "ctx": {
+      "type": "object",
+      "title": "Context"
+     }
+    },
+    "type": "object",
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError"
+   },
+   "Via": {
+    "properties": {
+     "fuente": {
+      "type": "string",
+      "title": "Fuente"
+     },
+     "empresa": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Empresa"
+     }
+    },
+    "type": "object",
+    "required": [
+     "fuente"
+    ],
+    "title": "Via",
+    "description": "Por dónde llega un puesto: una fuente y quien publica (empresa o consultora)."
+   }
+  }
+ }
+}
