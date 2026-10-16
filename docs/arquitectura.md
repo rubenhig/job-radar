@@ -1,0 +1,131 @@
+# job-radar: mapa del sistema, roadmap y herramientas
+
+## Objetivo
+
+Un radar personal de empleo **guiado por el CV**. A partir del CV y de las preferencias de la persona, encuentra las empresas y las ofertas que encajan con ella y avisa por Telegram solo de lo que merece la pena.
+
+Todo lo que depende de la persona es **configuración del perfil**, no código:
+- ubicaciones (p. ej. Málaga)
+- modalidades (presencial, híbrido, remoto desde España, remoto con empresa extranjera)
+- roles e idiomas
+- umbrales de aviso
+
+El primer usuario es Rubén: AI/LLM Engineer y agentes en producción, en Málaga o en remoto desde España. Si funciona, más adelante se convierte en producto. La vivienda es un **módulo secundario** que reutiliza la misma plataforma.
+
+Principios:
+1. **La calidad depende de las fuentes.** La ingesta es la parte más cuidada.
+2. **Integrar, no crear.** Para cada bloque se usa una herramienta existente que haya pasado una prueba verificable. El código propio es solo el pegamento, más lo que no exista.
+3. **La empresa es la unidad principal**, no la oferta (ver `docs/estado-del-arte.md`).
+4. **Poco a poco.** Cada fase termina con algo comprobable.
+
+## Mapa global
+
+```mermaid
+flowchart LR
+    CV[CV] --> PERFIL["Perfil<br/>competencias + preferencias<br/>(ubicación, modalidad, roles)"]
+
+    subgraph FUENTES
+        N1["N1 · ATS de empresas<br/>Greenhouse, Lever, Ashby,<br/>Workday, Teamtailor…"]
+        N2["N2 · Portales<br/>InfoJobs, Indeed, LinkedIn,<br/>Tecnoempleo, remoto"]
+        N3["N3 · Emails de alerta"]
+    end
+
+    subgraph INGESTA
+        RAW[bruto inmutable] --> NORM[normalizar] --> DEDUP[deduplicar] --> MET[métricas por fuente]
+    end
+
+    N1 & N2 & N3 --> RAW
+    MET --> DB[(SQLite)]
+
+    subgraph INTELIGENCIA
+        EMP["Empresas<br/>descubrir · puntuar · vigilar"]
+        OF["Ofertas<br/>filtros duros + Claude<br/>con evidencias"]
+    end
+
+    PERFIL --> OF & EMP
+    DB <--> OF & EMP
+    OF --> TG["Telegram<br/>aviso top · resumen semanal"]
+```
+
+Además, a lo largo de todo el sistema: planificador, salud de fuentes, tope de gasto en LLM y configuración.
+
+### Matching a dos niveles
+- **Empresa** (¿es una empresa para mí?): a qué se dedica, madurez en IA con evidencias, stack, presencia en las ubicaciones del perfil o remoto, momento de contratación. Se recalcula de forma mensual o cuando cambia el perfil. Decide qué empresas se vigilan y con qué frecuencia.
+- **Oferta** (¿es este puesto para mí?):
+  - Primero, filtros duros deterministas.
+  - Después, Claude da veredictos por criterio con una cita de la oferta. Las restricciones duras (modalidad, idioma, seniority) se marcan como pasa / no pasa / no se sabe.
+  - Python calcula el porcentaje y lo pondera con el encaje de la empresa.
+
+### Niveles de fuente
+| Nivel | Fuentes | Acceso |
+|---|---|---|
+| **1. Canónica** | ATS de empresas (Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee, Teamtailor, Personio, Workday, SuccessFactors…), Himalayas, Manfred | Endpoints públicos sin clave |
+| **2. Portales** | InfoJobs (adaptador `infojobs_es` con httpcloak), Indeed y Glassdoor vía JobSpy, Tecnoempleo | Scraping a baja frecuencia y con búsquedas acotadas. InfoJobs: decisión de Rubén (15-oct-2026), uso personal |
+| **3. Solo emails propios** | LinkedIn, Welcome to the Jungle, Wellfound | Alertas a un buzón dedicado |
+| **Excluidas** | LinkedIn con sesión, Google Jobs, auto-apply | Riesgo de cuenta, riesgo legal o sin datos |
+
+Métricas por fuente en cada ejecución: rendimiento, completitud, precisión, exclusividad, estabilidad y riesgo.
+
+## Roadmap
+
+El seguimiento vivo está en GitHub: cada fase es un **milestone** y cada tarea un **issue** con sus criterios de aceptación y sus dependencias.
+
+```mermaid
+flowchart LR
+    F0[0 · Exploración ✅] --> F1[1 · Fuentes]
+    F1 --> F3[3 · Ingesta]
+    F2[2 · Perfil] --> F4[4 · Puntuación]
+    F3 --> F4 --> F5[5 · Avisos]
+    F5 --> MVP{{🎯 MVP}}
+    MVP --> F6[6 · Raspberry Pi]
+    MVP --> F7[7 · Empresas]
+    F6 & F7 --> F8[8 · Extras]
+    F6 --> F9[9 · Vivienda]
+```
+
+| # | Fase | Qué conseguimos | Criterios de aceptación | Herramientas a probar |
+|---|---|---|---|---|
+| 0 | Exploración ✅ | Datos reales de varias fuentes | `spikes/` con datos de 4 fuentes | — |
+| 0b | Estado del arte ✅ | Saber qué existe | `docs/estado-del-arte.md` | — |
+| **1** | **Fuentes** ← *en curso* | Saber de dónde salen las ofertas | Cada fuente candidata probada y marcada como ✅ o ❌. Lista de fuentes v1 cerrada. Campos comunes de una oferta definidos | ver tabla de abajo |
+| 2 | Perfil | El CV convertido en perfil | Fichero de perfil (competencias con evidencia + preferencias) extraído con Claude y **aprobado por Rubén**. Ubicaciones y modalidades son configurables | Claude con salida estructurada (Pydantic); ESCO v1.2.1 + capa propia de skills de IA |
+| 3 | Ingesta | Ofertas guardadas sin duplicados | Un comando llena SQLite con las fuentes v1 (bruto + normalizado). La misma oferta en dos fuentes cuenta una vez. Métricas por fuente. 7 días seguidos sin errores en el Mac | `sqlite-utils`; `tenacity`; EmbeddingGemma-300M (opcional, deduplicación) |
+| 4 | Puntuación | Claude decide qué es top | 30 ofertas etiquetadas por Rubén. Claude coincide en al menos un 80 % (top / no top). Coste diario medido | Claude Haiku con rúbrica (referencias: career-ops, JobSync; JobOps solo lectura) |
+| 5 | Avisos | Llega a Telegram | Aviso inmediato de lo top y resumen semanal, recibidos durante una semana | `python-telegram-bot` |
+| 🎯 | **MVP** | **Radar útil de punta a punta** | | |
+| 6 | Raspberry Pi | Funciona sola | 7 días en la Pi. Alerta si una fuente cae a 0 | timers de systemd o APScheduler; detección de anomalías de volumen |
+| 7 | Empresas | Encaje a nivel empresa | Lista viva de empresas puntuadas. Las mejores se vigilan solas | PDF del PTA, Promálaga/Dealroom; detección de ATS (patrones + CDX de Common Crawl) |
+| 8 | Extras | Bot, candidaturas, mercado | Por definir al llegar | — |
+| 9 | Vivienda | Módulo secundario | Por definir al llegar | — |
+
+## Fase 1 · Fuentes: pruebas
+
+Estados: ⬜ por probar · 🟡 probada a medias · ✅ aprobada · ❌ descartada.
+
+| Fuente | Herramienta | Prueba verificable | Estado |
+|---|---|---|---|
+| ATS de empresas | [`ats-scrapers`](https://github.com/kalil0321/ats-scrapers) 0.3.0 (MIT) con `beautifulsoup4`, `html2text` y `aiohttp` | Leer las ofertas de Ebury (Greenhouse EU), Freepik (Teamtailor) y Accenture Málaga (Workday) → `spikes/prueba_ats.py` | ✅ 15-oct-2026, detalle abajo |
+| InfoJobs | Adaptador `infojobs_es` de ats-scrapers + `httpcloak`, con `listing_url` filtrado y `max_pages` bajo | Página 1 sin captcha, filtro respetado, descripción y modalidad rellenas → `spikes/prueba_infojobs.py` | ✅ 15-oct-2026, detalle abajo |
+| Indeed y Glassdoor | [JobSpy](https://github.com/speedyapply/JobSpy) `python-jobspy==1.3.0` (MIT) | Ofertas de la ubicación con descripción y URL directa | 🟡 Indeed bien en el spike; Glassdoor sin probar |
+| LinkedIn (búsqueda) | JobSpy sin `fetch_description` masivo, con pausas; `linkedin_company_ids` para empresas objetivo | 3 días seguidos sin 429 (comprobado con `jobs.attrs["errors"]`) | 🟡 429 en el spike por pedir todas las descripciones |
+| Remoto con elegibilidad | Adaptadores de ats-scrapers (Manfred, Welcome to the Jungle, Wellfound, Get on Board, EURES); API de Himalayas (`country=Spain`) | Ofertas remotas que admiten España, con descripción | ⬜ |
+| Tecnoempleo | RSS (solo últimas 80) o búsqueda a baja frecuencia, **solo con código Python** (su robots.txt bloquea agentes LLM) | Ofertas filtradas por ubicación y tecnología | 🟡 RSS sin filtros en el spike |
+| Emails de alerta (LinkedIn) | Por buscar: parsers existentes de alertas | Extraer ofertas de un email real | ⬜ |
+
+**Detalle de ATS.**
+- Ebury: 149 ofertas con descripción en menos de 1 s.
+- Dos huecos que cubre una envoltura fina, y que son buenos candidatos a contribuir aguas arriba:
+  - **Workday** no admite búsqueda: descarga todo el catálogo y en Accenture falla al pasar de 1.000. Con `searchText: "Malaga"` salen 32.
+  - **Teamtailor** no admite dominio propio. Freepik: `jobs.magnific.com/jobs.rss`, 17 ofertas.
+- ❌ El directorio `find_company` de ats-scrapers no es fiable ("ebury" → Middlebury College).
+- ❌ [open-jobs-data](https://github.com/ConorsCode/open-jobs-data): lista fija de unas 380 empresas, casi todas de EE. UU., y sin descripciones.
+
+**Detalle de InfoJobs.**
+- Hay que filtrar con parámetros de búsqueda; las rutas semánticas (`/ofertas-trabajo/malaga`) caen en captcha. Parámetros: `provinceIds=34` (Málaga), `categoryIds=150` (Informática), `teleworkingIds=2` (solo teletrabajo), `keyword` y `sortBy=PUBLICATION_DATE`. Los códigos vienen en `aggregation` de la propia respuesta.
+- Málaga + Informática son **50 ofertas en total**: 3 páginas cubren todo el mercado tech de Málaga en InfoJobs.
+- Calidad:
+  - 95–100 % con descripción y modalidad.
+  - **~55 % con salario** (Indeed: 22 %).
+  - Empresa siempre visible.
+- `keyword=ia` mete ruido (Verisure, administrativos); es mejor filtrar por categoría y puntuar con Claude.
+- Las tarjetas promocionadas se repiten en la página, así que hay que deduplicar por `code`.

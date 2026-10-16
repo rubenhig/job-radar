@@ -1,0 +1,18 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Datos personales y secretos (nunca al repo público)
+data/
+.env
+
+# Investigación en bruto (el informe final está en docs/estado-del-arte.md)
+research_notes/
+reports/
