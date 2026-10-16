@@ -23,6 +23,12 @@ roles:
   secundarios:
     - Software Engineer      # puntúa más si el puesto tiene componente de IA
   excluir: []
+  # Palabras con las que se busca en las fuentes. Las principales se buscan en
+  # todas partes (también en remoto); las amplias, solo en las ubicaciones
+  # presenciales, donde hay menos volumen y conviene ver todo lo técnico.
+  terminos:
+    principales: [AI, IA, LLM, GenAI, "machine learning", "inteligencia artificial", "AI agents", "agentes IA"]
+    amplios: [software, developer, desarrollador, programador, engineer, ingeniero, python, data, datos, backend, "full stack", devops, cloud]
 
 # Si un puesto pide más nivel: "marcar" (avisa igual, con la advertencia) o "excluir".
 idiomas:

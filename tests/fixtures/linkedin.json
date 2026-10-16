@@ -1,0 +1,838 @@
+[
+ {
+  "id": 2417556206,
+  "date_posted": "2026-10-16T05:54:53",
+  "date_created": "2026-10-16T07:48:58.562633",
+  "title": "Python Developer – AI Agents, MCP & SDD ( Hibrido) Malaga 02CC",
+  "organization": "Abalia",
+  "organization_url": "https://www.linkedin.com/company/abalia",
+  "date_valid_through": "2026-11-15T05:54:52",
+  "locations": [
+   {
+    "@type": "Place",
+    "address": {
+     "@type": "PostalAddress",
+     "addressCountry": "ES",
+     "addressLocality": "Málaga",
+     "addressRegion": null,
+     "streetAddress": null
+    },
+    "latitude": 36.813858,
+    "longitude": -4.725957
+   }
+  ],
+  "location_type": null,
+  "location_requirements": null,
+  "salary": null,
+  "employment_type": [
+   "FULL_TIME"
+  ],
+  "url": "https://es.linkedin.com/jobs/view/python-developer-%E2%80%93-ai-agents-mcp-sdd-hibrido-malaga-02cc-at-abalia-4477363307",
+  "source_type": "jobboard",
+  "source": "linkedin",
+  "source_domain": "es.linkedin.com",
+  "organization_logo": "https://media.licdn.com/dms/image/v2/C4E0BAQHdD4aDAIyxug/company-logo_200_200/company-logo_200_200/0/1631300665713?e=2147483647&v=beta&t=bejmJVyU-AC8I93yRw6TBWwfVbOiAH1V5FlUjPqYNU0",
+  "cities_derived": [
+   "Málaga"
+  ],
+  "counties_derived": [
+   "Málaga-Costa del Sol"
+  ],
+  "regions_derived": [
+   "Andalusia"
+  ],
+  "countries_derived": [
+   "Spain"
+  ],
+  "locations_derived": [
+   "Málaga, Andalusia, Spain"
+  ],
+  "timezones_derived": [
+   "Europe/Madrid"
+  ],
+  "lats_derived": [
+   36.7213028
+  ],
+  "lngs_derived": [
+   -4.4216366
+  ],
+  "seniority": "Intermedio",
+  "direct_apply": true,
+  "no_jb_schema": null,
+  "ats_duplicate": null,
+  "linkedin_id": 4477363307,
+  "org_linkedin_slug": "abalia",
+  "org_linkedin_id": 10825996,
+  "org_linkedin_headcount": 172,
+  "org_linkedin_website": "http://www.abalia.com",
+  "org_linkedin_size": "201-500 employees",
+  "org_linkedin_slogan": "Consultora de TI fundada en el año 2002. Convertimos los retos tecnológicos de nuestros clientes en proyectos de éxito.",
+  "org_linkedin_industry": "Information Technology & Services",
+  "org_linkedin_followers": 63025,
+  "org_linkedin_headquarters": "Rivas Vaciamadrid, Comunidad de Madrid",
+  "org_linkedin_type": "Privately Held",
+  "org_linkedin_founded_date": "2002",
+  "org_linkedin_specialties": [
+   "Software",
+   "Ciberseguridad",
+   "IoT",
+   "Proyectos end to end",
+   "Business Intelligence",
+   "Gestión de Servicios TI",
+   "Monitorización",
+   "Automatización y Orquestación",
+   "Planificación de Procesos Batch",
+   "and Gestión de Procesos ITIL"
+  ],
+  "org_linkedin_locations": [
+   "Calle Marie Curie, 5, Edificio Alfa, Planta 5, Rivas Vaciamadrid, Comunidad de Madrid 28521 , ES"
+  ],
+  "org_linkedin_description": "Nuestro eslogan «El lado humano de la tecnología» pone de manifiesto lo que ofrecemos tanto al cliente externo como interno, y es que las personas siempre están en el centro de todo lo que hacemos. Cuidamos cada detalle, evolucionamos con los años, y nos adaptamos a los cambios para ofrecer lo mejor a nuestros colaboradores, clientes y empleados.\n\n¿Qué buscamos?\nPersonas con talento, entusiastas, con ganas de aprender y enganchadas a la tecnología. Si te sientes identificado estaremos encantados de que te unas a nuestra gran familia de Abalia.\n\n¿Por qué elegirnos?\nPorque somos diferentes, por tres motivos principales:\n1.- Para nosotros no eres un número.\n2.- Porque apostamos por la innovación y el aprendizaje contínuo.\n3.- Aportamos nuestro granito de arena para mejorar la calidad de vida de las personas, mediante la tecnología y proyectos que hacen de este mundo un lugar mejor\n\nElementos diferenciadores:\nValores: compromiso, apertura y flexibilidad\nCapital Humano: sabemos escuchar. Nos gusta lo que hacemos. Somos personas comprometidas, que vamos más allá.\nEl cliente: está en el centro de nuestras decisiones siempre. Somos sus socios, no sólo sus proveedores.\n\n5 áreas de negocio diferenciadas pero unidas entre sí:\nGestión de Sistemas TI, Gestión de Servicios TI, Desarrollo, Asistencia Técnica y Formación.\n\nPrincipales razones para trabajar con nosotros:\n• Flexibilidad horaria.\n• Tu opinión cuenta, nos gusta escuchar, aprender y mejorar con nuestros empleados\n• Proyectos variados: Innovación y Desarrollo.\n• Oficinas bien comunicadas.\n• Aprendizaje y crecimiento profesional, con formaciones internas y acciones que te harán crecer como profesional y persona.\n\nSi eres proactivo, con espíritu de superación y apasionado, suma tu talento a nuestra Compañía. Juntos haremos proyectos únicos donde tu huella permanecerá y lograremos transformar la realidad en algo mejor.\n\nEn Abalia... \"Juntos sumamos más\"",
+  "org_linkedin_recruitment_agency_derived": false,
+  "ai_salary_currency": null,
+  "ai_salary_value": null,
+  "ai_salary_min_value": null,
+  "ai_salary_max_value": null,
+  "ai_salary_unit_text": null,
+  "ai_benefits": null,
+  "ai_experience_level": "2-5",
+  "ai_work_arrangement": "Hybrid",
+  "ai_work_arrangement_office_days": null,
+  "ai_remote_location": null,
+  "ai_remote_location_derived": null,
+  "ai_key_skills": [
+   "Python",
+   "Spec-Driven Development (SDD)",
+   "AI Agents",
+   "Model Context Protocol (MCP)",
+   "MCP Connectors",
+   "Technical Specification Writing",
+   "Code Validation",
+   "Acceptance Criteria",
+   "Independent Technical Judgment",
+   "Written English"
+  ],
+  "ai_core_responsibilities": "Develop Python solutions for AI agents using execution engines and MCP connectors, following the Spec-Driven Development methodology. Independently define and finalize technical specifications, validate code and acceptance criteria, ensure implementation matches specifications, and collaborate with the team to deliver reliable solutions.",
+  "ai_requirements_summary": "Candidates need knowledge of Python, Spec-Driven Development, AI agents, and Model Context Protocol and its connectors. They should demonstrate autonomy, initiative, independent technical judgment, and strong written English for working with technical documentation and specifications.",
+  "ai_working_hours": 40,
+  "ai_employment_type": [
+   "FULL_TIME"
+  ],
+  "ai_job_language": "Spanish",
+  "ai_visa_sponsorship": false,
+  "ai_keywords": [
+   "Python",
+   "AI Agents",
+   "Model Context Protocol",
+   "MCP Connectors",
+   "Execution Engines",
+   "Spec-Driven Development",
+   "Technical Specifications",
+   "Code Validation",
+   "Acceptance Criteria",
+   "Technical Documentation",
+   "Independent Problem-Solving",
+   "Technical Consulting",
+   "IT Services"
+  ],
+  "ai_taxonomies_a": [
+   "Software",
+   "Technology",
+   "Consulting"
+  ],
+  "ai_education": null,
+  "description_text": "Nuestro eslogan «El lado humano de la tecnología» pone de manifiesto lo que ofrecemos tanto al cliente externo como interno, y es que las personas siempre están en el centro de todo lo que hacemos. Cuidamos cada detalle, evolucionamos con los años, y nos adaptamos a los cambios para ofrecer lo mejor a nuestros colaboradores, clientes y empleados.\n¿Qué buscamos?\nPersonas con talento, entusiastas, con ganas de aprender y enganchadas a la tecnología. Si te sientes identificado estaremos encantados de que te unas a nuestra gran familia de Abalia.\n¿Por qué elegirnos?\nPorque somos diferentes, por tres motivos principales:\n1.- Para nosotros no eres un número.\n2.- Porque apostamos por la innovación y el aprendizaje continuo.\n3.- Aportamos nuestro granito de arena para mejorar la calidad de vida de las personas, mediante la tecnología y proyectos que hacen de este mundo un lugar mejor.\n\nBuscamos un/a Python Developer para participar en un proyecto tecnológico centrado en el desarrollo de agentes de inteligencia artificial, utilizando Python, motores de ejecución y conectores MCP (Model Context Protocol).\n\nFunciones\n\nDesarrollar soluciones en Python utilizando motores de ejecución y conectores MCP.\nImplementar funcionalidades siguiendo la metodología SDD.\nDefinir y finalizar especificaciones técnicas de manera autónoma.\nValidar código, resultados y criterios de aceptación antes de aprobar las entregas.\nGarantizar la coherencia entre las especificaciones y la implementación final.\nResolver problemas técnicos y tomar decisiones de forma independiente.\nColaborar con el equipo para asegurar la calidad y fiabilidad de las soluciones.\n\nRequisitos imprescindibles\n\nConocimientos de Python.\nConocimientos de SDD (Spec-Driven Development).\nFamiliaridad con agentes de IA.\nConocimientos de MCP (Model Context Protocol) y sus conectores.\nAutonomía, iniciativa y capacidad de juicio técnico independiente.\nBuen nivel de inglés escrito para trabajar con documentación y especificaciones técnicas.\n\nSi estás interesado/a no dudes en inscribirte"
+ },
+ {
+  "id": 2415558172,
+  "date_posted": "2026-10-15T09:48:26",
+  "date_created": "2026-10-15T10:48:39.426852",
+  "title": "Technical Lead/ Senior Python AI Engineer",
+  "organization": "Voiping US",
+  "organization_url": "https://www.linkedin.com/company/voipingus",
+  "date_valid_through": "2026-11-14T09:48:25",
+  "locations": [
+   {
+    "@type": "Place",
+    "address": {
+     "@type": "PostalAddress",
+     "addressCountry": "ES",
+     "addressLocality": "Málaga",
+     "addressRegion": null,
+     "streetAddress": null
+    },
+    "latitude": 36.813858,
+    "longitude": -4.725957
+   }
+  ],
+  "location_type": null,
+  "location_requirements": null,
+  "salary": null,
+  "employment_type": [
+   "FULL_TIME"
+  ],
+  "url": "https://es.linkedin.com/jobs/view/technical-lead-senior-python-ai-engineer-at-voiping-us-somos-talento-tic-%C2%A1crecemos-juntos%21-4477072409",
+  "source_type": "jobboard",
+  "source": "linkedin",
+  "source_domain": "es.linkedin.com",
+  "organization_logo": "https://media.licdn.com/dms/image/v2/C4D0BAQEH_w86zZeZBQ/company-logo_200_200/company-logo_200_200/0/1630510585875/voipingus_logo?e=2147483647&v=beta&t=jNVWdDaUSWxf0Mc63pHNh8QhdqBYgCm-SN5RhkyokB8",
+  "cities_derived": [
+   "Málaga"
+  ],
+  "counties_derived": [
+   "Málaga-Costa del Sol"
+  ],
+  "regions_derived": [
+   "Andalusia"
+  ],
+  "countries_derived": [
+   "Spain"
+  ],
+  "locations_derived": [
+   "Málaga, Andalusia, Spain"
+  ],
+  "timezones_derived": [
+   "Europe/Madrid"
+  ],
+  "lats_derived": [
+   36.7213028
+  ],
+  "lngs_derived": [
+   -4.4216366
+  ],
+  "seniority": "Algo de responsabilidad",
+  "direct_apply": true,
+  "no_jb_schema": null,
+  "ats_duplicate": null,
+  "linkedin_id": 4477072409,
+  "org_linkedin_slug": "voipingus",
+  "org_linkedin_id": 3220307,
+  "org_linkedin_headcount": 41,
+  "org_linkedin_website": "http://www.voiping.es",
+  "org_linkedin_size": "51-200 employees",
+  "org_linkedin_slogan": "We Grow Together!",
+  "org_linkedin_industry": "IT Services and IT Consulting",
+  "org_linkedin_followers": 55649,
+  "org_linkedin_headquarters": "Madrid, Madrid",
+  "org_linkedin_type": "Privately Held",
+  "org_linkedin_founded_date": "2009",
+  "org_linkedin_specialties": [
+   "Tecnologías de la Información",
+   "Telecomunicaciones",
+   "Desarrollo software",
+   "Administración Redes Informáticas",
+   "Seguridad informática",
+   "Servicios Outsourcing",
+   "IT recruiting",
+   "Big Data",
+   "Servicios Profesionales",
+   "Software Factory",
+   "Telco",
+   "Software Development",
+   "Ciberseguridad",
+   "Automatización de procesos",
+   "OSS",
+   "BSS",
+   "and IA"
+  ],
+  "org_linkedin_locations": [
+   "Madrid, Madrid 28040, ES"
+  ],
+  "org_linkedin_description": "IT Consulting, Talent hunters",
+  "org_linkedin_recruitment_agency_derived": true,
+  "ai_salary_currency": "EUR",
+  "ai_salary_value": 47000,
+  "ai_salary_min_value": null,
+  "ai_salary_max_value": null,
+  "ai_salary_unit_text": "YEAR",
+  "ai_benefits": [
+   "Hybrid Work",
+   "Professional Growth",
+   "Long-Term Project Stability"
+  ],
+  "ai_experience_level": "5-10",
+  "ai_work_arrangement": "Hybrid",
+  "ai_work_arrangement_office_days": 3,
+  "ai_remote_location": null,
+  "ai_remote_location_derived": null,
+  "ai_key_skills": [
+   "Python",
+   "Generative AI",
+   "AI Agents",
+   "Large Language Models",
+   "Specification-Driven Development",
+   "MCP Connectors",
+   "Technical Leadership",
+   "Architecture Design",
+   "Code Review",
+   "API Integration",
+   "Process Automation",
+   "Technical Decision-Making",
+   "English"
+  ],
+  "ai_core_responsibilities": "Develop generative AI and intelligent agent solutions in Python, using execution engines and MCP connectors, and design and evolve technical specifications under the Specification-Driven Development methodology. Review code, specifications, and acceptance criteria; contribute to technical and architecture decisions; and collaborate with international, multidisciplinary teams.",
+  "ai_requirements_summary": "Requires strong Python development experience, knowledge or experience with AI agents and LLM-based environments, and experience with Specification-Driven Development. Candidates should be able to work independently, make technical decisions, and communicate effectively in English in international settings.",
+  "ai_working_hours": 40,
+  "ai_employment_type": [
+   "FULL_TIME"
+  ],
+  "ai_job_language": "Spanish",
+  "ai_visa_sponsorship": false,
+  "ai_keywords": [
+   "Python",
+   "Generative AI",
+   "AI Agents",
+   "Large Language Models",
+   "Specification-Driven Development",
+   "MCP Connectors",
+   "Execution Engines",
+   "GitHub Copilot",
+   "Claude",
+   "OpenAI",
+   "CrewAI",
+   "LangGraph",
+   "API Integration",
+   "Intelligent Process Automation",
+   "Technical Leadership",
+   "Architecture Design",
+   "Code Review",
+   "Acceptance Criteria",
+   "International Collaboration",
+   "IT Services",
+   "IT Consulting"
+  ],
+  "ai_taxonomies_a": [
+   "Technology",
+   "Software",
+   "Management & Leadership",
+   "Consulting"
+  ],
+  "ai_education": null,
+  "description_text": "🚀 Technical Lead / Senior Python AI Engineer | Málaga (Híbrido)\n¿Te apasiona la IA Generativa, los agentes inteligentes y el desarrollo avanzado en Python? Buscamos incorporar un/a Technical Lead / Senior Python AI Engineer para participar en proyectos innovadores relacionados con AI Agents, LLMs y Specification Driven Development (SDD).\n📍 Ubicación: Málaga\n🏠 Modalidad: Híbrida (2-3 días presenciales por semana)\n💼 Proyecto estable y de largo recorrido\n🗣️ Inglés B2 alto imprescindible\n\n¿Qué harás?\n✅ Desarrollo de soluciones basadas en IA Generativa y Agentes Inteligentes.\n✅ Diseño y evolución de especificaciones técnicas siguiendo metodología SDD.\n✅ Desarrollo en Python utilizando motores de ejecución y conectores MCP.\n✅ Revisión de código, especificaciones y criterios de aceptación.\n✅ Participación en decisiones técnicas y foros de arquitectura internacionales.\n✅ Colaboración con equipos multidisciplinares en entornos globales.\n\nRequisitos\n✔️ Experiencia sólida en desarrollo con Python.\n✔️ Conocimientos o experiencia en AI Agents y entornos basados en LLMs.\n✔️ Experiencia trabajando con Specification Driven Development (SDD).\n✔️ Capacidad para trabajar de forma autónoma y tomar decisiones técnicas.\n✔️ Inglés alto para desenvolverse en entornos internacionales.\n\nSe valorará especialmente\n⭐ Experiencia con herramientas de IA como Copilot, Claude, OpenAI, CrewAI, LangGraph o similares.\n⭐ Participación en diseño de arquitecturas y liderazgo técnico.\n⭐ Experiencia en integración de APIs y automatización de procesos inteligentes.\n\n¿Qué ofrecemos?\n🔹 Proyecto innovador en tecnologías de IA.\n🔹 Equipo internacional y altamente cualificado.\n🔹 Flexibilidad y modelo híbrido.\n🔹 Estabilidad y crecimiento profesional.\n🔹 Participación en proyectos punteros con impacto real en negocio.\n🔹 Salario hasta 47k según valia"
+ },
+ {
+  "id": 2414250612,
+  "date_posted": "2026-10-14T19:15:17",
+  "date_created": "2026-10-14T19:49:00.206697",
+  "title": "Software Engineer (Mobile SDK, Android)",
+  "organization": "Ookla",
+  "organization_url": "https://www.linkedin.com/company/ookla",
+  "date_valid_through": "2026-11-13T19:15:17",
+  "locations": [
+   {
+    "@type": "Place",
+    "address": {
+     "@type": "PostalAddress",
+     "addressCountry": "ES",
+     "addressLocality": "Málaga",
+     "addressRegion": null,
+     "streetAddress": null
+    },
+    "latitude": 36.813858,
+    "longitude": -4.725957
+   }
+  ],
+  "location_type": "TELECOMMUTE",
+  "location_requirements": [
+   {
+    "@type": "Country",
+    "name": "Málaga, Andalucía, España"
+   }
+  ],
+  "salary": {
+   "@type": "MonetaryAmount",
+   "currency": "EUR",
+   "value": {
+    "@type": "QuantitativeValue",
+    "minValue": 50000,
+    "maxValue": 74500,
+    "unitText": "YEAR"
+   }
+  },
+  "employment_type": [
+   "FULL_TIME"
+  ],
+  "url": "https://es.linkedin.com/jobs/view/software-engineer-mobile-sdk-android-at-ookla-4478482779",
+  "source_type": "jobboard",
+  "source": "linkedin",
+  "source_domain": "es.linkedin.com",
+  "organization_logo": "https://media.licdn.com/dms/image/v2/D560BAQHmxk1pboscEQ/company-logo_200_200/B56Z7XPCsHIoAE-/0/1781727505406/ookla_logo?e=2147483647&v=beta&t=IIT0_CLxXtt3Nn5DZnd6GvgpDaDZNvK_EXNd9x1-Adk",
+  "cities_derived": [
+   "Málaga"
+  ],
+  "counties_derived": [
+   "Málaga-Costa del Sol"
+  ],
+  "regions_derived": [
+   "Andalusia"
+  ],
+  "countries_derived": [
+   "Spain"
+  ],
+  "locations_derived": [
+   "Málaga, Andalusia, Spain"
+  ],
+  "timezones_derived": [
+   "Europe/Madrid"
+  ],
+  "lats_derived": [
+   36.7213028
+  ],
+  "lngs_derived": [
+   -4.4216366
+  ],
+  "seniority": "Algo de responsabilidad",
+  "direct_apply": false,
+  "no_jb_schema": null,
+  "ats_duplicate": true,
+  "linkedin_id": 4478482779,
+  "org_linkedin_slug": "ookla",
+  "org_linkedin_id": 939279,
+  "org_linkedin_headcount": 604,
+  "org_linkedin_website": "http://www.ookla.com",
+  "org_linkedin_size": "501-1,000 employees",
+  "org_linkedin_slogan": "Better data. Better insights. Better outcomes.",
+  "org_linkedin_industry": "Technology, Information and Internet",
+  "org_linkedin_followers": 47798,
+  "org_linkedin_headquarters": "Global",
+  "org_linkedin_type": "Privately Held",
+  "org_linkedin_founded_date": "2006",
+  "org_linkedin_specialties": [
+   "Speedtest",
+   "Internet",
+   "Telecommunications",
+   "Connectivity",
+   "Downdetector",
+   "Connected Experience",
+   "Connected Services",
+   "Online Monitoring",
+   "QoS",
+   "QoE",
+   "Network Performance",
+   "Network Quality",
+   "Network Coverage",
+   "Telco",
+   "Network Intelligence",
+   "5G",
+   "Mobile",
+   "Fixed Broadband",
+   "Test & Measurement",
+   "and Consumer Experience"
+  ],
+  "org_linkedin_locations": [
+   "Global, US",
+   "Denver, Colorado, US",
+   "Memphis, Tennessee, US",
+   "Dublin, IE",
+   "Greater London, GB",
+   "Dubai, AE",
+   "Málaga, ES",
+   "Seattle, Washington, US"
+  ],
+  "org_linkedin_description": "Ookla delivers unmatched connectivity insights, empowering organizations to optimize networks, enhance digital experiences, and deliver better connectivity for all.",
+  "org_linkedin_recruitment_agency_derived": false,
+  "ai_salary_currency": "EUR",
+  "ai_salary_value": null,
+  "ai_salary_min_value": 50000,
+  "ai_salary_max_value": 74500,
+  "ai_salary_unit_text": "YEAR",
+  "ai_benefits": null,
+  "ai_experience_level": "5-10",
+  "ai_work_arrangement": "Remote OK",
+  "ai_work_arrangement_office_days": null,
+  "ai_remote_location": null,
+  "ai_remote_location_derived": null,
+  "ai_key_skills": [
+   "Android",
+   "Kotlin",
+   "Java",
+   "C++",
+   "JNI/NDK",
+   "SDK Development",
+   "Software Testing",
+   "SQL",
+   "Python",
+   "Data Analysis",
+   "Debugging",
+   "Network Measurement",
+   "Networking Fundamentals",
+   "Feature Flags",
+   "AI-Assisted Engineering"
+  ],
+  "ai_core_responsibilities": "Design, implement, test, document, deploy, and support network measurement features for the CQoE and Speedtest Android SDKs, including debugging and contributing to the shared C++ engine across the JNI/NDK boundary. Own feature delivery end to end, use AI-assisted tools responsibly, and roll out changes with quality checks, feature flags, and post-release verification.",
+  "ai_requirements_summary": "Requires at least five years of software development experience, strong foundations in data structures, algorithms, and design patterns, and substantial experience building and maintaining SDKs or libraries with Android, Kotlin, and Java. Candidates should also be skilled in SQL and Python-based data analysis, debugging, and data-quality monitoring; telecom or network measurement, iOS, networking, and embedded C++ experience are advantageous.",
+  "ai_working_hours": 40,
+  "ai_employment_type": [
+   "FULL_TIME"
+  ],
+  "ai_job_language": "English",
+  "ai_visa_sponsorship": false,
+  "ai_keywords": [
+   "Android",
+   "Kotlin",
+   "Java",
+   "C++",
+   "JNI",
+   "NDK",
+   "CQoE SDK",
+   "Speedtest SDK",
+   "Software Development Kits",
+   "Network Measurement",
+   "Telecom",
+   "Quality Of Experience",
+   "Quality Of Service",
+   "SQL",
+   "Python",
+   "Data Analysis",
+   "Data-Quality Monitoring",
+   "AI-Assisted Tooling",
+   "Feature Flags",
+   "Software Testing",
+   "API Design",
+   "Networking",
+   "IP",
+   "TCP/UDP",
+   "HTTP/S",
+   "WebSocket",
+   "iOS",
+   "Embedded Systems",
+   "RF",
+   "Cellular Networks"
+  ],
+  "ai_taxonomies_a": [
+   "Software",
+   "Technology",
+   "Engineering",
+   "Data & Analytics"
+  ],
+  "ai_education": null,
+  "description_text": "The Opportunity:\nWe are looking for a highly capable Senior Android Engineer to join our Powered team and take ownership of our Android SDKs: the CQoE SDK, which telecom carriers and partners embed directly into their own apps to passively measure real-world network quality, and the Speedtest SDK, the core measurement library that powers every Speedtest client.\nYou will be responsible for implementing and maintaining features that perform a wide variety of network measurements on millions of Android devices. Much of this measurement logic lives in a shared C++ engine used across Android, iOS, and embedded targets, so you’ll have an opportunity to work across the Kotlin/Java, JNI/NDK, C++ boundary.\nYou love to code and appreciate well-designed APIs, as you will need to strike the right balance between SDK and application code. You have experience with Android platform, but are interested in both Android and iOS as well as embedded environments. You want to make a better Internet for everyone. If you already use Ookla’s tools to check your broadband or mobile data performance, now you have a chance to be a part of the team that produces them.\n\nKey Responsibilities: \nDesign, implement, and maintain network measurement features in the CQoE and Speedtest Android SDKs, consumed by external carrier partners, third-party app developers, and internal client apps. This includes implementation, testing, documentation, deployment, and development support\nWork across the JNI/NDK boundary into the shared C++ measurement engine used across Android, iOS, and embedded targets by debugging native code and, over time, contributing to and maintaining it directly\nBring AI-assisted tooling into coding, QA, and data analysis where it genuinely earns its place, with clear guardrails around safety, privacy, security, and verification\nStay hands-on where it counts (technical reviews, architecture discussions, targeted implementation) while taking ownership of delivery end-to-end on the features and fixes you drive\nRoll out SDK and measurement changes deliberately: gate them behind feature flags, run quality checks, and verify post-release that real-world behavior matches intent before widening exposure\nJob Requirements:\n5+ years of software development experience, with a solid foundation in data structures, algorithms, and design patterns\nExperience with Android using Kotlin and Java\nSubstantial experience building and maintaining SDKs or libraries\nStrong data literacy: comfortable writing SQL to investigate production and measurement data, using Python (or similar) for analysis, and applying data-quality monitoring practices to catch anomalies before they reach partners\nA curious, proactive stance toward AI and modern engineering practices\nExcellent debugging, troubleshooting, data analysis skills\nStrong time management skills and a self-driven work ethic\nNice to have:\nExperience with telecom/network measurement, QoE/QoS systems, or RF/cellular domain knowledge\nExperience with iOS\nStrong understanding of networking fundamentals (IP, TCP/UDP, HTTP/S, WebSocket).\nExperience with embedded systems using C++\nAbout \nOokla, an Accenture company, is a global leader in connectivity intelligence that brings together the trusted expertise of Speedtest®, Downdetector®, Ekahau®, and RootMetrics® to deliver unmatched network and connectivity insights. By combining multi-source data with industry-leading expertise, we transform network performance metrics into strategic, actionable insights.\n\nOur solutions empower service providers, enterprises, and governments with the critical data and insights needed to optimize networks, enhance digital experiences, and help close the digital divide. At the same time, we amplify the real-world experiences of individuals and businesses that rely on connectivity to work, learn, and communicate. From measuring and analyzing connectivity to driving industry innovation, Ookla helps the world stay connected.\n\n\nAbout Accenture\nAccenture helps the world’s leading enterprises reinvent by building their digital core and unleashing the power of AI to create value at speed for organizations across industries. Our strategy is to be the reinvention partner of choice for our clients and lead in the safe, widespread adoption of AI, and to be the most client focused, AI-enabled, great place to work in the world. We bring together the talent of our approximately 799,000 people with proprietary assets and platforms, deep process and industry expertise, and leading ecosystem relationships to deliver end-to-end solutions and measurable outcomes at scale. Through our Reinvention Services, we offer broad expertise across Cybersecurity, Digital Core, Finance, Industry and Enterprise, Song, Supply Chain and Engineering, and Talent, with advanced capabilities in AI and Data, Industry and Process, and Technology. We serve approximately 9,000 clients and generated approximately $70 billion in FY25 revenue. Visit us at accenture.com.\n\n\nCompensation Range\nOokla provides a range for the base pay. Factors that may be used to determine your actual pay may include your specific job related knowledge, skills, experience, and geographic location. The salary compensation for this role is 50,000 to 74,500 EUR annually. Individual pay within the compensation range for this business unit specific role is determined based on a variety of factors including experience, scope of the role, capabilities to perform the role, education and training, as well as business and company performance."
+ },
+ {
+  "id": 2417578542,
+  "date_posted": "2026-10-16T08:13:41.299",
+  "date_created": "2026-10-16T08:13:41.372537",
+  "title": "Fulah Language Specialist - Freelance AI Trainer Project",
+  "organization": "Jobgether",
+  "organization_url": "https://www.linkedin.com/company/jobgether",
+  "date_valid_through": null,
+  "locations": [
+   {
+    "@type": "Place",
+    "address": {
+     "@type": "PostalAddress",
+     "addressRegion": "",
+     "addressCountry": "",
+     "addressLocality": "España"
+    }
+   }
+  ],
+  "location_type": null,
+  "location_requirements": null,
+  "salary": null,
+  "employment_type": null,
+  "url": "https://es.linkedin.com/jobs/view/fulah-language-specialist-freelance-ai-trainer-project-at-jobgether-4479338360",
+  "source_type": "jobboard",
+  "source": "linkedin",
+  "source_domain": "es.linkedin.com",
+  "organization_logo": "https://media.licdn.com/dms/image/v2/D4E0BAQHdx4NngvFyPA/company-logo_100_100/B4EZ5GHh6CHEAU-/0/1779292839822/jobgether_logo?e=2147483647&v=beta&t=86Xk6jTn5SYx8OIuRc_gwpv1rBQZ8l6-zCWNpsa3Iy0",
+  "cities_derived": null,
+  "counties_derived": null,
+  "regions_derived": null,
+  "countries_derived": [
+   "Spain"
+  ],
+  "locations_derived": [
+   "Spain"
+  ],
+  "timezones_derived": [
+   "Europe/Madrid"
+  ],
+  "lats_derived": [
+   39.3260685
+  ],
+  "lngs_derived": [
+   -4.8379791
+  ],
+  "seniority": "Sin experiencia",
+  "direct_apply": true,
+  "no_jb_schema": true,
+  "ats_duplicate": null,
+  "linkedin_id": 4479338360,
+  "org_linkedin_slug": "jobgether",
+  "org_linkedin_id": 27130504,
+  "org_linkedin_headcount": 629,
+  "org_linkedin_website": "https://www.jobgether.com",
+  "org_linkedin_size": "11-50 employees",
+  "org_linkedin_slogan": "Helping senior professionals navigate the remote job market and get seen by the right companies.",
+  "org_linkedin_industry": "Internet Marketplace Platforms",
+  "org_linkedin_followers": 4941655,
+  "org_linkedin_headquarters": "Brussels",
+  "org_linkedin_type": "Privately Held",
+  "org_linkedin_founded_date": "2020",
+  "org_linkedin_specialties": [
+   "carreer navigation",
+   "job search playbook",
+   "remote work",
+   "and senior professionals"
+  ],
+  "org_linkedin_locations": [
+   "Brussels, BE"
+  ],
+  "org_linkedin_description": "Jobgether is a career navigation platform built for senior professionals competing in the remote job market. Hiring systems were designed for volume and keyword matching, not for 15 or 20 years of nonlinear experience. That structural mismatch is why strong profiles get filtered out before a human ever sees them.\n\nOur platform diagnoses where a search is breaking, corrects how experience is positioned, and connects professionals to the companies where their background creates real value. The goal is not more applications. It is the right visibility in the right places.\n\nOur mission is to ensure no senior professional remains invisible in the global remote market, not because they lack the skills, but because the system failed to read them correctly.",
+  "org_linkedin_recruitment_agency_derived": true,
+  "ai_salary_currency": "USD",
+  "ai_salary_value": null,
+  "ai_salary_min_value": 8,
+  "ai_salary_max_value": 65,
+  "ai_salary_unit_text": "HOUR",
+  "ai_benefits": [
+   "Fully Remote Work",
+   "Flexible Freelance Schedule",
+   "Opportunity to Contribute to Advanced AI Technologies",
+   "Professional Exposure to AI Training and Language Evaluation"
+  ],
+  "ai_experience_level": "0-2",
+  "ai_work_arrangement": "Remote Solely",
+  "ai_work_arrangement_office_days": null,
+  "ai_remote_location": [
+   "Spain"
+  ],
+  "ai_remote_location_derived": [
+   "Spain"
+  ],
+  "ai_key_skills": [
+   "Fulah Fluency",
+   "Grammar",
+   "Syntax",
+   "Semantics",
+   "Linguistic Annotation",
+   "Translation",
+   "Proofreading",
+   "Editing",
+   "Cultural Awareness",
+   "Language Evaluation",
+   "AI Training",
+   "Data Labeling",
+   "Quality Assurance",
+   "Analytical Thinking",
+   "Written Communication",
+   "Attention to Detail"
+  ],
+  "ai_core_responsibilities": "Review, annotate, and refine Fulah-language data and evaluate AI-generated content for linguistic quality, fluency, and cultural appropriateness. Document recurring issues and provide actionable feedback while collaborating with project teams to improve prompts, evaluation methods, annotation practices, and language guidelines.",
+  "ai_requirements_summary": "Applicants must be fluent in Fulah, understand its linguistic structure and cultural context, and have professional experience in translation, linguistics, language teaching, editing, proofreading, or a related field. Strong written communication, attention to detail, analytical judgment, independence, and the ability to provide consistent, structured feedback are required.",
+  "ai_working_hours": 40,
+  "ai_employment_type": [
+   "CONTRACTOR",
+   "FULL_TIME"
+  ],
+  "ai_job_language": "English",
+  "ai_visa_sponsorship": false,
+  "ai_keywords": [
+   "Fulah",
+   "Artificial Intelligence",
+   "AI Training",
+   "Language Models",
+   "Linguistic Annotation",
+   "Data Labeling",
+   "Language Evaluation",
+   "Translation",
+   "Linguistics",
+   "Language Teaching",
+   "Editing",
+   "Proofreading",
+   "Grammar",
+   "Syntax",
+   "Semantics",
+   "Fluency",
+   "Cultural Context",
+   "Prompt Evaluation",
+   "Annotation Guidelines",
+   "Quality Assurance",
+   "Evaluation Methodologies",
+   "Language Data",
+   "AI-Generated Content",
+   "Constructive Feedback",
+   "Remote Work"
+  ],
+  "ai_taxonomies_a": [
+   "Technology",
+   "Education",
+   "Data & Analytics"
+  ],
+  "ai_education": null,
+  "description_text": "This position is listed on behalf of a partner company, who manages all applications and next steps. Our partner is looking for a Fulah Language Specialist - Freelance AI Trainer Project based in Spain.\n\nHelp shape the next generation of artificial intelligence by applying your Fulah language expertise to the development of more accurate, natural, and culturally aware AI systems. In this fully remote freelance opportunity, you will evaluate AI-generated content, refine linguistic outputs, and help improve the quality of language models. Your work will focus on grammar, syntax, semantics, fluency, style, and cultural appropriateness, ensuring that AI communicates effectively with Fulah speakers. You will collaborate with a team working on advanced AI technologies, contributing linguistic insights that strengthen model performance across diverse applications. This role is ideal for language professionals who value precision, cultural understanding, and innovation. Your expertise will help make AI-powered communication more accessible and reliable for Fulah-speaking communities worldwide.\n\nAccountabilities\n\nAs a Fulah Language Specialist and AI Trainer, you will apply your linguistic knowledge and cultural expertise to evaluate, annotate, and improve language data used to train and assess AI models. You will help identify language quality issues, establish reliable evaluation standards, and provide actionable feedback that supports more accurate and contextually appropriate AI-generated content.\n\nReview, annotate, and refine Fulah-language text used in AI training and evaluation datasets. \nEvaluate AI-generated responses for grammatical accuracy, fluency, syntax, semantics, tone, style, and overall linguistic quality. \nAssess whether generated content reflects appropriate cultural context and authentic Fulah language usage. \nIdentify, categorize, and document recurring linguistic errors, inconsistencies, and patterns in model outputs. \nProvide clear, detailed feedback to improve language model accuracy, naturalness, and contextual understanding. \nCollaborate with project teams to refine prompts, evaluation methodologies, annotation practices, and linguistic guidelines. \nApply professional judgment to distinguish accurate, natural language from awkward, misleading, or culturally inappropriate outputs. \nMaintain consistent quality standards and follow project-specific instructions when reviewing and annotating language data. \nContribute linguistic insights that help improve AI applications in education, accessibility, communication, and other language-related use cases. \n\nRequirements\n\nYou are a highly proficient Fulah language professional with a strong understanding of linguistic structure, cultural nuance, and effective communication. You can critically assess written language, explain errors clearly, and apply consistent evaluation criteria to AI-generated content. Your professional background may include translation, linguistics, language teaching, editing, or a related field. Strong attention to detail, independent judgment, and the ability to provide constructive feedback are essential for success in this freelance project.\n\nFluency in Fulah, with a strong understanding of its grammar, syntax, semantics, vocabulary, and language conventions. \nDemonstrated professional experience in translation, linguistics, language teaching, editing, proofreading, or a related language-focused discipline. \nStrong written communication skills and the ability to evaluate language quality with precision. \nKnowledge of Fulah-speaking communities, cultural contexts, idiomatic expressions, and appropriate language usage. \nExcellent attention to detail and the ability to identify subtle linguistic errors, inconsistencies, and unnatural phrasing. \nStrong analytical and critical-thinking skills, with the ability to explain linguistic judgments clearly and consistently. \nAbility to work independently, follow detailed instructions, and meet project-specific quality expectations. \nClear communication skills and the ability to provide structured, actionable feedback. \n\nPreferred Qualifications\n\nExperience with AI training, language model evaluation, linguistic annotation, or data labeling. \nExperience training, coaching, or assessing language learners or other language professionals. \nFamiliarity with prompt evaluation, structured annotation guidelines, or quality assurance processes for language data. \n\nBenefits\n\nHourly compensation ranging from $8 to $65 per hour, depending on experience, expertise, and geographic location. \nFully remote work arrangement, with a worldwide project scope. \nFreelance contract offering flexibility in how you organize your work, subject to project requirements. \nOpportunity to contribute to the development and improvement of advanced AI technologies. \nThe chance to apply your Fulah language expertise to applications supporting education, accessibility, and global communication. \nProfessional exposure to AI training, language evaluation, and linguistic quality assurance. \nAs this is a contractor position, company-sponsored benefits such as health insurance and paid time off are not provided. \nContractors must supply their own secure computer and maintain a stable internet connection. \n\nHow Jobgether Works\n\nWe use an AI-powered matching process to ensure your application is reviewed quickly, objectively, and fairly against the role's core requirements. Our system identifies the top-fitting candidates, and this shortlist is then shared directly with the hiring company. The final decision and next steps (interviews, assessments) are managed by their internal team.\n\nWe appreciate your interest and wish you the best!\n\nWhy Apply Through Jobgether?\n\nData Privacy Notice: By submitting your application, you acknowledge that Jobgether will process your personal data to evaluate your candidacy and share relevant information with the hiring employer. This processing is based on legitimate interest and pre-contractual measures under applicable data protection laws (including GDPR). You may exercise your rights (access, rectification, erasure, objection) at any time.\n\nWe may use artificial intelligence (AI) tools to support parts of the hiring process, such as reviewing applications, analyzing resumes, or assessing responses and identifying potential inconsistencies or verification signals in application materials based on available information. These tools assist our recruitment team but do not replace human judgment. Final hiring decisions are ultimately made by humans. If you would like more information about how your data is processed, please contact us."
+ },
+ {
+  "id": 2417578579,
+  "date_posted": "2026-10-16T08:13:41.981",
+  "date_created": "2026-10-16T08:13:42.072173",
+  "title": "Senior Backend Developer PHP Symfony (Dpto Arquitectura, Microservicios, Cloud, Ia)⚽",
+  "organization": "Quental",
+  "organization_url": "https://www.linkedin.com/company/quental",
+  "date_valid_through": null,
+  "locations": [
+   {
+    "@type": "Place",
+    "address": {
+     "@type": "PostalAddress",
+     "addressRegion": "",
+     "addressCountry": "",
+     "addressLocality": "España"
+    }
+   }
+  ],
+  "location_type": null,
+  "location_requirements": null,
+  "salary": null,
+  "employment_type": null,
+  "url": "https://es.linkedin.com/jobs/view/senior-backend-developer-php-symfony-dpto-arquitectura-microservicios-cloud-ia-%E2%9A%BD-at-quental-4480346002",
+  "source_type": "jobboard",
+  "source": "linkedin",
+  "source_domain": "es.linkedin.com",
+  "organization_logo": "https://media.licdn.com/dms/image/v2/C4E0BAQGTMq6IrhOASw/company-logo_100_100/company-logo_100_100/0/1631339995214?e=2147483647&v=beta&t=4eiwolSEf5eOTlmR1dY0bbu3BVp7LuusuUoibbKiVhU",
+  "cities_derived": null,
+  "counties_derived": null,
+  "regions_derived": null,
+  "countries_derived": [
+   "Spain"
+  ],
+  "locations_derived": [
+   "Spain"
+  ],
+  "timezones_derived": [
+   "Europe/Madrid"
+  ],
+  "lats_derived": [
+   39.3260685
+  ],
+  "lngs_derived": [
+   -4.8379791
+  ],
+  "seniority": "Intermedio",
+  "direct_apply": true,
+  "no_jb_schema": true,
+  "ats_duplicate": null,
+  "linkedin_id": 4480346002,
+  "org_linkedin_slug": "quental",
+  "org_linkedin_id": 820591,
+  "org_linkedin_headcount": 285,
+  "org_linkedin_website": "http://www.quental.com",
+  "org_linkedin_size": "201-500 employees",
+  "org_linkedin_slogan": "Servicios y Soluciones tecnológicas para las necesidades de su negocio",
+  "org_linkedin_industry": "IT Services and IT Consulting",
+  "org_linkedin_followers": 99128,
+  "org_linkedin_headquarters": "Madrid, Community of Madrid",
+  "org_linkedin_type": "Privately Held",
+  "org_linkedin_founded_date": "2001",
+  "org_linkedin_specialties": [
+   "Integración de Sistemas",
+   "Desarrollo de proyectos a medida",
+   "Servicios de Telefonía",
+   "Seguridad Física y Lógica",
+   "Outsourcing",
+   "Formación",
+   "Desarrollo para móviles",
+   "Business Intelligence",
+   "Modelización",
+   "Datawarehouse",
+   "Datamining",
+   "Data Quality",
+   "and Jedox"
+  ],
+  "org_linkedin_locations": [
+   "Paseo de la Castellana, 259d, Torre Emperador - Planta 18, Madrid, Community of Madrid 28046, ES"
+  ],
+  "org_linkedin_description": "Quental es una empresa de servicios y soluciones tecnológicas de capital 100% español. Con un equipo humano de más de 500 personas, 22 años de experiencia y una facturación de más de 25M€, nuestra compañía se fundamenta sobre:\n\n🧠  El talento, demostrado por nuestro equipo humano\n🧩 La flexibilidad, nos adaptamos a las necesidades de nuestros clientes\n💡 La innovación, siempre pendientes de los últimos avances tecnológicos\n👌 Nuestra apuesta por la calidad, tanto en nuestros procesos internos como en las implantaciones a clientes\n🤝  Seguimos la Filosofía Agile, la interacción entre personas es más importante que los procesos\n\nSomos conscientes de que nuestro éxito se debe a nuestro equipo y, por ello, nuestros procesos de selección se realizan de forma exhaustiva, localizando a la persona más adecuada para cada puesto, adaptándonos a las necesidades de los proyectos con nuestros clientes. \n\n\n\n",
+  "org_linkedin_recruitment_agency_derived": false,
+  "ai_salary_currency": null,
+  "ai_salary_value": null,
+  "ai_salary_min_value": null,
+  "ai_salary_max_value": null,
+  "ai_salary_unit_text": null,
+  "ai_benefits": [
+   "Flexible Compensation Plan",
+   "Social Benefits",
+   "Flexible Schedule",
+   "Fully Remote Work",
+   "Career Development",
+   "Training Bonuses",
+   "Negotiable Salary",
+   "Private Language Lessons",
+   "Employee Benefits and Discounts"
+  ],
+  "ai_experience_level": "5-10",
+  "ai_work_arrangement": "Remote Solely",
+  "ai_work_arrangement_office_days": null,
+  "ai_remote_location": [
+   "Spain"
+  ],
+  "ai_remote_location_derived": [
+   "Spain"
+  ],
+  "ai_key_skills": [
+   "PHP",
+   "Symfony",
+   "REST API Design",
+   "Data Modeling",
+   "Software Architecture",
+   "Domain-Driven Design",
+   "Design Patterns",
+   "Concurrency",
+   "Performance Optimization",
+   "State and Event Management",
+   "Cloud Computing",
+   "Docker",
+   "Linux",
+   "Git",
+   "CI/CD",
+   "Microservices"
+  ],
+  "ai_core_responsibilities": "Develop web and responsive applications that meet business needs and technical requirements, and contribute to code reviews and knowledge sharing. Propose architectures, frameworks, and project solutions, and perform unit and integration testing.",
+  "ai_requirements_summary": "Requires more than four to five years of Symfony experience, with PHP 7/8, REST API design, data modeling, and strong software architecture knowledge. Desired technical experience includes cloud platforms, distributed systems and microservices, Docker, Linux, Git, CI/CD, Kubernetes, scalable and resilient systems, high concurrency, and AI tools applied to development; candidates must complete a technical test.",
+  "ai_working_hours": 40,
+  "ai_employment_type": [
+   "FULL_TIME"
+  ],
+  "ai_job_language": "Spanish",
+  "ai_visa_sponsorship": false,
+  "ai_keywords": [
+   "PHP 7/8",
+   "Symfony 3.x+",
+   "REST APIs",
+   "Data Modeling",
+   "System Design",
+   "Software Architecture",
+   "Domain-Driven Design",
+   "Design Patterns",
+   "Concurrency",
+   "Performance",
+   "State Management",
+   "Event Management",
+   "Cloud Computing",
+   "Azure",
+   "AWS",
+   "Google Cloud Platform",
+   "Docker",
+   "Linux",
+   "GitLab",
+   "Bitbucket",
+   "CI/CD",
+   "Jenkins",
+   "Distributed Architecture",
+   "Microservices",
+   "Hexagonal Architecture",
+   "Clean Architecture",
+   "Kubernetes",
+   "Scalable Systems",
+   "Resilient Systems",
+   "AI Development Tools"
+  ],
+  "ai_taxonomies_a": [
+   "Software",
+   "Technology"
+  ],
+  "ai_education": null,
+  "description_text": "¿Quieres formar parte de un equipo puntero con proyectos dinámicos?\nSi la respuesta es sí, ¡te estamos esperando!\n\nEn Quental buscamos Desarrolladores Backend especializados en Symfony con un enfoque claro hacia arquitectura de software, diseño de soluciones y trabajo en entornos cloud para unirse a un importante proyecto del sector deportivo ⚽ ¿te animas?\n\nEl candidato deberá ser capaz no sólo de desarrollar, sino de:\n\n💡 Diseñar soluciones escalables\n⚙️ Tomar decisiones técnicas\n🚀 Entender implicaciones de rendimiento, concurrencia y seguridad\n🌐 Trabajar en entornos distribuidos\n\n¡No te quedes fuera de juego! 🚫\n\nQueremos contar contigo para:\n\n⭐Desarrollar aplicaciones web y responsive de acuerdo con las necesidades comerciales y los requisitos técnicos.\n⭐Participar en revisiones regulares de código y actividades de intercambio de conocimientos en equipo.\n⭐Proponer nuevas arquitecturas, frameworks, soluciones para el proyecto.\n⭐Realizar Pruebas unitarias e integración.\n\nEres nuestro candidato ideal si aportas más de 4 / 5 años de experiencia en Symfony con las siguientes tecnologías:\n\n• 🐘 PHP 7/8 y Symfony (3.x en adelante)\n• 🔌 Diseño de APIs REST y buenas prácticas de integración\n• 🧩 Modelado de datos y diseño de sistemas\n• 🏗️ Conocimientos sólidos de:\n• 🧠 Arquitectura de software (DDD, patrones de diseño)\n• ⚡ Concurrencia y rendimiento\n• 🔄 Gestión de estados y eventos\n• ☁️ Experiencia trabajando en entornos cloud (Azure, AWS o GCP)\n• 🐳 Contenerización con Docker\n• 🐧 Experiencia en entornos Linux\n• 🔧 Control de versiones (GitLab / Bitbucket)\n• 🔁 CI/CD (Jenkins o similares)\nRequerimientos técnicos valorables (muy importantes)\n• 🌐 Experiencia en arquitecturas distribuidas / microservicios\n• 🧱 Conocimientos de arquitectura hexagonal o clean architecture\n• ☸️ Experiencia en Kubernetes\n• 🚀 Diseño de sistemas escalables y resilientes\n• ⚡ Experiencia en sistemas de alta concurrencia\n• 🤖 Uso de herramientas de IA aplicadas al desarrollo (no solo uso básico)\n\n📌Podrás demostrar tus habilidades mediante una prueba técnica (Indispensable)\n\nTe ofrecemos:\n\n💹Contrato indefinido y plan de retribución flexible con interesantes beneficios sociales\n👨 👩 👧 👦🏖️Horario flexible y modelo de trabajo Full Remote que te permitirá conciliar tu vida personal y profesional.\n✔️Desarrollo de carrera en un ambiente colaborativo y con bonificaciones a tu formación, para que siempre estés actualizado y a la última en cuanto a tecnología y tendencias en transformación digital.\n💶Entorno salarial negociable en función de la experiencia aportada.\n🗺️Clases particulares de idiomas.\n🎁Inclusión en el programa de beneficios y descuentos, para disfrutar de tus eventos, vacaciones, compras diarias y caprichos, beneficiándote de todos los descuentos que aporta el Quental Club Benefits!\n\n¿Cómo son nuestros procesos de selección? Es primordial para nosotros mantener la coherencia en la toma de decisiones durante las distintas etapas de esta labor llevada a cabo por nuestro equipo. Nuestros procedimientos son inclusivos, sin sesgos ni prejuicios y buscando el objetivo: colaborar con el mejor talento.\n\n¡Te esperamos!"
+ }
+]
