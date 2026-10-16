@@ -4,9 +4,10 @@
 
 Un radar personal de empleo **guiado por el CV**. A partir del CV y de las preferencias de la persona, encuentra las empresas y las ofertas que encajan con ella y avisa por Telegram solo de lo que merece la pena.
 
-Es un sistema con **dos caras** sobre los mismos datos:
+El sistema tiene un **núcleo** y varias formas de usarlo:
 - **El motor (automático):** un servicio en Python que corre solo en la Raspberry Pi. Encuentra, deduplica, puntúa y avisa.
-- **La mesa de trabajo (interactiva):** dentro de este repo, con Claude Code y los comandos de [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) (MIT) integrados. Sobre los puestos y el perfil del motor: preparar candidaturas (`/apply`), entrevistas (`/interview`), seguimiento (`/outcome`) y análisis de skills que faltan (`/upskill`).
+- **La mesa de trabajo:** los comandos de [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) (MIT) integrados, sobre los puestos y el perfil del motor: preparar candidaturas (`/apply`), entrevistas (`/interview`), seguimiento (`/outcome`) y análisis de skills que faltan (`/upskill`).
+- **La web (puerta principal):** desde el móvil y el ordenador se maneja **todo el sistema**, incluida la mesa de trabajo. Telegram se queda para avisar al momento y Claude Code para trabajar de forma conversacional.
 
 Todo lo que depende de la persona es **configuración del perfil**, no código:
 - ubicaciones (p. ej. Málaga)
@@ -21,7 +22,7 @@ Principios:
 2. **Integrar, no crear.** Para cada bloque se usa una herramienta existente que haya pasado una prueba verificable. El código propio es solo el pegamento, más lo que no exista. Catálogo de candidatos: [`docs/repositorios.md`](repositorios.md).
 3. **La empresa es la unidad principal**, no la oferta (ver `docs/estado-del-arte.md`).
 4. **Poco a poco.** Cada fase termina con algo comprobable.
-5. **Un solo perfil y una sola base de datos.** El motor y la mesa de trabajo leen lo mismo; nada se mantiene dos veces.
+5. **Un solo perfil, una sola base de datos y una sola capa de servicios.** Web, Telegram y Claude Code usan las mismas funciones sobre los mismos datos; nada se programa ni se mantiene dos veces.
 
 ## Arquitectura
 
@@ -75,7 +76,38 @@ Tres bucles que no se dibujan para que el diagrama se lea de arriba abajo:
 - **Candidaturas → Inteligencia:** lo que registra `/outcome` (entrevista, rechazo, oferta) es la etiqueta más valiosa de todas, y vuelve al SQLite como feedback.
 - **Encaje de empresa → Registro de fuentes:** las empresas que más encajan pasan a vigilarse, y su ATS se añade como búsqueda de la fuente `ats`.
 
-Transversal a todo: **planificador** (systemd timers), **configuración** (perfil y fuentes), **tope de gasto en LLM** y **panel** (Datasette sobre el SQLite).
+Transversal a todo: **planificador** (systemd timers), **configuración** (perfil y fuentes), **tope de gasto en LLM** y **Datasette** sobre el SQLite como herramienta de depuración.
+
+### Cómo se interactúa
+
+```mermaid
+flowchart TB
+    subgraph CLI["Clientes · cómo interactúas"]
+        direction LR
+        WEB["🖥️📱 Web (principal)<br/>todo el sistema<br/>móvil y ordenador · PWA"]
+        TG["Telegram<br/>avisos al momento<br/>👍/👎 · enlace a la web"]
+        CC["Claude Code<br/>mesa de trabajo<br/>conversacional"]
+        WEB ~~~ TG ~~~ CC
+    end
+
+    API["API de servicios (FastAPI)<br/>fuentes · puestos · empresas · perfil<br/>puntuación · candidaturas · skills"]
+
+    subgraph NUC["Núcleo"]
+        direction LR
+        MOT["Motor<br/>conectores · ingesta<br/>puntuación"]
+        DB[(SQLite)]
+        COLA["Cola de tareas (huey)<br/>/apply · /upskill<br/>vía claude -p"]
+        MOT ~~~ DB ~~~ COLA
+    end
+
+    CLI --> API --> NUC
+```
+
+- **API de servicios en el centro.** Cada acción del sistema (lanzar una fuente, puntuar, dar feedback, editar preferencias, preparar una candidatura…) es una función de Python expuesta por una API (FastAPI). Web, Telegram y la terminal son clientes: añadir una pantalla es dibujar lo que ya existe.
+- **Web: la puerta principal.** Todo el sistema, desde el móvil y el ordenador. Una app moderna y cuidada (React o Svelte con una librería de componentes, gráficos y modo oscuro), instalable en el móvil (PWA). Se compila en el Mac o en CI y la Pi solo sirve ficheros estáticos y la API: **la Pi no limita el diseño**.
+- **La mesa de trabajo, también desde la web.** "Preparar candidatura" o "Analizar skills" lanzan los comandos de ai-job-search por detrás con `claude -p`. Como tardan minutos, van a una **cola de tareas** (huey sobre SQLite) y el resultado aparece en la web para revisarlo.
+- **Telegram avisa** al momento, con 👍/👎 rápido y un enlace a la ficha del puesto en la web.
+- **Acceso privado con Tailscale:** la web vive en la Pi y solo se ve desde tus dispositivos, sin exponer nada a internet ni gestionar contraseñas mientras haya un único usuario.
 
 | Pieza | Responsabilidad | Detalle |
 |---|---|---|
@@ -87,6 +119,9 @@ Transversal a todo: **planificador** (systemd timers), **configuración** (perfi
 | **Inteligencia** | Encaje de empresa (¿es para mí?) y de puesto (filtros duros + Claude con evidencias, ponderado por la empresa) | Fases 4 y 7 |
 | **Avisos** | Aviso inmediato de lo top, resumen semanal, feedback 👍/👎 que sirve para medir y mejorar la puntuación | Fase 5 |
 | **Mesa de trabajo** | Comandos de ai-job-search en Claude Code, adaptados para leer el perfil y los puestos del SQLite: `/apply` (CV adaptado y carta con agente revisor), `/interview`, `/outcome` y `/upskill`. Su `/scrape` y su `/setup` no se usan: los sustituyen el motor y nuestro perfil | Fase 8 |
+| **API de servicios** | Todas las acciones del sistema como funciones con nombre, expuestas por FastAPI; la usan la web, Telegram y la terminal | Fase 4 (base) y siguientes |
+| **Web** | Interfaz principal para todo el sistema, en móvil y ordenador | Una pantalla por fase, desde la Fase 4 |
+| **Cola de tareas** | Ejecutar en segundo plano lo que tarda (comandos de la mesa de trabajo, lanzar fuentes a demanda) | Fase 8 |
 | **SQLite** | Única fuente de verdad: bruto, ofertas, puestos, empresas, evaluaciones, avisos, candidaturas, ejecuciones | Fase 3 |
 
 Los nombres de entidades (Fuente, Búsqueda, Ejecución, Bruto, Oferta, Puesto, Empresa, Perfil, Evaluación, Aviso, Feedback, Candidatura) y los campos comunes de una oferta están en [`docs/modelo.md`](modelo.md).
@@ -134,15 +169,15 @@ flowchart LR
 | 0 | Exploración ✅ | Datos reales de varias fuentes | `spikes/` con datos de 4 fuentes | — |
 | 0b | Estado del arte ✅ | Saber qué existe | `docs/estado-del-arte.md` | — |
 | 1 | Fuentes ✅ | Saber de dónde salen las ofertas | Cada fuente candidata probada y marcada como ✅ o ❌. Lista de fuentes v1 cerrada. Campos comunes de una oferta definidos | ver tabla de abajo |
-| **2** | **Perfil** ← *siguiente* | El CV convertido en perfil | Fichero de perfil (competencias con evidencia + preferencias) extraído con Claude y **aprobado por Rubén**. Ubicaciones y modalidades son configurables | `claude -p` con la suscripción (conector LLM reemplazable); `pypdf`; ESCO + JobBERT-v3 (#14), con propuesta de aplazarlo a la Fase 4 |
-| 3 | Ingesta | Ofertas guardadas sin duplicados | Un comando llena SQLite con las fuentes v1 a través de conectores con el mismo contrato (bruto + normalizado). La misma vacante en varias fuentes o consultoras es un solo Puesto. Métricas por fuente. 7 días seguidos sin errores en el Mac | `sqlite-utils`, `tenacity`, `rapidfuzz` + `cleanco`, Healthchecks, Datasette |
-| 4 | Puntuación | Claude decide qué es top | 30 ofertas etiquetadas por Rubén. Claude coincide en al menos un 80 % (top / no top). Coste diario medido | Rúbrica basada en el marco de evaluación de ai-job-search (filtros de elegibilidad e idioma + 5 dimensiones con escalas ancladas) y el patrón de jobchecker; Claude Haiku por API, pagado con el crédito mensual de Max; `pydantic-evals` + κ de Cohen |
-| 5 | Avisos | Llega a Telegram | Aviso inmediato de lo top y resumen semanal, recibidos durante una semana | aiogram 3 (modelo: JobNavigator); Apprise |
+| **2** | **Perfil** ← *siguiente* | El CV convertido en perfil | Fichero de perfil (competencias con evidencia + preferencias) extraído con Claude y **aprobado por Rubén**. Ubicaciones y modalidades son configurables. *Pantalla de perfil y preferencias: llega con la base de la web (Fase 4).* | `claude -p` con la suscripción (conector LLM reemplazable); `pypdf`; ESCO + JobBERT-v3 (#14), con propuesta de aplazarlo a la Fase 4 |
+| 3 | Ingesta | Ofertas guardadas sin duplicados | Un comando llena SQLite con las fuentes v1 a través de conectores con el mismo contrato (bruto + normalizado). La misma vacante en varias fuentes o consultoras es un solo Puesto. Métricas por fuente. 7 días seguidos sin errores en el Mac. **Datasette** para ver fuentes, ejecuciones, ofertas y puestos | `sqlite-utils`, `tenacity`, `rapidfuzz` + `cleanco`, Healthchecks, Datasette |
+| 4 | Puntuación | Claude decide qué es top | 30 ofertas etiquetadas por Rubén. Claude coincide en al menos un 80 % (top / no top). Coste diario medido. **Base de la web** (API de servicios + app) con las primeras pantallas: **etiquetar ofertas**, fichas de puesto con puntuación y citas, y perfil | Rúbrica basada en el marco de evaluación de ai-job-search (filtros de elegibilidad e idioma + 5 dimensiones con escalas ancladas) y el patrón de jobchecker; Claude Haiku por API, pagado con el crédito mensual de Max; `pydantic-evals` + κ de Cohen |
+| 5 | Avisos | Llega a Telegram | Aviso inmediato de lo top y resumen semanal, recibidos durante una semana. Cada aviso enlaza a su ficha en la web; **bandeja de avisos** en la web | aiogram 3 (modelo: JobNavigator); Apprise |
 | 🎯 | **MVP** | **Radar útil de punta a punta** | | |
-| 6 | Raspberry Pi | Funciona sola | 7 días en la Pi. Alerta si una fuente cae a 0 | timers de systemd o APScheduler; detección de anomalías de volumen |
-| 7 | Empresas | Encaje a nivel empresa | Lista viva de empresas puntuadas. Las mejores se vigilan solas | Empresas con ATS en freehire, ficha de LinkedIn, `discover` de maccydee/job-radar, PDF del PTA |
-| 8a | Mesa de trabajo: `/upskill` | Saber qué skills faltan para los puestos objetivo | `/upskill` de ai-job-search ejecutado sobre los puestos del SQLite y nuestro perfil; plan de aprendizaje revisado por Rubén. Puede hacerse en cuanto haya ingesta (Fase 3) | ai-job-search (MIT) |
-| 8b | Mesa de trabajo: candidaturas | Presentarse a un puesto top con buen material | `/apply`, `/interview` y `/outcome` funcionan sobre un Puesto del SQLite y el perfil exportado; los resultados de `/outcome` vuelven como feedback | ai-job-search (MIT); exportar `perfil_cv.yaml` → su `01-candidate-profile.md` |
+| 6 | Raspberry Pi | Funciona sola | 7 días en la Pi. Alerta si una fuente cae a 0. **Web accesible por Tailscale** desde el móvil y el ordenador, instalable como app | timers de systemd o APScheduler; detección de anomalías de volumen |
+| 7 | Empresas | Encaje a nivel empresa | Lista viva de empresas puntuadas. Las mejores se vigilan solas. **Pantalla de empresas** (encaje, vigiladas, descartadas) | Empresas con ATS en freehire, ficha de LinkedIn, `discover` de maccydee/job-radar, PDF del PTA |
+| 8a | Mesa de trabajo: `/upskill` | Saber qué skills faltan para los puestos objetivo | `/upskill` de ai-job-search ejecutado sobre los puestos del SQLite y nuestro perfil; plan de aprendizaje revisado por Rubén, visible en la web. Puede hacerse en cuanto haya ingesta (Fase 3) | ai-job-search (MIT) |
+| 8b | Mesa de trabajo: candidaturas | Presentarse a un puesto top con buen material | `/apply`, `/interview` y `/outcome` funcionan sobre un Puesto del SQLite y el perfil exportado; los resultados de `/outcome` vuelven como feedback. **Tablero de candidaturas** y botón "Preparar candidatura" en la web (cola de tareas) | ai-job-search (MIT); exportar `perfil_cv.yaml` → su `01-candidate-profile.md` |
 | 9 | Vivienda | Módulo secundario | Por definir al llegar | — |
 
 ## Fase 1 · Fuentes: pruebas

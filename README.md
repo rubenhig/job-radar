@@ -7,9 +7,11 @@ Radar personal de empleo **guiado por el CV**. Extrae del CV las competencias, l
 
 Puntúa empresas y ofertas con Claude y avisa por Telegram solo de lo que merece la pena.
 
-Tiene dos caras sobre los mismos datos:
+Tiene un núcleo y varias formas de usarlo, todas sobre los mismos datos:
 - **El motor**, automático: corre solo y avisa.
-- **La mesa de trabajo**, interactiva: Claude Code con los comandos de [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) integrados, para preparar candidaturas y entrevistas y analizar qué skills faltan.
+- **La web**, la puerta principal: todo el sistema desde el móvil y el ordenador.
+- **La mesa de trabajo**: los comandos de [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) integrados, para preparar candidaturas y entrevistas y analizar qué skills faltan; se lanzan desde la web o desde Claude Code.
+- **Telegram**, para avisar al momento.
 
 Pensado para correr en una Raspberry Pi 5. Primer caso de uso: un AI/LLM Engineer que busca trabajo en Málaga o en remoto desde España.
 
@@ -22,7 +24,7 @@ flowchart LR
     I --> DB[(SQLite)]
     P & DB --> M["Matching<br/>empresa + oferta<br/>(Claude con evidencias)"]
     M --> T[Telegram]
-    T --> W["Mesa de trabajo<br/>/apply · /interview · /upskill"]
+    T --> W["Web (móvil y ordenador)<br/>+ mesa de trabajo"]
     DB -.-> W
 ```
 
