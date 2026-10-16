@@ -108,6 +108,29 @@ flowchart TB
 - **La mesa de trabajo, también desde la web.** "Preparar candidatura" o "Analizar skills" lanzan los comandos de ai-job-search por detrás con `claude -p`. Como tardan minutos, van a una **cola de tareas** (huey sobre SQLite) y el resultado aparece en la web para revisarlo.
 - **Telegram avisa** al momento, con 👍/👎 rápido y un enlace a la ficha del puesto en la web.
 - **Acceso privado con Tailscale:** la web vive en la Pi y solo se ve desde tus dispositivos, sin exponer nada a internet ni gestionar contraseñas mientras haya un único usuario.
+- **Despliegue con Docker Compose**, igual en el Mac y en la Pi. Hay dos servicios:
+  - `api`: FastAPI, que sirve la web compilada y la API. La imagen se construye en dos etapas: Node compila la web y luego se monta Python con uv.
+  - `worker`: huey, que lanza la ingesta según su frecuencia, la puntuación y las tareas largas; sustituye a launchd y cron.
+
+  Los dos comparten un volumen con `data/` (SQLite y perfil); las claves van en `.env`, nunca en la imagen. Fuera de Docker quedan el desarrollo diario (uv y el servidor de Vite), Tailscale (en el sistema de la Pi) y la mesa de trabajo interactiva (Claude Code). Las tareas automáticas con Claude dentro del `worker` usan un token de larga duración de la suscripción (`claude setup-token`).
+
+**Funcionalidades de la web, por fases:**
+
+| Sección | Qué se hace | Fase |
+|---|---|---|
+| Puestos | Lista con filtros (fuente, modalidad, ciudad, puntuación, fecha) y búsqueda; por qué vías llega cada uno | 4 (#30) |
+| Ficha de puesto | Sus ofertas, campos fusionados con su procedencia, enlaces a la original; después, la puntuación con citas | 4 |
+| Etiquetar | Top / no top con motivo, rápido desde el móvil: la vara de medir de la puntuación | 4 (#30) |
+| Perfil y preferencias | Competencias con sus citas, editar ubicaciones, roles, términos e inglés, volver a extraer el perfil desde un CV | 4 (#30) |
+| Puntuación | Por qué es top o no; comparación con las etiquetas; coste | 4 |
+| Fuentes | Salud, ejecuciones, cuota y gasto, exclusividad, lanzar a mano, pausar (sustituye a Datasette) | 4–5 |
+| Avisos | Historial, 👍/👎, umbral y frecuencia del resumen | 5 |
+| Empresas | Descubiertas, puntuación, seguidas y sus ofertas | 7 |
+| Candidaturas | Kanban, preparar CV y carta, entrevistas, resultados | 8 |
+| Skills | Qué piden los puestos y te falta; qué estudiar | 8 |
+| Vivienda | Pisos | 9 |
+
+En todas: modo oscuro, instalable en el móvil y progreso de las tareas largas.
 
 | Pieza | Responsabilidad | Detalle |
 |---|---|---|
@@ -121,7 +144,7 @@ flowchart TB
 | **Mesa de trabajo** | Comandos de ai-job-search en Claude Code, adaptados para leer el perfil y los puestos del SQLite: `/apply` (CV adaptado y carta con agente revisor), `/interview`, `/outcome` y `/upskill`. Su `/scrape` y su `/setup` no se usan: los sustituyen el motor y nuestro perfil | Fase 8 |
 | **API de servicios** | Todas las acciones del sistema como funciones con nombre, expuestas por FastAPI; la usan la web, Telegram y la terminal | Fase 4 (base) y siguientes |
 | **Web** | Interfaz principal para todo el sistema, en móvil y ordenador | Una pantalla por fase, desde la Fase 4 |
-| **Cola de tareas** | Ejecutar en segundo plano lo que tarda (comandos de la mesa de trabajo, lanzar fuentes a demanda) | Fase 8 |
+| **Cola de tareas** | Servicio `worker` (huey): ingesta según frecuencia, puntuación, comandos de la mesa de trabajo y fuentes a demanda | Tras la semana de prueba de la Fase 3 |
 | **SQLite** | Única fuente de verdad: bruto, ofertas, puestos, empresas, evaluaciones, avisos, candidaturas, ejecuciones | Fase 3 |
 
 Los nombres de entidades (Fuente, Búsqueda, Ejecución, Bruto, Oferta, Puesto, Empresa, Perfil, Evaluación, Aviso, Feedback, Candidatura) y los campos comunes de una oferta están en [`docs/modelo.md`](modelo.md).
@@ -174,7 +197,7 @@ flowchart LR
 | 4 | Puntuación | Claude decide qué es top | 30 ofertas etiquetadas por Rubén. Claude coincide en al menos un 80 % (top / no top). Coste diario medido. **Base de la web** (API de servicios + app) con las primeras pantallas: **etiquetar ofertas**, fichas de puesto con puntuación y citas, y perfil | Rúbrica basada en el marco de evaluación de ai-job-search (filtros de elegibilidad e idioma + 5 dimensiones con escalas ancladas) y el patrón de jobchecker; Claude Haiku por API, pagado con el crédito mensual de Max; `pydantic-evals` + κ de Cohen |
 | 5 | Avisos | Llega a Telegram | Aviso inmediato de lo top y resumen semanal, recibidos durante una semana. Cada aviso enlaza a su ficha en la web; **bandeja de avisos** en la web | aiogram 3 (modelo: JobNavigator); Apprise |
 | 🎯 | **MVP** | **Radar útil de punta a punta** | | |
-| 6 | Raspberry Pi | Funciona sola | 7 días en la Pi. Alerta si una fuente cae a 0. **Web accesible por Tailscale** desde el móvil y el ordenador, instalable como app | timers de systemd o APScheduler; detección de anomalías de volumen |
+| 6 | Raspberry Pi | Funciona sola | El mismo `docker compose` del Mac, 7 días en la Pi. Alerta si una fuente cae a 0. **Web accesible por Tailscale** desde el móvil y el ordenador, instalable como app | Docker Compose (imágenes arm64); `tailscale serve`; huey como planificador |
 | 7 | Empresas | Encaje a nivel empresa | Lista viva de empresas puntuadas. Las mejores se vigilan solas. **Pantalla de empresas** (encaje, vigiladas, descartadas) | Empresas con ATS en freehire, ficha de LinkedIn, `discover` de maccydee/job-radar, PDF del PTA |
 | 8a | Mesa de trabajo: `/upskill` | Saber qué skills faltan para los puestos objetivo | `/upskill` de ai-job-search ejecutado sobre los puestos del SQLite y nuestro perfil; plan de aprendizaje revisado por Rubén, visible en la web. Puede hacerse en cuanto haya ingesta (Fase 3) | ai-job-search (MIT) |
 | 8b | Mesa de trabajo: candidaturas | Presentarse a un puesto top con buen material | `/apply`, `/interview` y `/outcome` funcionan sobre un Puesto del SQLite y el perfil exportado; los resultados de `/outcome` vuelven como feedback. **Tablero de candidaturas** y botón "Preparar candidatura" en la web (cola de tareas) | ai-job-search (MIT); exportar `perfil_cv.yaml` → su `01-candidate-profile.md` |
