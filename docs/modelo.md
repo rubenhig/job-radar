@@ -47,6 +47,7 @@ Decisiones:
 - **Se avisa y se puntúa por Puesto, no por Oferta.** El mismo puesto de *Technical Lead Python – AI Agents* llegó por tres consultoras y tres portales: es un aviso, con las tres vías listadas.
 - **Al fusionar, cada campo recuerda de dónde viene.** Por ejemplo, el salario se toma por orden de preferencia (InfoJobs > LinkedIn > freehire > Indeed) y se guarda de qué oferta salió.
 - **La mesa de trabajo (ai-job-search) no tiene datos propios:** lee el perfil y los puestos del SQLite y escribe ahí las candidaturas. Sus ficheros de perfil (`01-candidate-profile.md`…) se **generan** desde `perfil_cv.yaml`, nunca se editan a mano.
+- **Las acciones largas son tareas en segundo plano** (cola huey sobre el mismo SQLite): preparar una candidatura o analizar skills devuelve una tarea cuyo estado y resultado se consultan desde la web.
 - **La vivienda reutilizará Fuente, Búsqueda, Ejecución y Bruto** con su propia entidad (Anuncio).
 
 ## El conector: contrato de cada fuente

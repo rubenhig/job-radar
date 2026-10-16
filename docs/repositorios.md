@@ -23,6 +23,7 @@ Esto es lo que buscamos. Rubén investiga en paralelo y aporta ideas (como comen
 | 5 · Avisos | Telegram con botones 👍/👎 y resumen semanal | aiogram 3 + modelo de JobNavigator; Apprise para avisos simples |
 | 7 · Empresas | Empresas tech de Málaga con web, ATS y señales de IA | Overture Places + OSM + Wikidata; `discover` de maccydee; PDF del PTA |
 | 8 · Mesa de trabajo | Candidaturas (CV adaptado, carta), entrevistas, seguimiento y análisis de skills | **[ai-job-search](https://github.com/MadsLorentzen/ai-job-search)** (47,7k★, MIT): integrado como mesa de trabajo en Claude Code (decisión 16-oct-2026) |
+| 4+ · Interfaz web | App moderna para todo el sistema, móvil y ordenador, sobre una API de servicios | FastAPI + React o Svelte con una librería de componentes (p. ej. shadcn/ui) y PWA; **pendiente de búsqueda** de plantillas de panel reutilizables. Datasette para depurar. huey para la cola de tareas. Tailscale para el acceso |
 | 9 · Vivienda | Anuncios de alquiler y venta en el centro de Málaga, histórico de precios | API oficial de idealista (pedir credenciales) + open-properties; [API de idealista en RapidAPI](https://rapidapi.com/kiwimaker/api/idealista-real-estate/pricing) (idea de Rubén, de un tercero: falta ver plan y datos) |
 
 ## Método
