@@ -104,7 +104,7 @@ flowchart TB
 ```
 
 - **API de servicios en el centro.** Cada acción del sistema (lanzar una fuente, puntuar, dar feedback, editar preferencias, preparar una candidatura…) es una función de Python expuesta por una API (FastAPI). Web, Telegram y la terminal son clientes: añadir una pantalla es dibujar lo que ya existe.
-- **Web: la puerta principal.** Todo el sistema, desde el móvil y el ordenador. Una app moderna y cuidada (React o Svelte con una librería de componentes, gráficos y modo oscuro), instalable en el móvil (PWA). Se compila en el Mac o en CI y la Pi solo sirve ficheros estáticos y la API: **la Pi no limita el diseño**.
+- **Web: la puerta principal.** Todo el sistema, desde el móvil y el ordenador. Una app moderna y cuidada: React + shadcn/ui sobre la plantilla shadcn-admin, con gráficos y modo oscuro, instalable en el móvil (PWA); ver [repositorios](repositorios.md#bloque-interfaz-web). Se compila en el Mac o en CI. En la Pi, FastAPI sirve la app y la API desde el mismo origen, con HTTPS de `tailscale serve`: **la Pi no limita el diseño**.
 - **La mesa de trabajo, también desde la web.** "Preparar candidatura" o "Analizar skills" lanzan los comandos de ai-job-search por detrás con `claude -p`. Como tardan minutos, van a una **cola de tareas** (huey sobre SQLite) y el resultado aparece en la web para revisarlo.
 - **Telegram avisa** al momento, con 👍/👎 rápido y un enlace a la ficha del puesto en la web.
 - **Acceso privado con Tailscale:** la web vive en la Pi y solo se ve desde tus dispositivos, sin exponer nada a internet ni gestionar contraseñas mientras haya un único usuario.
