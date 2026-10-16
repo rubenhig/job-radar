@@ -23,7 +23,7 @@ Esto es lo que buscamos. Rubén investiga en paralelo y aporta ideas (como comen
 | 5 · Avisos | Telegram con botones 👍/👎 y resumen semanal | aiogram 3 + modelo de JobNavigator; Apprise para avisos simples |
 | 7 · Empresas | Empresas tech de Málaga con web, ATS y señales de IA | Overture Places + OSM + Wikidata; `discover` de maccydee; PDF del PTA |
 | 8 · Mesa de trabajo | Candidaturas (CV adaptado, carta), entrevistas, seguimiento y análisis de skills | **[ai-job-search](https://github.com/MadsLorentzen/ai-job-search)** (47,7k★, MIT): integrado como mesa de trabajo en Claude Code (decisión 16-oct-2026) |
-| 4+ · Interfaz web | App moderna para todo el sistema, móvil y ordenador, sobre una API de servicios | FastAPI + React o Svelte con una librería de componentes (p. ej. shadcn/ui) y PWA; **pendiente de búsqueda** de plantillas de panel reutilizables. Datasette para depurar. huey para la cola de tareas. Tailscale para el acceso |
+| 4+ · Interfaz web | App moderna para todo el sistema, móvil y ordenador, sobre una API de servicios | **Decidido (#29):** React + shadcn/ui sobre la plantilla shadcn-admin, cliente generado con hey-api, kanban de Dice UI, PWA con vite-plugin-pwa, FastAPI sirve web y API, `tailscale serve`. Datasette para depurar. huey para la cola de tareas |
 | 9 · Vivienda | Anuncios de alquiler y venta en el centro de Málaga, histórico de precios | API oficial de idealista (pedir credenciales) + open-properties; [API de idealista en RapidAPI](https://rapidapi.com/kiwimaker/api/idealista-real-estate/pricing) (idea de Rubén, de un tercero: falta ver plan y datos) |
 
 ## Método
@@ -201,6 +201,30 @@ Lo que aprendimos en la primera ronda (16-oct-2026):
 
 **Recomendación:** montar el juez con el patrón de jobchecker (criterios con escala anclada, evidencia `matched`/`missing` y nota ponderada en Python, nunca la nota que da el modelo), añadir las dos etiquetas de fitlens (evidencia frente a nivel) y tomar como guía las 13 preguntas de 5 niveles de jobfit-jevbench. Lo primero que probaría: un `Dataset` de `pydantic-evals` con 30–50 ofertas etiquetadas a mano y la κ de Cohen por criterio contra Haiku.
 **Búsquedas usadas:** `gh search repos --topic job-matching`, `--topic resume-matching`, `--topic resume-job-matching`, `--topic job-matching --language python`, `"job matching LLM"`, `"resume job matching"`, `"resume matcher"`, `"cv job matching"`, `"resume screening llm"`, `"job scoring" llm`, `"job fit" score claude`, `"llm-as-a-judge"`, `--topic llm-as-a-judge`, `--topic llm-evaluation --language python`, `"rubric" llm evaluation`, `"esco skill extraction"`, `"jobbert"` (todas con `--sort stars --json fullName,stargazersCount,pushedAt,license,language,description`). Hugging Face: `api/models?search=jobbert|job-matching|resume|job-description|cv-job`, `api/models?author=TechWolf`, `api/datasets?search=job|resume-job|job-fit|resume-matching|cv-job`. PyPI: `pydantic-evals`, `workrb`.
+
+### Bloque: Interfaz web
+**Qué necesitamos:** una app cuidada para móvil y ordenador que maneje todo el sistema: lista y ficha de puestos, etiquetado rápido, perfil y preferencias, salud de fuentes con gráficos, kanban de candidaturas y tareas largas con su progreso. La Pi solo sirve estáticos; la mantiene una persona con Claude Code.
+
+**Decisión (16-oct-2026, aprobada por Rubén, #29): React + Vite + TypeScript + shadcn/ui + TanStack Router/Query/Table + Recharts.** Es el stack que mejor conocen los modelos y el que más piezas trae ya hechas. shadcn, además, ofrece MCP y una *skill* para agentes. Versiones consultadas en npm el 16-oct-2026: React 19.3, Vite 8.3, Tailwind 4.3, CLI `shadcn` 4.22 (Base UI por defecto desde julio de 2026), TanStack Router 1.170, Query 5.104, Table 9.3.
+
+| Repositorio | ★ | Último push | Licencia | Qué aporta | Veredicto |
+|---|---|---|---|---|---|
+| [satnaing/shadcn-admin](https://github.com/satnaing/shadcn-admin) | 15,8k | 2026-09 | MIT | Panel Vite SPA con React 19, TanStack Router/Query/Table, Recharts, Tailwind 4, modo oscuro y diseño adaptable; su página "tasks" es una tabla con filtros por facetas | **base de la app**; quitar Clerk y las secciones de demo |
+| [fastapi/full-stack-fastapi-template](https://github.com/fastapi/full-stack-fastapi-template) | 46k | 2026-10 | MIT | Cliente generado desde `openapi.json` con `@hey-api/openapi-ts` (script `generate-client`), y `generate_unique_id_function` en FastAPI para nombres limpios | **copiar el patrón** del cliente tipado (versión exacta fijada: hey-api es 0.x y rompe en las minor) |
+| [shadcn-ui/ui](https://github.com/shadcn-ui/ui) | 125,7k | 2026-10 | MIT | Bloque `dashboard-01` (tarjetas KPI, gráfico de área, data-table), Charts sobre Recharts 3 | **usar** para el panel de salud de fuentes |
+| [sadmann7/diceui](https://github.com/sadmann7/diceui) | 2,1k | 2026-10 | MIT | Kanban sobre dnd-kit instalable por el registro de shadcn (`shadcn add @diceui/kanban`) | **usar** para el kanban de candidaturas (aislado en un componente: dnd-kit está cambiando de versión) |
+| [sadmann7/tablecn](https://github.com/sadmann7/tablecn) | 6,3k | 2026-10 | MIT | Filtros avanzados (facetas, rangos) para el data-table | **usar si hace falta** más filtrado que el de shadcn-admin |
+| [Gsync/jobsync](https://github.com/Gsync/jobsync) | 1,4k | 2026-10 | MIT | Seguimiento de candidaturas con Next 15, shadcn y Prisma/SQLite; modelo Job, JobStatus, Company, Activity, Interview… | **referencia** de modelo de datos y pantallas de candidaturas (código atado a Next) |
+| [career-ops-hq/career-ops](https://github.com/career-ops-hq/career-ops) | 75k | 2026-10 | MIT | Agente para CLIs de IA que puntúa ofertas contra el CV con evidencias, hace seguimiento y comprueba si las ofertas siguen vivas | **referencia** funcional y de criterios de puntuación para la Fase 4 (revisar a fondo, como ai-job-search) |
+| [vite-pwa/vite-plugin-pwa](https://github.com/vite-pwa/vite-plugin-pwa) | — | — | MIT | Manifest y service worker (Workbox); `navigateFallbackDenylist: [/^\/api\//]` | **usar**: instalable en Android e iOS (en iOS, "Añadir a pantalla de inicio") |
+
+**Despliegue:** FastAPI sirve la app compilada y la API (`/api`) desde el mismo origen. Uvicorn escucha en `127.0.0.1:8000` y por delante va `tailscale serve --bg 8000`, que da HTTPS válido en `*.ts.net` (contexto seguro para la PWA). No hace falta CORS; en desarrollo, el `server.proxy` de Vite.
+
+**Descartados:**
+- SvelteKit + shadcn-svelte: más ligero, pero no hay plantilla de panel gratuita y mantenida; SvelteKit 3 salió el 1-oct-2026 sin compatibilidad confirmada con shadcn-svelte, y los modelos escriben Svelte antiguo.
+- Vue + Nuxt UI 4: muy completo, pero tiene menos ecosistema y los modelos lo dominan peor.
+- Mantine 9: muy productivo, pero se parece más a "Mantine" y tiene menos bloques.
+- Next.js (p. ej. Kiranism/next-shadcn-dashboard-starter): no hace falta servidor propio; de ese starter solo se puede tomar el kanban, que es MIT.
 
 ## Fase 5 · Avisos
 
