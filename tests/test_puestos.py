@@ -113,3 +113,24 @@ def test_ids_estables_y_fusion_de_puestos(db):
     c = guardar(db, oferta("infojobs", "5", titulo="AI Engineer (Híbrido)"))
     puestos.actualizar(db)
     assert db["oferta"].get(c)["puesto_id"] == p1
+
+
+def test_remoto_publicado_en_varias_ciudades_es_un_puesto():
+    ofertas = [oferta("linkedin", str(i), titulo="Software Developer Java & AI | Remoto", empresa="knowmad mood",
+                      ciudad=c, pais="ES", modalidad="remoto") | {"id": i}
+               for i, c in enumerate(["Madrid", "Murcia", "Seville", "Málaga"])]
+    assert len(puestos.agrupar(ofertas)) == 1
+
+
+def test_la_etiqueta_pasa_al_puesto_que_queda_al_fusionar(db):
+    a = guardar(db, oferta("linkedin", "1", titulo="AI Engineer", ciudad="Madrid", modalidad="remoto", pais="ES"))
+    b = guardar(db, oferta("indeed", "2", titulo="AI Engineer", ciudad="Murcia", modalidad="remoto", pais="ES",
+                           empresa="Otra", descripcion="Nada que ver."))
+    puestos.actualizar(db)
+    pb = db["oferta"].get(b)["puesto_id"]
+    db["etiqueta"].insert({"puesto_id": pb, "valor": "top", "motivo": "IA", "creada_en": "x", "actualizada_en": "x"})
+    db.execute("UPDATE oferta SET empresa = 'Acme' WHERE id = ?", [b])  # ahora sí son el mismo puesto
+    puestos.actualizar(db)
+    queda = db["oferta"].get(a)["puesto_id"]
+    assert db["oferta"].get(b)["puesto_id"] == queda
+    assert [r["puesto_id"] for r in db["etiqueta"].rows] == [queda]

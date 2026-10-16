@@ -93,10 +93,12 @@ def _palabras(texto: str) -> set[str]:
 
 
 def zona(o: dict) -> str | None:
-    if o.get("ciudad"):
-        return "ciudad:" + re.sub(r"\W+", " ", _plano(o["ciudad"])).strip()
+    """Dónde se compara una oferta. En remoto la ciudad del anuncio no distingue el puesto:
+    la misma vacante remota se publica en Madrid, Murcia y Málaga a la vez."""
     if o.get("modalidad") == "remoto" and o.get("pais"):
         return "remoto:" + o["pais"]
+    if o.get("ciudad"):
+        return "ciudad:" + re.sub(r"\W+", " ", _plano(o["ciudad"])).strip()
     return None
 
 
@@ -183,6 +185,18 @@ def fusionar(ofertas: list[dict]) -> dict:
     return fusion
 
 
+def heredar_etiqueta(db, origen: int, destino: int) -> None:
+    """Al fusionar puestos, la etiqueta de Rubén pasa al que queda. Si los dos tenían, gana la más reciente."""
+    if "etiqueta" not in db.table_names():
+        return
+    db.execute("""INSERT INTO etiqueta (puesto_id, valor, motivo, creada_en, actualizada_en)
+                  SELECT ?, valor, motivo, creada_en, actualizada_en FROM etiqueta WHERE puesto_id = ?
+                  ON CONFLICT (puesto_id) DO UPDATE SET valor = excluded.valor, motivo = excluded.motivo,
+                      actualizada_en = excluded.actualizada_en
+                  WHERE excluded.actualizada_en > etiqueta.actualizada_en""", [destino, origen])
+    db.execute("DELETE FROM etiqueta WHERE puesto_id = ?", [origen])
+
+
 def actualizar(db, dias: int = VENTANA_DIAS) -> dict[str, int]:
     """Recalcula los puestos de las ofertas vistas en la ventana. Devuelve cuántos se crean, cambian y fusionan."""
     desde = (datetime.now(UTC) - timedelta(days=dias)).isoformat(timespec="seconds")
@@ -198,6 +212,7 @@ def actualizar(db, dias: int = VENTANA_DIAS) -> dict[str, int]:
             puesto_id = min(previos, key=lambda p: (-previos[p], p))
             for otro in set(previos) - {puesto_id}:
                 db["puesto"].update(otro, {"estado": f"fusionado:{puesto_id}", "actualizado_en": ahora})
+                heredar_etiqueta(db, otro, puesto_id)
                 m["fusionados"] += 1
         else:
             puesto_id = None
