@@ -19,6 +19,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from job_radar.preferencias import Modalidad
 
+UA = "job-radar/0.1 (radar personal de empleo; github.com/rubenhig/job-radar)"
+
+
+class ErrorFuente(RuntimeError):
+    """La fuente respondió algo que el conector no esperaba (formato, parámetros ignorados…)."""
+
+
 # --- lo que se busca ------------------------------------------------------------
 
 
@@ -63,9 +70,15 @@ class Bruto:
     eliminados: list[str] = field(default_factory=list)  # campos personales quitados (con valor)
 
     @classmethod
-    def de(cls, id_externo: Any, payload: dict[str, Any], personales: Iterable[str] = ()) -> "Bruto":
-        """Construye el bruto quitando antes los campos personales: nunca llegan a guardarse."""
-        limpio = dict(payload)
+    def de(cls, id_externo: Any, payload: dict[str, Any], personales: Iterable[str] = (),
+           volatiles: Iterable[str] = ()) -> "Bruto":
+        """Construye el bruto quitando antes los campos personales: nunca llegan a guardarse.
+
+        Los volátiles (contadores de visitas, "visto por última vez"…) no son de la
+        oferta sino de la fuente; se quitan para que la misma oferta no parezca
+        nueva en cada ejecución.
+        """
+        limpio = {k: v for k, v in payload.items() if k not in set(volatiles)}
         eliminados = [c for c in personales if c in limpio and _tiene_valor(limpio.pop(c))]
         return cls(str(id_externo), limpio, eliminados)
 
@@ -121,6 +134,7 @@ class Conector(Protocol):
     fuente: ClassVar[str]          # 'linkedin'
     version: ClassVar[str]         # 'linkedin-fantastic-rapidapi/1': cambia si cambia la interpretación
     personales: ClassVar[tuple[str, ...]]  # campos del payload que nunca se guardan
+    volatiles: ClassVar[tuple[str, ...]]   # campos que cambian en cada consulta sin que cambie la oferta
 
     # Lo que la fuente diga de su cuota en la última llamada a `traer` (cabeceras, créditos…).
     cuota: dict[str, Any] | None
@@ -130,7 +144,7 @@ class Conector(Protocol):
         ...
 
     def traer(self, busqueda: Busqueda) -> Iterator[Bruto]:
-        """Red. Puede fallar. Cada Bruto se construye con `Bruto.de(..., self.personales)`."""
+        """Red. Puede fallar. Cada Bruto se construye con `Bruto.de(..., self.personales, self.volatiles)`."""
         ...
 
     def normalizar(self, payload: dict[str, Any]) -> Oferta:
