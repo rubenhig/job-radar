@@ -1,0 +1,88 @@
+"""Preferencias del candidato: lo que busca, como configuración y no como código.
+
+Las preferencias definen qué búsquedas lanza cada fuente (ingesta) y qué
+restricciones duras aplica la puntuación. Cada persona tiene su fichero
+(`data/perfil/preferencias.yaml`, fuera del repo); `config/preferencias.ejemplo.yaml`
+es la plantilla versionada.
+"""
+
+from enum import StrEnum
+from pathlib import Path
+from typing import Literal
+
+import yaml
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+class Modalidad(StrEnum):
+    PRESENCIAL = "presencial"
+    HIBRIDO = "hibrido"
+    REMOTO = "remoto"
+
+
+class Estricto(BaseModel):
+    model_config = ConfigDict(extra="forbid")  # una clave mal escrita es un error, no un silencio
+
+
+class Ubicacion(Estricto):
+    """Un sitio donde se acepta trabajar en persona (presencial o híbrido)."""
+
+    ciudad: str
+    pais: str = Field(pattern=r"^[A-Z]{2}$", description="ISO 3166-1 alfa-2, p. ej. ES")
+    modalidades: list[Modalidad] = [Modalidad.PRESENCIAL, Modalidad.HIBRIDO]
+
+
+class Remoto(Estricto):
+    """Trabajo en remoto: desde qué país y para qué empresas."""
+
+    acepta: bool = True
+    desde_pais: str = Field(pattern=r"^[A-Z]{2}$", description="País desde el que se trabajaría")
+    empresa_local: bool = True
+    empresa_extranjera: bool = True
+
+
+class Roles(Estricto):
+    principales: list[str] = Field(min_length=1)
+    secundarios: list[str] = []
+    excluir: list[str] = Field(default=[], description="Términos que descartan un puesto")
+
+
+NivelIdioma = Literal["A1", "A2", "B1", "B2", "C1", "C2", "nativo"]
+
+
+class Idioma(Estricto):
+    nivel: NivelIdioma
+    efecto: Literal["marcar", "excluir"] = Field(
+        "marcar", description="Si un puesto pide más nivel: marcarlo o descartarlo")
+
+
+class Informativo(Estricto):
+    """Datos que se guardan y se muestran, pero no filtran."""
+
+    filtra: Literal[False] = False
+
+
+class Avisos(Estricto):
+    inmediato_desde: int = Field(85, ge=0, le=100, description="Puntuación mínima para avisar al momento")
+    resumen: Literal["diario", "semanal"] = "semanal"
+
+
+class Preferencias(Estricto):
+    version: int = 1
+    ubicaciones: list[Ubicacion] = []
+    remoto: Remoto | None = None
+    roles: Roles
+    idiomas: dict[str, Idioma] = {}
+    salario: Informativo = Informativo()
+    tipo_empresa: Informativo = Informativo()
+    avisos: Avisos = Avisos()
+
+    @model_validator(mode="after")
+    def algun_sitio(self):
+        if not self.ubicaciones and not (self.remoto and self.remoto.acepta):
+            raise ValueError("hace falta al menos una ubicación o aceptar remoto")
+        return self
+
+
+def cargar(ruta: Path) -> Preferencias:
+    return Preferencias.model_validate(yaml.safe_load(ruta.read_text(encoding="utf-8")))
