@@ -32,6 +32,17 @@ class Via(BaseModel):
     empresa: str | None = None
 
 
+class Valoracion(BaseModel):
+    """La última evaluación del puesto con la rúbrica vigente, en corto."""
+
+    nota: int
+    vetado: bool
+    motivo_veto: str | None = None
+    marcas: list[str] = []
+    resumen: str | None = None
+    rol_ia: str | None = None
+
+
 class PuestoResumen(BaseModel):
     id: int
     titulo: str
@@ -46,6 +57,7 @@ class PuestoResumen(BaseModel):
     vias: list[Via]
     ofertas: int
     etiqueta: Etiqueta | None = None
+    valoracion: Valoracion | None = None
 
 
 class PaginaPuestos(BaseModel):
@@ -86,10 +98,67 @@ class CampoFusionado(BaseModel):
     fuente: str | None = None
 
 
+class Criterio(BaseModel):
+    valor: str
+    cita: str | None = None
+    motivo: str
+
+
+class RequisitoEvaluado(BaseModel):
+    requisito: str
+    importancia: str
+    origen: str
+    competencia: str | None = None
+    cobertura: str
+
+
+class Evaluacion(BaseModel):
+    """Una evaluación completa: veredictos por criterio con sus citas, y la nota calculada."""
+
+    nota: int
+    vetado: bool
+    motivo_veto: str | None = None
+    marcas: list[str] = []
+    resumen: str
+    compuertas: dict[str, Criterio]       # modalidad, elegibilidad, idioma (valor = veredicto)
+    dimensiones: dict[str, Criterio]      # funcion, rol_ia, seniority, fuente
+    requisitos: list[RequisitoEvaluado]
+    parciales: dict[str, float]
+    citas_falsas: list[str]
+    rubrica: str
+    modelo: str
+    coste_usd: float | None = None
+    creada_en: str
+
+
 class PuestoDetalle(PuestoResumen):
     estado: str
     fusion: dict[str, CampoFusionado]
     lista_ofertas: list[Oferta]
+    evaluacion: Evaluacion | None = None
+
+
+class CasoAcuerdo(BaseModel):
+    puesto_id: int
+    titulo: str
+    etiqueta: Valor
+    nota: int
+    vetado: bool
+    acierto: bool
+    explicacion: str
+    motivo: str | None = None
+
+
+class Acuerdo(BaseModel):
+    """Cuánto coincide la puntuación con las etiquetas de Rubén."""
+
+    rubrica: str
+    casos: list[CasoAcuerdo]
+    umbral: int | None = None
+    acuerdo: float | None = None
+    kappa: float | None = None
+    dejando_uno_fuera: float | None = None
+    coste_usd: float = 0
 
 
 class EstadoFuente(BaseModel):

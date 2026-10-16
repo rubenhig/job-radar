@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { type Options, perfilGuardarPreferencias, perfilLeerPreferencias, perfilPerfil, puestosEtiquetar, puestosFicha, puestosListar, puestosQuitarEtiqueta, sistemaFuentes, sistemaResumen } from '../sdk.gen';
-import type { PerfilGuardarPreferenciasData, PerfilGuardarPreferenciasError, PerfilGuardarPreferenciasResponse, PerfilLeerPreferenciasData, PerfilLeerPreferenciasResponse, PerfilPerfilData, PerfilPerfilResponse, PuestosEtiquetarData, PuestosEtiquetarError, PuestosEtiquetarResponse, PuestosFichaData, PuestosFichaError, PuestosFichaResponse, PuestosListarData, PuestosListarError, PuestosListarResponse, PuestosQuitarEtiquetaData, PuestosQuitarEtiquetaError, PuestosQuitarEtiquetaResponse, SistemaFuentesData, SistemaFuentesResponse, SistemaResumenData, SistemaResumenResponse } from '../types.gen';
+import { type Options, perfilGuardarPreferencias, perfilLeerPreferencias, perfilPerfil, puestosEtiquetar, puestosFicha, puestosListar, puestosQuitarEtiqueta, puntuacionAcuerdo, sistemaFuentes, sistemaResumen } from '../sdk.gen';
+import type { PerfilGuardarPreferenciasData, PerfilGuardarPreferenciasError, PerfilGuardarPreferenciasResponse, PerfilLeerPreferenciasData, PerfilLeerPreferenciasResponse, PerfilPerfilData, PerfilPerfilResponse, PuestosEtiquetarData, PuestosEtiquetarError, PuestosEtiquetarResponse, PuestosFichaData, PuestosFichaError, PuestosFichaResponse, PuestosListarData, PuestosListarError, PuestosListarResponse, PuestosQuitarEtiquetaData, PuestosQuitarEtiquetaError, PuestosQuitarEtiquetaResponse, PuntuacionAcuerdoData, PuntuacionAcuerdoResponse, SistemaFuentesData, SistemaFuentesResponse, SistemaResumenData, SistemaResumenResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -201,3 +201,23 @@ export const perfilGuardarPreferenciasMutation = (options?: Partial<Options<Perf
     };
     return mutationOptions;
 };
+
+export const puntuacionAcuerdoQueryKey = (options?: Options<PuntuacionAcuerdoData>) => createQueryKey('puntuacionAcuerdo', options);
+
+/**
+ * Acuerdo
+ *
+ * La puntuación frente a las etiquetas de Rubén (ver job_radar.medir).
+ */
+export const puntuacionAcuerdoOptions = (options?: Options<PuntuacionAcuerdoData>) => queryOptions<PuntuacionAcuerdoResponse, DefaultError, PuntuacionAcuerdoResponse, ReturnType<typeof puntuacionAcuerdoQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await puntuacionAcuerdo({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: puntuacionAcuerdoQueryKey(options)
+});

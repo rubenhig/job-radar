@@ -122,6 +122,40 @@
       }
      },
      {
+      "name": "nota_min",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "maximum": 100,
+         "minimum": 0
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Nota Min"
+      }
+     },
+     {
+      "name": "puntuado",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Puntuado"
+      }
+     },
+     {
       "name": "orden",
       "in": "query",
       "required": false,
@@ -129,7 +163,8 @@
        "enum": [
         "recientes",
         "publicadas",
-        "vias"
+        "vias",
+        "nota"
        ],
        "type": "string",
        "default": "recientes",
@@ -437,10 +472,103 @@
      }
     }
    }
+  },
+  "/api/acuerdo": {
+   "get": {
+    "tags": [
+     "puntuacion"
+    ],
+    "summary": "Acuerdo",
+    "description": "La puntuación frente a las etiquetas de Rubén (ver job_radar.medir).",
+    "operationId": "puntuacion-acuerdo",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Acuerdo"
+        }
+       }
+      }
+     }
+    }
+   }
   }
  },
  "components": {
   "schemas": {
+   "Acuerdo": {
+    "properties": {
+     "rubrica": {
+      "type": "string",
+      "title": "Rubrica"
+     },
+     "casos": {
+      "items": {
+       "$ref": "#/components/schemas/CasoAcuerdo"
+      },
+      "type": "array",
+      "title": "Casos"
+     },
+     "umbral": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Umbral"
+     },
+     "acuerdo": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Acuerdo"
+     },
+     "kappa": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kappa"
+     },
+     "dejando_uno_fuera": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dejando Uno Fuera"
+     },
+     "coste_usd": {
+      "type": "number",
+      "title": "Coste Usd",
+      "default": 0
+     }
+    },
+    "type": "object",
+    "required": [
+     "rubrica",
+     "casos"
+    ],
+    "title": "Acuerdo",
+    "description": "Cuánto coincide la puntuación con las etiquetas de Rubén."
+   },
    "Alerta": {
     "properties": {
      "fuente": {
@@ -522,6 +650,93 @@
     ],
     "title": "CampoFusionado",
     "description": "Un campo del puesto y de qué oferta sale."
+   },
+   "CasoAcuerdo": {
+    "properties": {
+     "puesto_id": {
+      "type": "integer",
+      "title": "Puesto Id"
+     },
+     "titulo": {
+      "type": "string",
+      "title": "Titulo"
+     },
+     "etiqueta": {
+      "type": "string",
+      "enum": [
+       "top",
+       "no_top"
+      ],
+      "title": "Etiqueta"
+     },
+     "nota": {
+      "type": "integer",
+      "title": "Nota"
+     },
+     "vetado": {
+      "type": "boolean",
+      "title": "Vetado"
+     },
+     "acierto": {
+      "type": "boolean",
+      "title": "Acierto"
+     },
+     "explicacion": {
+      "type": "string",
+      "title": "Explicacion"
+     },
+     "motivo": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Motivo"
+     }
+    },
+    "type": "object",
+    "required": [
+     "puesto_id",
+     "titulo",
+     "etiqueta",
+     "nota",
+     "vetado",
+     "acierto",
+     "explicacion"
+    ],
+    "title": "CasoAcuerdo"
+   },
+   "Criterio": {
+    "properties": {
+     "valor": {
+      "type": "string",
+      "title": "Valor"
+     },
+     "cita": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cita"
+     },
+     "motivo": {
+      "type": "string",
+      "title": "Motivo"
+     }
+    },
+    "type": "object",
+    "required": [
+     "valor",
+     "motivo"
+    ],
+    "title": "Criterio"
    },
    "EstadoFuente": {
     "properties": {
@@ -684,6 +899,115 @@
      "valor"
     ],
     "title": "EtiquetaEntrada"
+   },
+   "Evaluacion": {
+    "properties": {
+     "nota": {
+      "type": "integer",
+      "title": "Nota"
+     },
+     "vetado": {
+      "type": "boolean",
+      "title": "Vetado"
+     },
+     "motivo_veto": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Motivo Veto"
+     },
+     "marcas": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Marcas",
+      "default": []
+     },
+     "resumen": {
+      "type": "string",
+      "title": "Resumen"
+     },
+     "compuertas": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/Criterio"
+      },
+      "type": "object",
+      "title": "Compuertas"
+     },
+     "dimensiones": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/Criterio"
+      },
+      "type": "object",
+      "title": "Dimensiones"
+     },
+     "requisitos": {
+      "items": {
+       "$ref": "#/components/schemas/RequisitoEvaluado"
+      },
+      "type": "array",
+      "title": "Requisitos"
+     },
+     "parciales": {
+      "additionalProperties": {
+       "type": "number"
+      },
+      "type": "object",
+      "title": "Parciales"
+     },
+     "citas_falsas": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Citas Falsas"
+     },
+     "rubrica": {
+      "type": "string",
+      "title": "Rubrica"
+     },
+     "modelo": {
+      "type": "string",
+      "title": "Modelo"
+     },
+     "coste_usd": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Coste Usd"
+     },
+     "creada_en": {
+      "type": "string",
+      "title": "Creada En"
+     }
+    },
+    "type": "object",
+    "required": [
+     "nota",
+     "vetado",
+     "resumen",
+     "compuertas",
+     "dimensiones",
+     "requisitos",
+     "parciales",
+     "citas_falsas",
+     "rubrica",
+     "modelo",
+     "creada_en"
+    ],
+    "title": "Evaluacion",
+    "description": "Una evaluación completa: veredictos por criterio con sus citas, y la nota calculada."
    },
    "Fuentes": {
     "properties": {
@@ -1179,6 +1503,16 @@
        }
       ]
      },
+     "valoracion": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Valoracion"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "estado": {
       "type": "string",
       "title": "Estado"
@@ -1196,6 +1530,16 @@
       },
       "type": "array",
       "title": "Lista Ofertas"
+     },
+     "evaluacion": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Evaluacion"
+       },
+       {
+        "type": "null"
+       }
+      ]
      }
     },
     "type": "object",
@@ -1315,6 +1659,16 @@
         "type": "null"
        }
       ]
+     },
+     "valoracion": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Valoracion"
+       },
+       {
+        "type": "null"
+       }
+      ]
      }
     },
     "type": "object",
@@ -1359,6 +1713,45 @@
     ],
     "title": "Remoto",
     "description": "Trabajo en remoto: desde qué país y para qué empresas."
+   },
+   "RequisitoEvaluado": {
+    "properties": {
+     "requisito": {
+      "type": "string",
+      "title": "Requisito"
+     },
+     "importancia": {
+      "type": "string",
+      "title": "Importancia"
+     },
+     "origen": {
+      "type": "string",
+      "title": "Origen"
+     },
+     "competencia": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Competencia"
+     },
+     "cobertura": {
+      "type": "string",
+      "title": "Cobertura"
+     }
+    },
+    "type": "object",
+    "required": [
+     "requisito",
+     "importancia",
+     "origen",
+     "cobertura"
+    ],
+    "title": "RequisitoEvaluado"
    },
    "Resumen": {
     "properties": {
@@ -1607,6 +2000,66 @@
      "type"
     ],
     "title": "ValidationError"
+   },
+   "Valoracion": {
+    "properties": {
+     "nota": {
+      "type": "integer",
+      "title": "Nota"
+     },
+     "vetado": {
+      "type": "boolean",
+      "title": "Vetado"
+     },
+     "motivo_veto": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Motivo Veto"
+     },
+     "marcas": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Marcas",
+      "default": []
+     },
+     "resumen": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Resumen"
+     },
+     "rol_ia": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rol Ia"
+     }
+    },
+    "type": "object",
+    "required": [
+     "nota",
+     "vetado"
+    ],
+    "title": "Valoracion",
+    "description": "La última evaluación del puesto con la rúbrica vigente, en corto."
    },
    "Via": {
     "properties": {

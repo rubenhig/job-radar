@@ -5,6 +5,42 @@ export type ClientOptions = {
 };
 
 /**
+ * Acuerdo
+ *
+ * Cuánto coincide la puntuación con las etiquetas de Rubén.
+ */
+export type Acuerdo = {
+    /**
+     * Rubrica
+     */
+    rubrica: string;
+    /**
+     * Casos
+     */
+    casos: Array<CasoAcuerdo>;
+    /**
+     * Umbral
+     */
+    umbral?: number | null;
+    /**
+     * Acuerdo
+     */
+    acuerdo?: number | null;
+    /**
+     * Kappa
+     */
+    kappa?: number | null;
+    /**
+     * Dejando Uno Fuera
+     */
+    dejando_uno_fuera?: number | null;
+    /**
+     * Coste Usd
+     */
+    coste_usd?: number;
+};
+
+/**
  * Alerta
  */
 export type Alerta = {
@@ -56,6 +92,62 @@ export type CampoFusionado = {
      * Fuente
      */
     fuente?: string | null;
+};
+
+/**
+ * CasoAcuerdo
+ */
+export type CasoAcuerdo = {
+    /**
+     * Puesto Id
+     */
+    puesto_id: number;
+    /**
+     * Titulo
+     */
+    titulo: string;
+    /**
+     * Etiqueta
+     */
+    etiqueta: 'top' | 'no_top';
+    /**
+     * Nota
+     */
+    nota: number;
+    /**
+     * Vetado
+     */
+    vetado: boolean;
+    /**
+     * Acierto
+     */
+    acierto: boolean;
+    /**
+     * Explicacion
+     */
+    explicacion: string;
+    /**
+     * Motivo
+     */
+    motivo?: string | null;
+};
+
+/**
+ * Criterio
+ */
+export type Criterio = {
+    /**
+     * Valor
+     */
+    valor: string;
+    /**
+     * Cita
+     */
+    cita?: string | null;
+    /**
+     * Motivo
+     */
+    motivo: string;
 };
 
 /**
@@ -140,6 +232,76 @@ export type EtiquetaEntrada = {
      * Motivo
      */
     motivo?: string | null;
+};
+
+/**
+ * Evaluacion
+ *
+ * Una evaluación completa: veredictos por criterio con sus citas, y la nota calculada.
+ */
+export type Evaluacion = {
+    /**
+     * Nota
+     */
+    nota: number;
+    /**
+     * Vetado
+     */
+    vetado: boolean;
+    /**
+     * Motivo Veto
+     */
+    motivo_veto?: string | null;
+    /**
+     * Marcas
+     */
+    marcas?: Array<string>;
+    /**
+     * Resumen
+     */
+    resumen: string;
+    /**
+     * Compuertas
+     */
+    compuertas: {
+        [key: string]: Criterio;
+    };
+    /**
+     * Dimensiones
+     */
+    dimensiones: {
+        [key: string]: Criterio;
+    };
+    /**
+     * Requisitos
+     */
+    requisitos: Array<RequisitoEvaluado>;
+    /**
+     * Parciales
+     */
+    parciales: {
+        [key: string]: number;
+    };
+    /**
+     * Citas Falsas
+     */
+    citas_falsas: Array<string>;
+    /**
+     * Rubrica
+     */
+    rubrica: string;
+    /**
+     * Modelo
+     */
+    modelo: string;
+    /**
+     * Coste Usd
+     */
+    coste_usd?: number | null;
+    /**
+     * Creada En
+     */
+    creada_en: string;
 };
 
 /**
@@ -379,6 +541,7 @@ export type PuestoDetalle = {
      */
     ofertas: number;
     etiqueta?: Etiqueta | null;
+    valoracion?: Valoracion | null;
     /**
      * Estado
      */
@@ -393,6 +556,7 @@ export type PuestoDetalle = {
      * Lista Ofertas
      */
     lista_ofertas: Array<Oferta>;
+    evaluacion?: Evaluacion | null;
 };
 
 /**
@@ -445,6 +609,7 @@ export type PuestoResumen = {
      */
     ofertas: number;
     etiqueta?: Etiqueta | null;
+    valoracion?: Valoracion | null;
 };
 
 /**
@@ -471,6 +636,32 @@ export type Remoto = {
      * Empresa Extranjera
      */
     empresa_extranjera?: boolean;
+};
+
+/**
+ * RequisitoEvaluado
+ */
+export type RequisitoEvaluado = {
+    /**
+     * Requisito
+     */
+    requisito: string;
+    /**
+     * Importancia
+     */
+    importancia: string;
+    /**
+     * Origen
+     */
+    origen: string;
+    /**
+     * Competencia
+     */
+    competencia?: string | null;
+    /**
+     * Cobertura
+     */
+    cobertura: string;
 };
 
 /**
@@ -633,6 +824,38 @@ export type ValidationError = {
 };
 
 /**
+ * Valoracion
+ *
+ * La última evaluación del puesto con la rúbrica vigente, en corto.
+ */
+export type Valoracion = {
+    /**
+     * Nota
+     */
+    nota: number;
+    /**
+     * Vetado
+     */
+    vetado: boolean;
+    /**
+     * Motivo Veto
+     */
+    motivo_veto?: string | null;
+    /**
+     * Marcas
+     */
+    marcas?: Array<string>;
+    /**
+     * Resumen
+     */
+    resumen?: string | null;
+    /**
+     * Rol Ia
+     */
+    rol_ia?: string | null;
+};
+
+/**
  * Via
  *
  * Por dónde llega un puesto: una fuente y quien publica (empresa o consultora).
@@ -677,9 +900,17 @@ export type PuestosListarData = {
          */
         dias?: number | null;
         /**
+         * Nota Min
+         */
+        nota_min?: number | null;
+        /**
+         * Puntuado
+         */
+        puntuado?: boolean | null;
+        /**
          * Orden
          */
-        orden?: 'recientes' | 'publicadas' | 'vias';
+        orden?: 'recientes' | 'publicadas' | 'vias' | 'nota';
         /**
          * Limite
          */
@@ -892,3 +1123,19 @@ export type PerfilGuardarPreferenciasResponses = {
 };
 
 export type PerfilGuardarPreferenciasResponse = PerfilGuardarPreferenciasResponses[keyof PerfilGuardarPreferenciasResponses];
+
+export type PuntuacionAcuerdoData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/acuerdo';
+};
+
+export type PuntuacionAcuerdoResponses = {
+    /**
+     * Successful Response
+     */
+    200: Acuerdo;
+};
+
+export type PuntuacionAcuerdoResponse = PuntuacionAcuerdoResponses[keyof PuntuacionAcuerdoResponses];
