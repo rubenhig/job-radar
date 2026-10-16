@@ -5,6 +5,7 @@ import type { PuestoResumen } from '@/api'
 import { ChevronLeft, ChevronRight, Filter, X } from 'lucide-react'
 import { puestosListarOptions } from '@/api/@tanstack/react-query.gen'
 import { FUENTES, MODALIDADES, haceCuanto, lugar, salario } from '@/lib/formato'
+import { DESTACADO, TOP } from '@/lib/puntuacion'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -35,6 +36,7 @@ import {
 import { Cabecera } from '@/components/layout/cabecera'
 import { Main } from '@/components/layout/main'
 import { InsigniaEtiqueta } from './componentes/etiqueta'
+import { Nota } from './componentes/nota'
 import { Vias } from './componentes/vias'
 
 const ruta = getRouteApi('/_app/puestos/')
@@ -46,8 +48,15 @@ const ETIQUETAS = {
   top: 'Top',
   no_top: 'No top',
 } as const
+const NOTAS = {
+  todas: 'Cualquier nota',
+  destacados: `Desde ${DESTACADO}`,
+  top: `Desde ${TOP}`,
+  sin: 'Sin puntuar',
+} as const
 const ORDENES = {
   recientes: 'Más recientes',
+  nota: 'Mejor nota',
   publicadas: 'Fecha de publicación',
   vias: 'Más vías',
 } as const
@@ -81,6 +90,13 @@ export function Puestos() {
         etiqueta: busqueda.etiqueta === 'todas' ? undefined : busqueda.etiqueta,
         dias: busqueda.dias,
         orden: busqueda.orden,
+        nota_min:
+          busqueda.nota === 'destacados'
+            ? DESTACADO
+            : busqueda.nota === 'top'
+              ? TOP
+              : undefined,
+        puntuado: busqueda.nota === 'sin' ? false : undefined,
         limite: POR_PAGINA,
         desde: (pagina - 1) * POR_PAGINA,
       },
@@ -93,7 +109,8 @@ export function Puestos() {
     busqueda.fuente?.length ||
     busqueda.modalidad?.length ||
     (busqueda.etiqueta && busqueda.etiqueta !== 'todas') ||
-    busqueda.dias
+    busqueda.dias ||
+    (busqueda.nota && busqueda.nota !== 'todas')
   )
 
   return (
@@ -161,6 +178,21 @@ export function Puestos() {
             </SelectContent>
           </Select>
           <Select
+            value={busqueda.nota ?? 'todas'}
+            onValueChange={(v) => cambiar({ nota: v as keyof typeof NOTAS })}
+          >
+            <SelectTrigger className='h-9 w-40'>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(NOTAS).map(([k, v]) => (
+                <SelectItem key={k} value={k}>
+                  {v}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
             value={busqueda.orden ?? 'recientes'}
             onValueChange={(v) => cambiar({ orden: v as keyof typeof ORDENES })}
           >
@@ -194,6 +226,7 @@ export function Puestos() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className='w-14 text-center'>Nota</TableHead>
                 <TableHead>Puesto</TableHead>
                 <TableHead>Lugar</TableHead>
                 <TableHead>Salario</TableHead>
@@ -205,7 +238,7 @@ export function Puestos() {
               {isLoading &&
                 [...Array(8)].map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={6}>
                       <Skeleton className='h-8' />
                     </TableCell>
                   </TableRow>
@@ -216,7 +249,7 @@ export function Puestos() {
               {data && !data.items.length && (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={6}
                     className='h-24 text-center text-muted-foreground'
                   >
                     Ningún puesto con estos filtros.
@@ -312,6 +345,9 @@ function Multiple({
 function Fila({ puesto: p }: { puesto: PuestoResumen }) {
   return (
     <TableRow className='relative'>
+      <TableCell className='text-center'>
+        <Nota valoracion={p.valoracion} />
+      </TableCell>
       <TableCell className='max-w-md whitespace-normal'>
         <Link
           to='/puestos/$puestoId'
@@ -354,7 +390,10 @@ function Tarjeta({ puesto: p }: { puesto: PuestoResumen }) {
     >
       <div className='flex items-start justify-between gap-2'>
         <span className='leading-snug font-medium'>{p.titulo}</span>
-        <InsigniaEtiqueta etiqueta={p.etiqueta} />
+        <div className='flex shrink-0 items-center gap-1.5'>
+          <InsigniaEtiqueta etiqueta={p.etiqueta} />
+          {p.valoracion && <Nota valoracion={p.valoracion} />}
+        </div>
       </div>
       <div className='text-sm text-muted-foreground'>
         {[

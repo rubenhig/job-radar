@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { PerfilGuardarPreferenciasData, PerfilGuardarPreferenciasErrors, PerfilGuardarPreferenciasResponses, PerfilLeerPreferenciasData, PerfilLeerPreferenciasResponses, PerfilPerfilData, PerfilPerfilResponses, PuestosEtiquetarData, PuestosEtiquetarErrors, PuestosEtiquetarResponses, PuestosFichaData, PuestosFichaErrors, PuestosFichaResponses, PuestosListarData, PuestosListarErrors, PuestosListarResponses, PuestosQuitarEtiquetaData, PuestosQuitarEtiquetaErrors, PuestosQuitarEtiquetaResponses, SistemaFuentesData, SistemaFuentesResponses, SistemaResumenData, SistemaResumenResponses } from './types.gen';
+import type { PerfilGuardarPreferenciasData, PerfilGuardarPreferenciasErrors, PerfilGuardarPreferenciasResponses, PerfilLeerPreferenciasData, PerfilLeerPreferenciasResponses, PerfilPerfilData, PerfilPerfilResponses, PuestosEtiquetarData, PuestosEtiquetarErrors, PuestosEtiquetarResponses, PuestosFichaData, PuestosFichaErrors, PuestosFichaResponses, PuestosListarData, PuestosListarErrors, PuestosListarResponses, PuestosQuitarEtiquetaData, PuestosQuitarEtiquetaErrors, PuestosQuitarEtiquetaResponses, PuntuacionAcuerdoData, PuntuacionAcuerdoResponses, SistemaFuentesData, SistemaFuentesResponses, SistemaResumenData, SistemaResumenResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -80,3 +80,10 @@ export const perfilGuardarPreferencias = <ThrowOnError extends boolean = false>(
         ...options.headers
     }
 });
+
+/**
+ * Acuerdo
+ *
+ * La puntuación frente a las etiquetas de Rubén (ver job_radar.medir).
+ */
+export const puntuacionAcuerdo = <ThrowOnError extends boolean = false>(options?: Options<PuntuacionAcuerdoData, ThrowOnError>): RequestResult<PuntuacionAcuerdoResponses, unknown, ThrowOnError> => (options?.client ?? client).get<PuntuacionAcuerdoResponses, unknown, ThrowOnError>({ url: '/api/acuerdo', ...options });

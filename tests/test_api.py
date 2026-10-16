@@ -104,3 +104,23 @@ def test_sirve_la_web_y_resuelve_rutas_de_la_app(tmp_path, cliente):
     assert c.get("/assets/app.js").text == "js"
     assert c.get("/../pyproject.toml").text == "<html>app</html>"
     assert c.get("/api/resumen").status_code == 200
+
+
+def test_valoracion_en_lista_ficha_y_acuerdo(cliente):
+    from tests.test_puntuacion import OFERTA, veredictos
+    from job_radar import puntuacion
+    from job_radar.llm import Uso
+    import sqlite3
+    import sqlite_utils
+
+    db = sqlite_utils.Database(sqlite3.connect(cliente.app.state.ruta_db))
+    pid = cliente.get("/api/puestos", params={"q": "AI"}).json()["items"][0]["id"]
+    puntuacion.guardar(db, pid, puntuacion.calcular(veredictos(), OFERTA), Uso(motor="m", modelo="sonnet"), "p")
+    db.conn.commit()
+    lista = cliente.get("/api/puestos", params={"orden": "nota"}).json()["items"]
+    assert lista[0]["id"] == pid and lista[0]["valoracion"]["nota"] == 90
+    assert cliente.get("/api/puestos", params={"puntuado": "false"}).json()["total"] == 1
+    ev = cliente.get(f"/api/puestos/{pid}").json()["evaluacion"]
+    assert ev["dimensiones"]["rol_ia"]["valor"] == "ia_principal" and ev["compuertas"]["idioma"]["valor"] == "marca"
+    a = cliente.get("/api/acuerdo").json()
+    assert a["casos"] == [] and a["acuerdo"] is None  # sin etiquetas aún

@@ -19,6 +19,7 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppEtiquetarRouteImport } from './routes/_app/etiquetar'
 import { Route as AppFuentesRouteImport } from './routes/_app/fuentes'
 import { Route as AppPerfilRouteImport } from './routes/_app/perfil'
+import { Route as AppPuntuacionRouteImport } from './routes/_app/puntuacion'
 import { Route as AppErrorsErrorRouteImport } from './routes/_app/errors/$error'
 import { Route as AppPuestosIndexRouteImport } from './routes/_app/puestos/index'
 import { Route as AppPuestosPuestoIdRouteImport } from './routes/_app/puestos/$puestoId'
@@ -72,6 +73,11 @@ const AppPerfilRoute = AppPerfilRouteImport.update({
   path: '/perfil',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppPuntuacionRoute = AppPuntuacionRouteImport.update({
+  id: '/puntuacion',
+  path: '/puntuacion',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppErrorsErrorRoute = AppErrorsErrorRouteImport.update({
   id: '/errors/$error',
   path: '/errors/$error',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/etiquetar': typeof AppEtiquetarRoute
   '/fuentes': typeof AppFuentesRoute
   '/perfil': typeof AppPerfilRoute
+  '/puntuacion': typeof AppPuntuacionRoute
   '/errors/$error': typeof AppErrorsErrorRoute
   '/puestos/$puestoId': typeof AppPuestosPuestoIdRoute
   '/puestos/': typeof AppPuestosIndexRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/etiquetar': typeof AppEtiquetarRoute
   '/fuentes': typeof AppFuentesRoute
   '/perfil': typeof AppPerfilRoute
+  '/puntuacion': typeof AppPuntuacionRoute
   '/': typeof AppIndexRoute
   '/errors/$error': typeof AppErrorsErrorRoute
   '/puestos/$puestoId': typeof AppPuestosPuestoIdRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/_app/etiquetar': typeof AppEtiquetarRoute
   '/_app/fuentes': typeof AppFuentesRoute
   '/_app/perfil': typeof AppPerfilRoute
+  '/_app/puntuacion': typeof AppPuntuacionRoute
   '/_app/': typeof AppIndexRoute
   '/_app/errors/$error': typeof AppErrorsErrorRoute
   '/_app/puestos/$puestoId': typeof AppPuestosPuestoIdRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/etiquetar'
     | '/fuentes'
     | '/perfil'
+    | '/puntuacion'
     | '/errors/$error'
     | '/puestos/$puestoId'
     | '/puestos/'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/etiquetar'
     | '/fuentes'
     | '/perfil'
+    | '/puntuacion'
     | '/'
     | '/errors/$error'
     | '/puestos/$puestoId'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/_app/etiquetar'
     | '/_app/fuentes'
     | '/_app/perfil'
+    | '/_app/puntuacion'
     | '/_app/'
     | '/_app/errors/$error'
     | '/_app/puestos/$puestoId'
@@ -259,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPerfilRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/puntuacion': {
+      id: '/_app/puntuacion'
+      path: '/puntuacion'
+      fullPath: '/puntuacion'
+      preLoaderRoute: typeof AppPuntuacionRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/errors/$error': {
       id: '/_app/errors/$error'
       path: '/errors/$error'
@@ -287,6 +306,7 @@ interface AppRouteRouteChildren {
   AppEtiquetarRoute: typeof AppEtiquetarRoute
   AppFuentesRoute: typeof AppFuentesRoute
   AppPerfilRoute: typeof AppPerfilRoute
+  AppPuntuacionRoute: typeof AppPuntuacionRoute
   AppIndexRoute: typeof AppIndexRoute
   AppErrorsErrorRoute: typeof AppErrorsErrorRoute
   AppPuestosPuestoIdRoute: typeof AppPuestosPuestoIdRoute
@@ -297,6 +317,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppEtiquetarRoute: AppEtiquetarRoute,
   AppFuentesRoute: AppFuentesRoute,
   AppPerfilRoute: AppPerfilRoute,
+  AppPuntuacionRoute: AppPuntuacionRoute,
   AppIndexRoute: AppIndexRoute,
   AppErrorsErrorRoute: AppErrorsErrorRoute,
   AppPuestosPuestoIdRoute: AppPuestosPuestoIdRoute,

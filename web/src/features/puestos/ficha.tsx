@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, getRouteApi } from '@tanstack/react-router'
 import type { Oferta } from '@/api'
-import { ArrowLeft, ExternalLink, Sparkles } from 'lucide-react'
+import { ArrowLeft, ExternalLink } from 'lucide-react'
 import { puestosFichaOptions } from '@/api/@tanstack/react-query.gen'
 import {
   CONTRATOS,
@@ -12,6 +12,7 @@ import {
   lugar,
   salario,
 } from '@/lib/formato'
+import { citasDe, tramosCitados } from '@/lib/puntuacion'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Cabecera } from '@/components/layout/cabecera'
 import { Main } from '@/components/layout/main'
 import { BotonesEtiqueta } from './componentes/etiqueta'
+import { TarjetaPuntuacion } from './componentes/puntuacion'
 import { Vias } from './componentes/vias'
 
 const ruta = getRouteApi('/_app/puestos/$puestoId')
@@ -77,7 +79,7 @@ export function FichaPuesto() {
     p.modalidad && MODALIDADES[p.modalidad],
     salario(p.salario),
     p.publicada_en && `publicado ${haceCuanto(p.publicada_en)}`,
-  ].filter(Boolean)
+  ].filter((d) => d && d !== '—')
 
   return (
     <>
@@ -109,6 +111,7 @@ export function FichaPuesto() {
 
         <div className='grid gap-6 lg:grid-cols-[1fr_22rem]'>
           <div className='flex flex-col gap-6 lg:order-1'>
+            <TarjetaPuntuacion evaluacion={p.evaluacion} />
             <Card>
               <CardHeader>
                 <CardTitle>Descripción</CardTitle>
@@ -135,7 +138,12 @@ export function FichaPuesto() {
                 )}
               </CardHeader>
               <CardContent>
-                <Descripcion oferta={oferta} />
+                <Descripcion
+                  oferta={oferta}
+                  citas={
+                    oferta.id === idDescripcion ? citasDe(p.evaluacion) : []
+                  }
+                />
               </CardContent>
             </Card>
           </div>
@@ -157,18 +165,6 @@ export function FichaPuesto() {
                   conMotivos
                 />
               </CardContent>
-            </Card>
-
-            <Card className='border-dashed'>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2'>
-                  <Sparkles className='size-4' /> Puntuación
-                </CardTitle>
-                <CardDescription>
-                  Llega en la Fase 4: encaje con tu perfil, con las citas de la
-                  oferta que lo justifican.
-                </CardDescription>
-              </CardHeader>
             </Card>
 
             <Card>
@@ -282,10 +278,26 @@ function valor(campo: string, v: unknown): string {
   return String(v)
 }
 
-function Descripcion({ oferta }: { oferta: Oferta }) {
+function Descripcion({ oferta, citas }: { oferta: Oferta; citas: string[] }) {
   const [entera, setEntera] = useState(false)
   const texto = oferta.descripcion ?? 'Esta vía no trae descripción.'
   const larga = texto.length > 1600
+  // Las frases en las que se apoya la puntuación, resaltadas.
+  const trozos: React.ReactNode[] = []
+  let desde = 0
+  for (const [a, b] of tramosCitados(texto, citas)) {
+    trozos.push(texto.slice(desde, a))
+    trozos.push(
+      <mark
+        key={a}
+        className='rounded-sm bg-amber-300/40 px-0.5 text-inherit dark:bg-amber-400/25'
+      >
+        {texto.slice(a, b)}
+      </mark>
+    )
+    desde = b
+  }
+  trozos.push(texto.slice(desde))
   return (
     <div className='flex flex-col gap-2'>
       <div
@@ -294,7 +306,7 @@ function Descripcion({ oferta }: { oferta: Oferta }) {
           !entera && larga && 'line-clamp-[18]'
         )}
       >
-        {texto}
+        {trozos}
       </div>
       {larga && (
         <Button

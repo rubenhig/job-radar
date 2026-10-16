@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from job_radar import salud
 from job_radar.api.base import bd, datos
-from job_radar.api.esquemas import Alerta, EstadoFuente, Fuentes, Resumen
+from job_radar.api.esquemas import Acuerdo, Alerta, CasoAcuerdo, EstadoFuente, Fuentes, Resumen
 from job_radar.fuentes import registro as reg
 from job_radar.preferencias import Preferencias
 
@@ -88,3 +88,23 @@ def guardar_preferencias(nuevas: Preferencias, carpeta: Annotated[Path, Depends(
     ruta.write_text(yaml.safe_dump(nuevas.model_dump(mode="json"), allow_unicode=True, sort_keys=False),
                     encoding="utf-8")
     return nuevas
+
+
+@router.get("/acuerdo", response_model=Acuerdo, tags=["puntuacion"])
+def acuerdo(db: Annotated[Any, Depends(bd)]):
+    """La puntuación frente a las etiquetas de Rubén (ver job_radar.medir)."""
+    from job_radar import medir
+    from job_radar.puntuacion import RUBRICA
+
+    cs = medir.casos(db, RUBRICA)
+    salida = Acuerdo(rubrica=RUBRICA, casos=[], coste_usd=round(sum(c.coste_usd or 0 for c in cs), 4))
+    if len(cs) >= 5:
+        u = medir.mejor_umbral(cs)
+        salida.umbral, salida.acuerdo = u, medir.acierto(cs, u)
+        salida.kappa, salida.dejando_uno_fuera = round(medir.kappa(cs, u), 3), medir.dejando_uno_fuera(cs)
+    u = salida.umbral or 50
+    salida.casos = [CasoAcuerdo(puesto_id=c.puesto_id, titulo=c.titulo, etiqueta="top" if c.etiqueta else "no_top",
+                                nota=c.nota, vetado=c.vetado, acierto=(c.nota >= u) == c.etiqueta,
+                                explicacion=c.explicacion, motivo=c.motivo)
+                    for c in sorted(cs, key=lambda c: -c.nota)]
+    return salida

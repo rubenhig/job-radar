@@ -13,7 +13,11 @@ const filtros = z.object({
     .catch(undefined),
   dias: z.number().int().positive().optional().catch(undefined),
   orden: z
-    .enum(['recientes', 'publicadas', 'vias'])
+    .enum(['recientes', 'publicadas', 'vias', 'nota'])
+    .optional()
+    .catch(undefined),
+  nota: z
+    .enum(['todas', 'destacados', 'top', 'sin'])
     .optional()
     .catch(undefined),
   pagina: z.number().int().positive().optional().catch(undefined),

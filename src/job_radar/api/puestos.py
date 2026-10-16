@@ -8,8 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from job_radar import almacen
 from job_radar.api.base import bd
-from job_radar.api.esquemas import (CampoFusionado, Etiqueta, EtiquetaEntrada, Oferta, PaginaPuestos, PuestoDetalle,
-                                    PuestoResumen, Salario, Via)
+from job_radar.api.esquemas import (CampoFusionado, Criterio, Etiqueta, EtiquetaEntrada, Evaluacion, Oferta,
+                                    PaginaPuestos, PuestoDetalle, PuestoResumen, RequisitoEvaluado, Salario, Valoracion,
+                                    Via)
+from job_radar.puntuacion import RUBRICA
 
 router = APIRouter(prefix="/puestos", tags=["puestos"])
 
@@ -25,7 +27,12 @@ def _resumen(fila: dict) -> dict:
     vias = sorted({tuple(v.split(SEP, 1)) for v in (fila["vias"] or "").split("\x1e") if v})
     etiqueta = (Etiqueta(valor=fila["etiqueta"], motivo=fila["motivo"], actualizada_en=fila["etiquetada_en"])
                 if fila["etiqueta"] else None)
+    valoracion = (Valoracion(nota=fila["nota"], vetado=bool(fila["vetado"]), motivo_veto=fila["motivo_veto"],
+                             marcas=json.loads(fila["marcas"]) if fila["marcas"] else [],
+                             resumen=fila["ev_resumen"], rol_ia=fila["ev_rol"])
+                  if fila["nota"] is not None else None)
     return dict(
+        valoracion=valoracion,
         id=fila["id"], titulo=fila["titulo"], empresa=(fusion.get("empresa") or {}).get("valor"),
         ciudad=fila["ciudad"], pais=fila["pais"], modalidad=fila["modalidad"],
         salario=_salario((fusion.get("salario") or {}).get("valor")),
@@ -38,12 +45,18 @@ CONSULTA = """
     SELECT p.id, p.titulo, p.ciudad, p.pais, p.modalidad, p.fusion, p.estado,
            MIN(o.vista_primera) AS vista_primera, MAX(o.vista_ultima) AS vista_ultima, COUNT(o.id) AS ofertas,
            GROUP_CONCAT(o.fuente_id || char(31) || COALESCE(o.empresa, ''), char(30)) AS vias,
-           e.valor AS etiqueta, e.motivo, e.actualizada_en AS etiquetada_en
+           e.valor AS etiqueta, e.motivo, e.actualizada_en AS etiquetada_en,
+           ev.id AS evaluacion_id, ev.nota, ev.vetado, ev.motivo_veto, ev.marcas,
+           json_extract(ev.resultado, '$.veredictos.resumen') AS ev_resumen,
+           json_extract(ev.resultado, '$.veredictos.rol_ia.valor') AS ev_rol
     FROM puesto p JOIN oferta o ON o.puesto_id = p.id LEFT JOIN etiqueta e ON e.puesto_id = p.id
+    LEFT JOIN evaluacion ev ON ev.id = (SELECT MAX(x.id) FROM evaluacion x
+                                        WHERE x.puesto_id = p.id AND x.rubrica = '""" + RUBRICA + """')
 """
 
-Orden = Literal["recientes", "publicadas", "vias"]
+Orden = Literal["recientes", "publicadas", "vias", "nota"]
 ORDEN_SQL = {"recientes": "vista_primera DESC", "vias": "ofertas DESC, vista_primera DESC",
+             "nota": "COALESCE(ev.nota, -1) DESC, vista_primera DESC",
              "publicadas": "json_extract(p.fusion, '$.publicada_en.valor') DESC"}
 
 
@@ -55,6 +68,8 @@ def listar(db: Annotated[object, Depends(bd)],
            ciudad: str | None = None,
            etiqueta: Literal["top", "no_top", "sin"] | None = None,
            dias: Annotated[int | None, Query(gt=0)] = None,
+           nota_min: Annotated[int | None, Query(ge=0, le=100)] = None,
+           puntuado: bool | None = None,
            orden: Orden = "recientes",
            limite: Annotated[int, Query(gt=0, le=200)] = 50,
            desde: Annotated[int, Query(ge=0)] = 0):
@@ -76,6 +91,11 @@ def listar(db: Annotated[object, Depends(bd)],
     elif etiqueta:
         donde.append("e.valor = ?")
         args.append(etiqueta)
+    if nota_min is not None:
+        donde.append("ev.nota >= ?")
+        args.append(nota_min)
+    if puntuado is not None:
+        donde.append("ev.id IS NOT NULL" if puntuado else "ev.id IS NULL")
     having, hargs = "", []
     if dias:
         having = "HAVING MAX(o.vista_ultima) >= ?"
@@ -102,7 +122,27 @@ def ficha(puesto_id: int, db: Annotated[object, Depends(bd)]):
     ofertas = [_oferta(o) for o in db.query(
         "SELECT * FROM oferta WHERE puesto_id = ? ORDER BY vista_primera", [puesto_id])]
     fusion = {k: CampoFusionado(**v) for k, v in json.loads(fila["fusion"] or "{}").items()}
-    return PuestoDetalle(**_resumen(fila), estado=fila["estado"], fusion=fusion, lista_ofertas=ofertas)
+    evaluacion = _evaluacion(db.execute("SELECT * FROM evaluacion WHERE id = ?", [fila["evaluacion_id"]]).fetchone()
+                             if fila["evaluacion_id"] else None)
+    return PuestoDetalle(**_resumen(fila), estado=fila["estado"], fusion=fusion, lista_ofertas=ofertas,
+                         evaluacion=evaluacion)
+
+
+def _evaluacion(f) -> Evaluacion | None:
+    if f is None:
+        return None
+    r = json.loads(f["resultado"])
+    v = r["veredictos"]
+    criterio = lambda c: Criterio(valor=c.get("valor") or c.get("veredicto"), cita=c.get("cita"),  # noqa: E731
+                                  motivo=c["motivo"])
+    return Evaluacion(
+        nota=f["nota"], vetado=bool(f["vetado"]), motivo_veto=f["motivo_veto"],
+        marcas=json.loads(f["marcas"]) if f["marcas"] else [], resumen=v["resumen"],
+        compuertas={k: criterio(v[k]) for k in ("modalidad", "elegibilidad", "idioma")},
+        dimensiones={k: criterio(v[k]) for k in ("rol_ia", "funcion", "seniority", "fuente")},
+        requisitos=[RequisitoEvaluado(**q) for q in v["requisitos"]], parciales=r["parciales"],
+        citas_falsas=r["citas_falsas"], rubrica=f["rubrica"], modelo=f["modelo"], coste_usd=f["coste_usd"],
+        creada_en=f["creada_en"])
 
 
 @router.put("/{puesto_id}/etiqueta", response_model=Etiqueta)
