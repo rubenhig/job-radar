@@ -113,7 +113,7 @@ Cada ejecución deja sus métricas, y una comprobación diaria avisa por Telegra
 | **Cuota y coste** | Nos quedamos sin cuota o se dispara el gasto | Cuota restante < 20 %; coste mensual por encima del tope |
 | **Exclusividad** | Una fuente deja de aportar | % de ofertas que solo trae ella (mensual; decide si sigue mereciendo la pena) |
 
-El estado de cada fuente se consulta en un panel de Datasette sobre el SQLite.
+Las reglas están en [`salud.py`](../src/job_radar/salud.py) (`uv run python -m job_radar.salud`). El estado de cada fuente, las ejecuciones, los puestos que llegan por varias vías y la traza de cualquier oferta hasta su bruto se consultan en Datasette con las consultas de [`config/datasette.yaml`](../config/datasette.yaml).
 
 ## Campos comunes de una oferta
 

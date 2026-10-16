@@ -12,6 +12,7 @@ dependencies = [
     "ats-scrapers>=0.3.0",
     "beautifulsoup4>=4.15.0",
     "cleanco>=2.3",
+    "datasette>=0.65.5",
     "feedparser>=6.0.14",
     "html2text>=2025.4.15",
     "httpcloak>=1.7.3",
