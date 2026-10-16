@@ -5,7 +5,7 @@ copia citas literales del CV. Después Python comprueba que cada cita existe de
 verdad en el texto del CV: lo que no se puede comprobar se marca, no se cree.
 
 Uso:
-    uv run python -m job_radar.perfil --cv ~/projects/CV/cv.html
+    uv run python -m job_radar.perfil --cv ~/projects/CV/mi-cv.pdf
 """
 
 import argparse
@@ -19,6 +19,7 @@ from typing import Literal
 import html2text
 import yaml
 from pydantic import BaseModel, Field
+from pypdf import PdfReader
 from rapidfuzz import fuzz
 
 from job_radar.llm import ClaudeCLI, MotorLLM
@@ -81,18 +82,25 @@ la precisión importa más que la exhaustividad.
 
 Reglas:
 - Usa SOLO lo que dice el CV. No infieras tecnologías que no aparezcan.
-- Cada evidencia es una cita LITERAL del CV: copia el fragmento exacto, sin
-  parafrasear, sin cambiar mayúsculas ni signos. Basta con la frase o parte de
-  frase que lo demuestra.
+- Cada evidencia es una cita LITERAL del CV, en el idioma original del CV: copia
+  el fragmento exacto, sin traducir, sin parafrasear, sin cambiar mayúsculas ni
+  signos. Basta con la frase o parte de frase que lo demuestra.
 - Nivel: 'experto' solo con varios años y responsabilidad clara (liderar, diseñar
   desde cero, adopción medible); 'avanzado' con uso profesional sostenido;
   'intermedio' con uso puntual o en un proyecto; 'basico' si solo se menciona.
 - Agrupa sinónimos en una competencia (p. ej. 'LLM' y 'IA generativa' → 'IA generativa / LLM').
-- Escribe en español."""
+- Nombres de competencias, resúmenes y niveles, en español; las citas, sin traducir."""
 
 
 def cv_a_texto(ruta: Path) -> str:
-    """HTML o texto → texto plano, sin enlaces ni negritas (para poder verificar citas)."""
+    """PDF, HTML o texto → texto plano, sin enlaces ni negritas (para poder verificar citas)."""
+    if ruta.suffix.lower() == ".pdf":
+        # El modo "layout" respeta la maquetación: sin él, en CVs a columnas los
+        # logros de cada puesto salen al final, separados de su experiencia.
+        paginas = (pag.extract_text(extraction_mode="layout") for pag in PdfReader(ruta).pages)
+        texto = "\n".join(paginas)
+        texto = re.sub(r"[ \t]+", " ", texto)
+        return re.sub(r"\n\s*\n+", "\n", texto).strip()
     contenido = ruta.read_text(encoding="utf-8")
     if ruta.suffix.lower() in {".html", ".htm"}:
         h = html2text.HTML2Text()
