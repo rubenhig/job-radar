@@ -54,26 +54,36 @@ Decisiones:
 
 ## El conector: contrato de cada fuente
 
-Cada fuente es un módulo con dos operaciones, y **nada más del sistema sabe cómo es la fuente por dentro**:
+Cada fuente es un módulo con tres operaciones, y **nada más del sistema sabe cómo es la fuente por dentro**. Implementación: [`src/job_radar/fuentes/base.py`](../src/job_radar/fuentes/base.py).
 
 ```python
 class Conector(Protocol):
-    fuente: str      # "linkedin"
-    version: str     # "linkedin-fantastic-rapidapi/1"
+    fuente: str                   # "linkedin"
+    version: str                  # "linkedin-fantastic-rapidapi/1"
+    personales: tuple[str, ...]   # campos que nunca se guardan
+    cuota: dict | None            # lo que diga la fuente de su cuota en la última llamada
 
-    def traer(self, busqueda: Busqueda) -> Iterable[Bruto]:
-        """Red. Pide a la fuente y devuelve las respuestas tal cual. Puede fallar."""
+    def parametros(self, intencion: Intencion) -> list[dict]:
+        """Lo que busca el candidato → el vocabulario de la fuente."""
 
-    def normalizar(self, bruto: Bruto) -> Oferta:
+    def traer(self, busqueda: Busqueda) -> Iterator[Bruto]:
+        """Red. Pide a la fuente y devuelve las respuestas tal cual, sin datos personales. Puede fallar."""
+
+    def normalizar(self, payload: dict) -> Oferta:
         """Pura, sin red. Convierte un bruto en Oferta. Determinista y testeable."""
 ```
+
+De las preferencias a las búsquedas:
+- Las preferencias se convierten en **intenciones**, independientes de cualquier fuente: una por ubicación presencial, con los términos principales y los amplios, y otra para remoto, solo con los principales.
+- Cada conector traduce cada intención a sus parámetros (`provinceIds=34` en InfoJobs, `location="Malaga OR Málaga"` en LinkedIn…).
+- Añadir una ciudad o un rol en `preferencias.yaml` cambia las búsquedas de todas las fuentes a la vez.
 
 Por qué separar `traer` de `normalizar`:
 - **Trazabilidad y reprocesado.** Si mejoramos la normalización, la volvemos a pasar sobre todo el bruto guardado, sin pedir nada otra vez a la fuente (ni gastar cuota).
 - **Tests sin red.** Cada conector tiene *fixtures* con respuestas reales guardadas. Si la fuente cambia de formato, el test lo detecta en cuanto actualizamos la fixture.
 - **Reemplazo limpio.** LinkedIn por RapidAPI y LinkedIn por Apify son dos conectores con la misma `fuente` y distinta `version`; se elige uno en la configuración.
 
-Las fuentes, sus búsquedas y su plan B se declaran en un **registro de fuentes** (`fuentes.yaml`):
+Las fuentes, su conector activo, su coste, sus términos de uso, su frecuencia y su plan B se declaran en el **registro de fuentes** ([`config/fuentes.yaml`](../config/fuentes.yaml)):
 
 | Fuente | Herramienta | Plan B |
 |---|---|---|

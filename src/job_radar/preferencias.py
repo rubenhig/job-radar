@@ -41,10 +41,18 @@ class Remoto(Estricto):
     empresa_extranjera: bool = True
 
 
+class Terminos(Estricto):
+    """Con qué palabras se buscan los roles en las fuentes. Vacío → los nombres de los roles."""
+
+    principales: list[str] = Field(default=[], description="Se buscan en todas partes, también en remoto")
+    amplios: list[str] = Field(default=[], description="Solo en las ubicaciones presenciales, donde el volumen es menor")
+
+
 class Roles(Estricto):
     principales: list[str] = Field(min_length=1)
     secundarios: list[str] = []
     excluir: list[str] = Field(default=[], description="Términos que descartan un puesto")
+    terminos: Terminos = Terminos()
 
 
 NivelIdioma = Literal["A1", "A2", "B1", "B2", "C1", "C2", "nativo"]

@@ -1,0 +1,110 @@
+[
+ {
+  "code": "ff20afbe4e4c39add5e3dc3fe8f78c",
+  "title": "Full Stack Engineer",
+  "description": "¿Buscas un reto técnico en un entorno dinámico? Únete a nuestro equipo de proyectos  donde participarás en el desarrollo de soluciones críticas y evolutivos de software de alto impacto.\nWe're looking for a Java full-stack developer to join the team building a cloud-native network analytics platform for telecom operators. It handles alarm management, topology, root-cause analysis, performance prediction and data ingesti\nYou'll work in a small squad of three engineers. Each squad owns its features from start to finish: design, Spring Boot backend, React frontend, tests and deployment to Kubernetes. In a team this size there are no hand-offs between backend and frontend. Each person's work matters, and you'll have a real say in how things get bui\nWhat you'll do\nDesign and build REST APIs in Spring Boot / modern Java, organized as feature modules (alarms, topology, clustering, RCA, filter configuration, user access, and more) in a Maven multi-module monorepo.\nBuild and maintain React + TypeScript micro-frontends (Vite, pnpm workspaces, Material UI, Redux Toolkit, Tailwind, Mapbox GL for topology and geo views) inside a shared application shell.\nWrite data access against MongoDB, including schema design, indexing and query performance.\nWork on event-driven and batch pipelines: Kafka-based event flows, plus file ingestion of CSV, Excel, JSON, Parquet, XML and 3GPP formats.\nSecure services with Spring Security + Keycloak (OAuth2/OIDC) and handle secrets correctly, with nothing hard-coded.\nWrite tests at every level: JUnit 5, Mockito, Spring Boot Test, and end-to-end tests on the frontend.\nShip services as Docker images deployed to Kubernetes (GKE) with Helm through GitHub Actions CI/CD.\nTake part in spec-driven development: PRDs, acceptance specs, technical design reviews, and PR-based code review.\nCollaborate with the squads building the platform's Python-based AI agent services.\nMust have\n3–7 years of professional software development, mostly in Java (17+).\nSolid Spring Boot experience: Web/MVC, Security, Validation, configuration, OpenAPI.\nReal production experience with React + TypeScript: hooks, state management, component libraries, modern build tooling.\nHands-on work with MongoDB, or another NoSQL store plus a willingness to go deep on Mongo.\nExperience with microservices, REST API design and Maven.\nWorking knowledge of Docker and of how applications run on Kubernetes.\nGood testing habits and comfort with Git, pull requests and code review.\nAbility to work well remotely: clear written communication, comfort working asynchronously, and being self-directed within a small team.\nNice to have\nKafka or other messaging and event-driven design.\nKeycloak / OAuth2 / OIDC.\nHelm, Google Cloud / GKE, GitHub Actions.\nTelecom / OSS domain knowledge: fault management, alarms, network topology, 3GPP data.\nParquet or other big-data formats, or experience with analytics and ML-backed features.\nPython (FastAPI) or exposure to LLM / agentic applications.\nExperience working with AI coding assistants inside a spec-driven workflow.\nWhat we value\nOwnership: in a squad of three, you take features from idea to production and care how they behave once they're live.\nCare for shared code: core libraries are used by every service, so changes there are deliberate and well tested.\nClear writing: designs, PR descriptions and runbooks are how a remote team stays aligned.\nSecurity by default: no secrets in code or images, least privilege, pinned dependencies.\nWhat we offer\nFully remote work.\nA small, autonomous squad with real influence on architecture and product.\nA modern stack: the latest Java and Spring Boot, React, Kubernetes, and AI-assisted development.",
+  "city": "Málaga",
+  "link": "//www.infojobs.net/malaga/full-stack-engineer/of-iff20afbe4e4c39add5e3dc3fe8f78c?applicationOrigin=search-new&page=1&sortBy=RELEVANCE",
+  "contractType": "Contrato indefinido",
+  "salary": {
+   "range": {
+    "min": 33000,
+    "max": 45000
+   },
+   "period": "YEAR",
+   "currency": "EUR",
+   "type": "GROSS"
+  },
+  "workday": "Jornada completa",
+  "teleworking": "Híbrido",
+  "publishedAt": "2026-10-13T12:29:01Z",
+  "companyName": "CMV Consultores",
+  "companyLogo": "https://multimedia-logos.infojobs.net/image/upload/8f/8fc6e127-da02-4ba4-a7eb-878daa371e1c",
+  "companyLink": "https://www.infojobs.net/cmv-consultores/em-i98565356505453677786322010055224201356",
+  "states": [],
+  "upsellings": [
+   "PROMOTED"
+  ],
+  "executive": false,
+  "newBOId": "f96b31a7-612f-4450-a576-a9392bf13fb5"
+ },
+ {
+  "code": "5395e37a3c4ac7b24228549c85cf8a",
+  "title": "AI Platform Engineer (Senior)",
+  "description": "Buscamos un/a AI Platform Engineer (Senior) para liderar el desarrollo y evolución de la plataforma de IA corporativa. En este rol, serás responsable de construir la base tecnológica que permite desarrollar, desplegar y escalar soluciones de inteligencia artificial en toda la organización.\nTrabajarás en estrecha colaboración con arquitectos/as de soluciones, equipos de producto y otros perfiles de ingeniería para garantizar que las capacidades de la plataforma sean robustas, reutilizables y listas para uso productivo en entornos enterprise.\nResponsabilidades\nDesarrollo de plataforma AI:\n• Desarrollar y evolucionar la plataforma de IA siguiendo la estrategia y arquitectura definida.\n• Construir y mantener componentes clave como hubs de LLM, frameworks agenticos, registros MCP, pipelines CI/CD y componentes de integración reutilizables.\n• Evaluar e impulsar nuevas capacidades como plataformas agenticas low-code o agentes autónomos.\nEstándares de desarrollo y operación:\n• Definir y mejorar procesos de desarrollo, plantillas y buenas prácticas de ingeniería.\n• Garantizar que los servicios de plataforma sean seguros, mantenibles, observables y listos para producción.\nGobernanza y ciclo de vida:\n• Aplicar principios de arquitectura empresarial, seguridad y compliance en la plataforma\n• Definir modelos de ownership, documentación y transición de servicios de plataforma.\nIndustrialización y escalado:\n• Traducir necesidades de producto y arquitectura en capacidades reutilizables de plataforma.\n• Impulsar el uso consistente de la plataforma en distintos equipos y casos de uso.\nColaboración y conocimiento:\n• Compartir buenas prácticas y contribuir a la adopción transversal de la plataforma AI.\n• Fomentar redes internas y externas para posicionar a la organización como referente en innovación en IA.\n¿Requisitos\n• Experiencia en el desarrollo y operación de plataformas de IA, GenAI o servicios cloud escalables en entornos enterprise \n• Experiencia práctica en:\n     CI/CD\n     APIs e integración de sistemas\n     Observabilidad\n     Seguridad y gestión del ciclo de vida\n• Conocimiento sólido de:\n     Plataformas LLM\n     Frameworks agenticos\n     Conceptos MCP\n     Herramientas low-code para IA\n     Workflows modernos de desarrollo en IA\n• Capacidad para transformar arquitectura y necesidades de negocio en soluciones técnicas reutilizables \n• Nivel de inglés: avanzado",
+  "city": "Llanera",
+  "link": "//www.infojobs.net/llanera/ai-platform-engineer-senior/of-i5395e37a3c4ac7b24228549c85cf8a?applicationOrigin=search-new&page=1&sortBy=RELEVANCE",
+  "contractType": "Contrato indefinido",
+  "salary": {
+   "range": {
+    "min": 50000,
+    "max": null
+   },
+   "period": "YEAR",
+   "currency": "EUR",
+   "type": "GROSS"
+  },
+  "workday": "Jornada completa",
+  "teleworking": "Solo teletrabajo",
+  "publishedAt": "2026-10-14T08:27:26Z",
+  "companyName": "Phoenix Contact",
+  "companyLogo": "https://multimedia-logos.infojobs.net/image/upload/03/03b747e6-f9cd-48ba-8411-1db8b012a4a8",
+  "companyLink": "https://www.infojobs.net/phoenix-contact/em-i943457524534005431175205652315",
+  "states": [
+   "REUSED"
+  ],
+  "upsellings": [
+   "BUMP_WEEKLY",
+   "PROMOTED"
+  ],
+  "executive": false,
+  "newBOId": "8b1226d1-636d-40c1-bf4f-bbde0a17d48b"
+ },
+ {
+  "code": "9b5317bf1f4901b9ce53c49e7eb090",
+  "title": "Desarrollador/a Científico/a Junior – IA y Automatización",
+  "description": "Descripción del puesto\nBuscamos incorporar un/a Desarrollador/a Científico/a Junior para participar en el desarrollo, mantenimiento y mejora de las aplicaciones informáticas, bases de datos y modelos desarrollados por la empresa.\nLa persona seleccionada se integrará en el equipo de desarrollo y participará en proyectos relacionados con el tratamiento, análisis y previsión de datos, así como en el desarrollo de nuevas aplicaciones, funcionalidades y herramientas.\nEntre sus principales áreas de trabajo estarán:\nDesarrollo y mantenimiento de aplicaciones y herramientas científicas.\nTratamiento, análisis y modelización de datos.\nDesarrollo de automatizaciones e integraciones entre aplicaciones, bases de datos y servicios.\nIntegración con APIs externas, plataformas de terceros y sistemas internos.\nDesarrollo y mejora de soluciones basadas en inteligencia artificial y modelos de lenguaje (LLM).\nParticipación en el diseño de agentes de IA y flujos automatizados orientados a la optimización de tareas y procesos.\n Funciones\nDesarrollo y mantenimiento de software y aplicaciones científicas.\nTratamiento, análisis y modelización de datos.\nDesarrollo y mantenimiento de automatizaciones e integraciones entre sistemas.\nIntegración de aplicaciones con APIs, servicios web y plataformas de terceros.\nParticipación en el diseño e implementación de soluciones basadas en IA y modelos de lenguaje.\nDesarrollo y evaluación de agentes de IA y flujos de trabajo automatizados.\nRealización de pruebas, documentación y soporte de las soluciones desarrolladas.\nRequisitos\nGrado en Física, Ingeniería Informática, Ciencias de la Computación, Matemáticas, Ciencia de Datos u otras titulaciones técnicas afines.\nConocimientos de programación, preferentemente Python y/o C++.\nConocimientos de tratamiento, análisis y modelización de datos.\nConocimientos de bases de datos relacionales y SQL.\nConocimientos o experiencia en desarrollo de aplicaciones e integración mediante APIs y servicios web.\nCapacidad de aprendizaje, autonomía y orientación a la resolución de problemas.\n Se valorará\nExperiencia o formación en automatización de procesos e integración de sistemas.\nExperiencia en desarrollo de soluciones basadas en inteligencia artificial.\nConocimientos de modelos de lenguaje (LLM), agentes de IA y arquitecturas RAG.\nExperiencia con APIs de modelos de lenguaje e integración de IA con aplicaciones y bases de datos.\nConocimientos de Docker y Git.\nConocimientos de estadística, optimización numérica y series temporales.\nExperiencia en el desarrollo de aplicaciones científicas o de tratamiento de datos.",
+  "city": "Barcelona",
+  "link": "//www.infojobs.net/barcelona/desarrollador-cientifico-junior-ia-automatizacion/of-i9b5317bf1f4901b9ce53c49e7eb090?applicationOrigin=search-new&page=1&sortBy=RELEVANCE",
+  "contractType": "Contrato indefinido",
+  "salary": {
+   "range": {
+    "min": 26000,
+    "max": 28000
+   },
+   "period": "YEAR",
+   "currency": "EUR",
+   "type": "GROSS"
+  },
+  "workday": "Jornada completa",
+  "teleworking": "Presencial",
+  "publishedAt": "2026-08-28T09:04:44Z",
+  "companyName": "Alea Business Software",
+  "companyLogo": "https://multimedia-logos.infojobs.net/image/upload/63/63dad3a7-e76c-4c14-a880-1b0f37858800",
+  "companyLink": "https://www.infojobs.net/alea-business-software/em-i996950524536211740125135743160",
+  "states": [],
+  "upsellings": [],
+  "executive": false,
+  "newBOId": "63886f1b-a061-486f-a859-a6a23e5133d2"
+ },
+ {
+  "code": "ead34d0ded4cb4a04d4a26404745e9",
+  "title": "Desarrollador/a React | Infraestructura, Automatización y 100% Remoto",
+  "description": "¡Desde Luca TIC te estamos esperando! \n¿Te apasiona el desarrollo frontend y te gustaría participar en proyectos web modernos, escalables y de alto impacto, combinando el desarrollo con la automatización de procesos y la gestión de infraestructura?\nDesde Luca TIC buscamos un/a React Developer con experiencia en Infraestructura y CI/CD para incorporarse a nuestro equipo y participar en el desarrollo, optimización y despliegue de aplicaciones web, contribuyendo tanto a la calidad del código como a la automatización y eficiencia de los procesos técnicos.\nBuscamos un perfil con sólidos conocimientos de React y experiencia práctica en infraestructura, configuración de pipelines y automatización de despliegues. Se valorará especialmente haber trabajado con herramientas y soluciones de inteligencia artificial.\n¿Cuáles serán tus responsabilidades?\nDesarrollar y mantener aplicaciones web responsive utilizando React, JavaScript y TypeScript.\nCrear componentes reutilizables, accesibles y de alta calidad a partir de diseños UI/UX.\nIntegrar APIs REST y/o GraphQL en colaboración con los equipos de Backend.\nGestionar el estado de las aplicaciones y optimizar su rendimiento, escalabilidad y experiencia de usuario.\nConfigurar, mantener y optimizar entornos de desarrollo, integración y producción.\nDiseñar, configurar y automatizar pipelines CI/CD para la integración, validación, construcción y despliegue de aplicaciones.\nAutomatizar procesos de build, testing y despliegue, mejorando la eficiencia y fiabilidad de las entregas.\nGestionar y supervisar despliegues, identificando y resolviendo incidencias relacionadas con los procesos de publicación y ejecución de las aplicaciones.\nColaborar en la gestión y configuración de infraestructura, preferiblemente en entornos cloud.\nAplicar buenas prácticas de control de versiones, calidad del código, seguridad y mantenimiento.\nParticipar en revisiones de código y en decisiones técnicas relacionadas con la arquitectura y evolución de las aplicaciones.\nColaborar con los equipos de Producto, Diseño, Backend e Infraestructura para garantizar la calidad y estabilidad de las soluciones desarrolladas.\nRequisitos imprescindibles\nAl menos 3 años de experiencia profesional desarrollando aplicaciones web con React.\nDominio de JavaScript (ES6+) y TypeScript.\nSólidos conocimientos de React: Hooks, Context, ciclo de vida y gestión del estado.\nExperiencia con herramientas de gestión de estado como Redux, Zustand, Recoil o similares.\nBuenos conocimientos de HTML5, CSS3 y diseño responsive.\nExperiencia trabajando con APIs REST y/o GraphQL.\nExperiencia con Git y flujos de control de versiones.\nExperiencia práctica en infraestructura y configuración de entornos técnicos, preferiblemente en plataformas cloud.\nExperiencia configurando, manteniendo y automatizando pipelines CI/CD, utilizando herramientas como Jenkins, GitHub Actions, GitLab CI/CD o Azure DevOps.\nExperiencia en automatización de builds y despliegues, así como en la resolución de incidencias relacionadas con estos procesos.\nConocimientos de herramientas de contenedorización como Docker y/o tecnologías similares.\nSe valorará positivamente\nExperiencia trabajando con proveedores cloud como AWS, Azure o Google Cloud Platform.\nConocimientos de Kubernetes y herramientas de orquestación de contenedores.\nExperiencia con infraestructura como código (IaC), utilizando herramientas como Terraform.\nConocimientos de inteligencia artificial y experiencia integrando soluciones de IA en aplicaciones.\nExperiencia trabajando con APIs de IA, modelos de lenguaje (LLM) o soluciones de IA generativa.\nExperiencia con Next.js y frameworks basados en React, especialmente en entornos SSR, SSG o ISR.\nConocimientos de herramientas de testing como Jest, React Testing Library, Cypress o Playwright.\nConocimientos de soluciones de estilado como Styled Components, Emotion o Tailwind CSS.\nExperiencia con arquitecturas Micro Frontend.\nConocimientos",
+  "city": "Alcobendas",
+  "link": "//www.infojobs.net/alcobendas/desarrollador-react-infraestructura-automatizacion-100-remoto/of-iead34d0ded4cb4a04d4a26404745e9?applicationOrigin=search-new&page=1&sortBy=RELEVANCE",
+  "contractType": "Contrato indefinido",
+  "workday": "Jornada completa",
+  "teleworking": "Solo teletrabajo",
+  "publishedAt": "2026-10-15T10:47:28Z",
+  "companyName": "Luca TIC",
+  "companyLogo": "https://multimedia-logos.infojobs.net/image/upload/f6/f6b9dd93-5f41-44c1-b638-b7b7022a033c",
+  "companyLink": "https://luca-tic.ofertas-trabajo.infojobs.net",
+  "states": [
+   "NEW"
+  ],
+  "upsellings": [],
+  "executive": false,
+  "newBOId": "c43f7a4d-c12e-4346-8fe4-c08fa1855e90"
+ }
+]

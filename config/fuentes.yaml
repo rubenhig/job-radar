@@ -1,0 +1,52 @@
+# Registro de fuentes: qué fuentes se usan, con qué conector, a qué coste y qué
+# hacer si fallan. Cambiar de intermediario (p. ej. LinkedIn de RapidAPI a
+# Apify) es cambiar `conector` aquí; el resto del sistema no se entera.
+#
+# `conector` es la versión exacta: si cambia la interpretación de una fuente,
+# cambia la versión, y cada ejecución y cada oferta guardan con cuál se hicieron.
+# Decisiones y medidas: docs/arquitectura.md (Fase 1) y docs/modelo.md.
+
+fuentes:
+  freehire:
+    tipo: agregador
+    conector: freehire-api/1
+    acceso: API pública sin clave (freehire.me/api/v1)
+    coste: gratis
+    terminos: Proyecto MIT; API pública documentada en freehire.me/docs/api. Uso moderado, User-Agent identificado.
+    frecuencia_h: 24
+    plan_b:
+      - Active Jobs DB (fantastic.jobs), mismo agregado de ATS
+      - Autoalojar freehire (MIT)
+
+  infojobs:
+    tipo: portal
+    conector: infojobs-ats-scrapers/1
+    acceso: Listado web con httpcloak, vía el adaptador infojobs_es de ats-scrapers
+    coste: gratis
+    terminos: Scraping de páginas públicas. Solo búsquedas acotadas, pocas páginas y pausas largas, para no quemar la IP de casa.
+    frecuencia_h: 24
+    plan_b:
+      - freehire (incluye InfoJobs, solo Informática)
+      - Emails de alerta de InfoJobs (#10)
+
+  linkedin:
+    tipo: api_terceros
+    conector: linkedin-fantastic-rapidapi/1
+    acceso: API de fantastic.jobs en RapidAPI, clave en .env (RAPIDAPI_KEY)
+    coste: Plan gratuito de RapidAPI, 25 llamadas y 250 ofertas al mes; en Apify, 1,50 $ cada 1.000 ofertas
+    terminos: Términos de RapidAPI y de fantastic.jobs. El scraping de LinkedIn lo hace el proveedor, no nosotros.
+    frecuencia_h: 168  # semanal con ventana de 7 días: cabe en el plan gratuito; se revisa en #35
+    plan_b:
+      - La misma API en Apify (pago por oferta)
+      - JobSpy con pausas largas
+      - Emails de alerta de LinkedIn (#9)
+
+  indeed:
+    tipo: portal
+    conector: indeed-jobspy/1
+    acceso: JobSpy (python-jobspy)
+    coste: gratis
+    terminos: Scraping de páginas públicas a través de JobSpy. Fuente secundaria, baja frecuencia.
+    frecuencia_h: 72
+    plan_b:
+      - JSearch (RapidAPI)

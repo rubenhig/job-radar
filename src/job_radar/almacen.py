@@ -168,6 +168,11 @@ def registrar_fuente(db, id: str, tipo: str, conector: str, activa: bool = True)
                          "actualizada_en": ahora()}, pk="id")
 
 
+def guardar_busqueda(db, id: str, fuente_id: str, parametros: dict, frecuencia_h: int) -> None:
+    db["busqueda"].upsert({"id": id, "fuente_id": fuente_id, "frecuencia_h": frecuencia_h,
+                           "parametros": json.dumps(parametros, ensure_ascii=False, sort_keys=True)}, pk="id")
+
+
 def iniciar_ejecucion(db, fuente_id: str, conector: str, busqueda_id: str | None = None) -> int:
     return db["ejecucion"].insert({"fuente_id": fuente_id, "busqueda_id": busqueda_id,
                                    "conector": conector, "inicio": ahora()}).last_pk
