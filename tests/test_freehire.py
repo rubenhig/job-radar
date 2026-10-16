@@ -78,3 +78,26 @@ def test_traer_falla_si_la_fuente_ignora_un_filtro():
     cli, _ = respuesta([FIXTURE[:1]], ignorados=[{"param": "cities"}])
     with pytest.raises(ErrorFuente):
         list(Freehire(cli).traer(Busqueda("freehire:x", "freehire", {"cities": "Málaga"}, 24)))
+
+
+def test_reintenta_errores_transitorios(monkeypatch):
+    monkeypatch.setattr("job_radar.fuentes.freehire._pagina.retry.sleep", lambda s: None)
+    intentos = []
+
+    def manejar(req):
+        intentos.append(1)
+        if len(intentos) < 3:
+            return httpx.Response(503)
+        return httpx.Response(200, json={"data": FIXTURE[:1], "meta": {"total": 1}})
+
+    cli = httpx.Client(transport=httpx.MockTransport(manejar))
+    assert len(list(Freehire(cli).traer(Busqueda("freehire:x", "freehire", {}, 24)))) == 1 and len(intentos) == 3
+
+
+def test_no_reintenta_errores_4xx(monkeypatch):
+    monkeypatch.setattr("job_radar.fuentes.freehire._pagina.retry.sleep", lambda s: None)
+    intentos = []
+    cli = httpx.Client(transport=httpx.MockTransport(lambda r: intentos.append(1) or httpx.Response(400)))
+    with pytest.raises(httpx.HTTPStatusError):
+        list(Freehire(cli).traer(Busqueda("freehire:x", "freehire", {}, 24)))
+    assert len(intentos) == 1

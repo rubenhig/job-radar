@@ -17,7 +17,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, ClassVar, Literal, Protocol
 
+import httpx
 from pydantic import BaseModel, ConfigDict, Field
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from job_radar.preferencias import Modalidad
 
@@ -27,6 +29,18 @@ UA = "job-radar/0.1 (radar personal de empleo; github.com/rubenhig/job-radar)"
 
 class ErrorFuente(RuntimeError):
     """La fuente respondió algo que el conector no esperaba (formato, parámetros ignorados…)."""
+
+
+def transitorio(e: BaseException) -> bool:
+    """Fallos que suelen arreglarse solos: red y errores 5xx. Un 4xx o un captcha, no."""
+    if isinstance(e, httpx.TransportError):
+        return True
+    return isinstance(e, httpx.HTTPStatusError) and e.response.status_code >= 500
+
+
+# Para envolver una sola petición a la fuente (no un `traer` entero, que es un generador).
+reintentar = retry(retry=retry_if_exception(transitorio), stop=stop_after_attempt(3),
+                   wait=wait_exponential(multiplier=2, max=30), reraise=True)
 
 
 # --- lo que se busca ------------------------------------------------------------

@@ -15,7 +15,8 @@ from typing import Any
 
 import httpx
 
-from job_radar.fuentes.base import Bruto, Busqueda, ErrorFuente, Intencion, Oferta, cargar_env, limpio, numero
+from job_radar.fuentes.base import (Bruto, Busqueda, ErrorFuente, Intencion, Oferta, cargar_env, limpio, numero,
+                                   reintentar)
 from job_radar.preferencias import Modalidad
 
 MODALIDAD = {"On-site": Modalidad.PRESENCIAL, "Hybrid": Modalidad.HIBRIDO,
@@ -136,7 +137,7 @@ class LinkedInRapidAPI(_LinkedIn):
                 "description_format": "text", "limit": self.POR_PAGINA}
         try:
             for pagina in range(self.MAX_PAGINAS):
-                r = cli.get(f"https://{host}/active-jb", params={**base, "offset": pagina * self.POR_PAGINA})
+                r = _get(cli, f"https://{host}/active-jb", {**base, "offset": pagina * self.POR_PAGINA})
                 self.cuota = {k.lower(): v for k, v in r.headers.items() if "ratelimit" in k.lower()} or self.cuota
                 if r.status_code != 200:
                     raise ErrorFuente(f"LinkedIn (RapidAPI): HTTP {r.status_code}: {r.text[:300]}")
@@ -150,3 +151,11 @@ class LinkedInRapidAPI(_LinkedIn):
         finally:
             if self.cliente is None:
                 cli.close()
+
+
+@reintentar
+def _get(cli: httpx.Client, url: str, parametros: dict) -> httpx.Response:
+    r = cli.get(url, params=parametros)
+    if r.status_code >= 500:
+        r.raise_for_status()
+    return r

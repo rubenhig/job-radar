@@ -19,7 +19,7 @@ from typing import Any
 
 import httpx
 
-from job_radar.fuentes.base import UA, Bruto, Busqueda, ErrorFuente, Intencion, Oferta, limpio, numero
+from job_radar.fuentes.base import UA, Bruto, Busqueda, ErrorFuente, Intencion, Oferta, limpio, numero, reintentar
 from job_radar.preferencias import Modalidad
 
 URL = "https://freehire.me/api/v1/agent/jobs/search"  # la de /agent trae la descripción completa
@@ -69,9 +69,7 @@ class Freehire:
         try:
             offset = 0
             for _ in range(MAX_PAGINAS):
-                r = cli.get(URL, params={**base, "offset": offset})
-                r.raise_for_status()
-                datos = r.json()
+                datos = _pagina(cli, {**base, "offset": offset})
                 meta = datos.get("meta") or {}
                 if meta.get("ignored_params"):  # un filtro ignorado parece un resultado amplio: es un error
                     raise ErrorFuente(f"freehire ignoró parámetros: {meta['ignored_params']}")
@@ -115,3 +113,10 @@ class Freehire:
         derivados = [c for c in ("salario_min", "salario_max", "salario_moneda", "salario_periodo", "experiencia",
                                  "contrato", "skills", "ingles", "es_agencia") if getattr(o, c) is not None]
         return o.model_copy(update={"derivados": derivados or None})
+
+
+@reintentar
+def _pagina(cli: httpx.Client, parametros: dict) -> dict:
+    r = cli.get(URL, params=parametros)
+    r.raise_for_status()
+    return r.json()

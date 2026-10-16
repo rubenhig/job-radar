@@ -49,7 +49,20 @@ flowchart LR
 - **Integrar, no crear.** Cada bloque usa una herramienta open source existente que ha pasado una prueba verificable. Por ejemplo, [JobSpy](https://github.com/speedyapply/JobSpy) y [ats-scrapers](https://github.com/kalil0321/ats-scrapers).
 - **Poco a poco.** Cada fase termina con algo comprobable.
 
-## Pruebas de fuentes
+## Ingesta
+
+```sh
+uv run job-radar ingesta     # lanza las búsquedas que tocan según su frecuencia (config/fuentes.yaml)
+uv run job-radar resumen     # ofertas y puestos por fuente, exclusividad y salud
+uv run job-radar salud       # alertas de las fuentes
+uv run datasette data/job_radar.db --metadata config/datasette.yaml   # panel: fuentes, ejecuciones, puestos, trazas
+```
+
+- Las fuentes y su conector se declaran en `config/fuentes.yaml`; las búsquedas salen de las preferencias.
+- Las claves van en `.env` (`RAPIDAPI_KEY`; opcional `HEALTHCHECKS_URL`).
+- En el Mac corre a diario con launchd: ver [`deploy/launchd/`](deploy/launchd/com.rubenhig.job-radar.plist).
+
+## Pruebas de fuentes (Fase 1)
 
 ```sh
 uv run spikes/fuentes_empleo.py   # JobSpy + Tecnoempleo + ATS detectados → data/spike/*.csv
