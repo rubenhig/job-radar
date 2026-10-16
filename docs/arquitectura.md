@@ -64,6 +64,7 @@ Además, a lo largo de todo el sistema: planificador, salud de fuentes, tope de 
 | **Agregador** | [freehire](https://github.com/strelov1/freehire) (MIT): ~3M ofertas de 92 ATS y ~100 portales, deduplicadas y enriquecidas | API pública sin clave. Da amplitud (ATS de empresas de Málaga, remoto); las fuentes directas cubren lo que le falta o trae peor |
 | **2. Portales** | InfoJobs (adaptador `infojobs_es` con httpcloak), Indeed y Glassdoor vía JobSpy, Tecnoempleo | Scraping a baja frecuencia y con búsquedas acotadas. InfoJobs: decisión de Rubén (15-oct-2026), uso personal |
 | **3. Solo emails propios** | LinkedIn, Welcome to the Jungle, Wellfound | Alertas a un buzón dedicado |
+| **APIs de terceros** | LinkedIn vía fantastic.jobs (RapidAPI) | Ellos hacen el scraping; nosotros consumimos cuota. Sin 429 ni riesgo para nuestra IP |
 | **Excluidas** | LinkedIn con sesión, Google Jobs, auto-apply | Riesgo de cuenta, riesgo legal o sin datos |
 
 Métricas por fuente en cada ejecución: rendimiento, completitud, precisión, exclusividad, estabilidad y riesgo.
@@ -109,7 +110,7 @@ Estados: ⬜ por probar · 🟡 probada a medias · ✅ aprobada · ❌ descarta
 | ATS de empresas | [`ats-scrapers`](https://github.com/kalil0321/ats-scrapers) 0.3.0 (MIT) con `beautifulsoup4`, `html2text` y `aiohttp` | Leer las ofertas de Ebury (Greenhouse EU), Freepik (Teamtailor) y Accenture Málaga (Workday) → `spikes/prueba_ats.py` | ✅ 15-oct-2026, detalle abajo |
 | InfoJobs | Adaptador `infojobs_es` de ats-scrapers + `httpcloak`, con `listing_url` filtrado y `max_pages` bajo | Página 1 sin captcha, filtro respetado, descripción y modalidad rellenas → `spikes/prueba_infojobs.py` | ✅ 15-oct-2026, detalle abajo |
 | Indeed y Glassdoor | [JobSpy](https://github.com/speedyapply/JobSpy) `python-jobspy==1.3.0` (MIT) | Ofertas de la ubicación con descripción y URL directa | 🟡 Indeed bien en el spike; Glassdoor sin probar |
-| LinkedIn (búsqueda) | JobSpy sin `fetch_description` masivo, con pausas; `linkedin_company_ids` para empresas objetivo | 3 días seguidos sin 429 (comprobado con `jobs.attrs["errors"]`) | 🟡 429 en el spike por pedir todas las descripciones |
+| LinkedIn (búsqueda) | **API de LinkedIn de fantastic.jobs vía RapidAPI** (v4, `/active-jb`); plan B: JobSpy con pausas | Ofertas de Málaga y remoto con descripción → `spikes/prueba_linkedin_api.py` | ✅ 16-oct-2026, detalle abajo |
 | **freehire (agregador)** | API pública `freehire.me/api/v1` (`/jobs/facets`, `/agent/jobs/search`) | Cobertura de Málaga y de remoto, fuentes, completitud → `spikes/prueba_freehire.py` | ✅ 16-oct-2026, detalle abajo |
 | Remoto con elegibilidad | **API pública de [freehire](https://github.com/strelov1/freehire)** (agrega InfoJobs, Manfred, Get on Board, Himalayas, RemoteOK, Remotive…); adaptadores de ats-scrapers; API de Himalayas (`country=Spain`) | Ofertas remotas que admiten España, con descripción; medir cobertura y frescura frente a las fuentes directas | ⬜ |
 | ATS europeos y detección | Adaptadores de [maccydee/job-radar](https://github.com/maccydee/job-radar) (Personio, Teamtailor, Recruitee, Workable) + su `discover` + dataset de 17.814 boards | Resolver el ATS de una lista corta de empresas de Málaga | ⬜ |
@@ -146,3 +147,12 @@ Estados: ⬜ por probar · 🟡 probada a medias · ✅ aprobada · ❌ descarta
   - El filtro `countries=es` + `remote` deja pasar algunas ofertas de fuera.
 - **"Fantasma":** el 72 % de Málaga está marcado `stale`. Hay que entender qué significa antes de filtrar por ello.
 - Vocabulario: `countries=es`, `cities=Málaga`, `regions=eu`, `work_mode=remote|hybrid|onsite`, `q` para texto. `is_tech=true` no filtra (devuelve 0).
+
+**Detalle de LinkedIn (fantastic.jobs).**
+- API v4 en RapidAPI: `GET /active-jb` con `time_frame` (1h, 24h, 7d, 6m), `title` y `location` con sintaxis tipo Google, `ai_work_arrangement`, `organization_agency`, `has_salary` y `description_format=text`.
+- **Málaga + puestos técnicos, 7 días: 41 ofertas**, todas realmente en Málaga.
+  - 100 % con descripción, modalidad (`ai_work_arrangement`), skills (`ai_key_skills`) y **ficha de empresa de LinkedIn** (sector, tamaño, web, sede): justo lo que necesita el nivel empresa.
+  - Relevantes: *Python Developer – AI Agents, MCP & SDD* (Abalia) y *Technical Lead IA / AI Architect* (addSolutions).
+- **España + remoto + IA, 7 días: 50 (tope de la llamada)**, con un 22 % con salario. Hay ruido de plataformas de "AI trainer" (Alignerr, Jobgether), que se filtra con `organization_agency=exclude`, `exclude_organization` y la puntuación con Claude.
+- **Cuota del plan gratuito: 25 llamadas y 250 ofertas al mes.** La prueba gastó 3 llamadas y ~100 ofertas. Cubre una búsqueda semanal de Málaga, pero no un uso diario con remoto. Alternativas: el plan Pro de RapidAPI o el mismo proveedor en Apify (1,50 $ por cada 1.000 ofertas).
+- La API hermana **Active Jobs DB** (mismo proveedor) cubre ATS y webs de empleo de empresas, con filtro por dominio y ficha de LinkedIn. Es una alternativa o complemento de freehire.
