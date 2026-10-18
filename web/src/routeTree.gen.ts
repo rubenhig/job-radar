@@ -10,47 +10,16 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
-import { Route as errors401RouteImport } from './routes/(errors)/401'
-import { Route as errors403RouteImport } from './routes/(errors)/403'
-import { Route as errors404RouteImport } from './routes/(errors)/404'
-import { Route as errors500RouteImport } from './routes/(errors)/500'
-import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppEtiquetarRouteImport } from './routes/_app/etiquetar'
 import { Route as AppFuentesRouteImport } from './routes/_app/fuentes'
 import { Route as AppPerfilRouteImport } from './routes/_app/perfil'
 import { Route as AppPuntuacionRouteImport } from './routes/_app/puntuacion'
-import { Route as AppErrorsErrorRouteImport } from './routes/_app/errors/$error'
 import { Route as AppPuestosIndexRouteImport } from './routes/_app/puestos/index'
 import { Route as AppPuestosPuestoIdRouteImport } from './routes/_app/puestos/$puestoId'
 
 const AppRouteRoute = AppRouteRouteImport.update({
   id: '/_app',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors401Route = errors401RouteImport.update({
-  id: '/(errors)/401',
-  path: '/401',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors403Route = errors403RouteImport.update({
-  id: '/(errors)/403',
-  path: '/403',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors404Route = errors404RouteImport.update({
-  id: '/(errors)/404',
-  path: '/404',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors500Route = errors500RouteImport.update({
-  id: '/(errors)/500',
-  path: '/500',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const errors503Route = errors503RouteImport.update({
-  id: '/(errors)/503',
-  path: '/503',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -78,11 +47,6 @@ const AppPuntuacionRoute = AppPuntuacionRouteImport.update({
   path: '/puntuacion',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const AppErrorsErrorRoute = AppErrorsErrorRouteImport.update({
-  id: '/errors/$error',
-  path: '/errors/$error',
-  getParentRoute: () => AppRouteRoute,
-} as any)
 const AppPuestosIndexRoute = AppPuestosIndexRouteImport.update({
   id: '/puestos/',
   path: '/puestos/',
@@ -96,48 +60,30 @@ const AppPuestosPuestoIdRoute = AppPuestosPuestoIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
-  '/401': typeof errors401Route
-  '/403': typeof errors403Route
-  '/404': typeof errors404Route
-  '/500': typeof errors500Route
-  '/503': typeof errors503Route
   '/etiquetar': typeof AppEtiquetarRoute
   '/fuentes': typeof AppFuentesRoute
   '/perfil': typeof AppPerfilRoute
   '/puntuacion': typeof AppPuntuacionRoute
-  '/errors/$error': typeof AppErrorsErrorRoute
   '/puestos/$puestoId': typeof AppPuestosPuestoIdRoute
   '/puestos/': typeof AppPuestosIndexRoute
 }
 export interface FileRoutesByTo {
-  '/401': typeof errors401Route
-  '/403': typeof errors403Route
-  '/404': typeof errors404Route
-  '/500': typeof errors500Route
-  '/503': typeof errors503Route
   '/etiquetar': typeof AppEtiquetarRoute
   '/fuentes': typeof AppFuentesRoute
   '/perfil': typeof AppPerfilRoute
   '/puntuacion': typeof AppPuntuacionRoute
   '/': typeof AppIndexRoute
-  '/errors/$error': typeof AppErrorsErrorRoute
   '/puestos/$puestoId': typeof AppPuestosPuestoIdRoute
   '/puestos': typeof AppPuestosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteRouteWithChildren
-  '/(errors)/401': typeof errors401Route
-  '/(errors)/403': typeof errors403Route
-  '/(errors)/404': typeof errors404Route
-  '/(errors)/500': typeof errors500Route
-  '/(errors)/503': typeof errors503Route
   '/_app/etiquetar': typeof AppEtiquetarRoute
   '/_app/fuentes': typeof AppFuentesRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/puntuacion': typeof AppPuntuacionRoute
   '/_app/': typeof AppIndexRoute
-  '/_app/errors/$error': typeof AppErrorsErrorRoute
   '/_app/puestos/$puestoId': typeof AppPuestosPuestoIdRoute
   '/_app/puestos/': typeof AppPuestosIndexRoute
 }
@@ -145,58 +91,35 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/401'
-    | '/403'
-    | '/404'
-    | '/500'
-    | '/503'
     | '/etiquetar'
     | '/fuentes'
     | '/perfil'
     | '/puntuacion'
-    | '/errors/$error'
     | '/puestos/$puestoId'
     | '/puestos/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/401'
-    | '/403'
-    | '/404'
-    | '/500'
-    | '/503'
     | '/etiquetar'
     | '/fuentes'
     | '/perfil'
     | '/puntuacion'
     | '/'
-    | '/errors/$error'
     | '/puestos/$puestoId'
     | '/puestos'
   id:
     | '__root__'
     | '/_app'
-    | '/(errors)/401'
-    | '/(errors)/403'
-    | '/(errors)/404'
-    | '/(errors)/500'
-    | '/(errors)/503'
     | '/_app/etiquetar'
     | '/_app/fuentes'
     | '/_app/perfil'
     | '/_app/puntuacion'
     | '/_app/'
-    | '/_app/errors/$error'
     | '/_app/puestos/$puestoId'
     | '/_app/puestos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRouteRoute: typeof AppRouteRouteWithChildren
-  errors401Route: typeof errors401Route
-  errors403Route: typeof errors403Route
-  errors404Route: typeof errors404Route
-  errors500Route: typeof errors500Route
-  errors503Route: typeof errors503Route
 }
 
 declare module '@tanstack/react-router' {
@@ -206,41 +129,6 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/401': {
-      id: '/(errors)/401'
-      path: '/401'
-      fullPath: '/401'
-      preLoaderRoute: typeof errors401RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/403': {
-      id: '/(errors)/403'
-      path: '/403'
-      fullPath: '/403'
-      preLoaderRoute: typeof errors403RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/404': {
-      id: '/(errors)/404'
-      path: '/404'
-      fullPath: '/404'
-      preLoaderRoute: typeof errors404RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/500': {
-      id: '/(errors)/500'
-      path: '/500'
-      fullPath: '/500'
-      preLoaderRoute: typeof errors500RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(errors)/503': {
-      id: '/(errors)/503'
-      path: '/503'
-      fullPath: '/503'
-      preLoaderRoute: typeof errors503RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/': {
@@ -278,13 +166,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPuntuacionRouteImport
       parentRoute: typeof AppRouteRoute
     }
-    '/_app/errors/$error': {
-      id: '/_app/errors/$error'
-      path: '/errors/$error'
-      fullPath: '/errors/$error'
-      preLoaderRoute: typeof AppErrorsErrorRouteImport
-      parentRoute: typeof AppRouteRoute
-    }
     '/_app/puestos/': {
       id: '/_app/puestos/'
       path: '/puestos'
@@ -308,7 +189,6 @@ interface AppRouteRouteChildren {
   AppPerfilRoute: typeof AppPerfilRoute
   AppPuntuacionRoute: typeof AppPuntuacionRoute
   AppIndexRoute: typeof AppIndexRoute
-  AppErrorsErrorRoute: typeof AppErrorsErrorRoute
   AppPuestosPuestoIdRoute: typeof AppPuestosPuestoIdRoute
   AppPuestosIndexRoute: typeof AppPuestosIndexRoute
 }
@@ -319,7 +199,6 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppPerfilRoute: AppPerfilRoute,
   AppPuntuacionRoute: AppPuntuacionRoute,
   AppIndexRoute: AppIndexRoute,
-  AppErrorsErrorRoute: AppErrorsErrorRoute,
   AppPuestosPuestoIdRoute: AppPuestosPuestoIdRoute,
   AppPuestosIndexRoute: AppPuestosIndexRoute,
 }
@@ -330,11 +209,6 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AppRouteRoute: AppRouteRouteWithChildren,
-  errors401Route: errors401Route,
-  errors403Route: errors403Route,
-  errors404Route: errors404Route,
-  errors500Route: errors500Route,
-  errors503Route: errors503Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

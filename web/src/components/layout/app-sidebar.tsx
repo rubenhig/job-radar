@@ -1,4 +1,3 @@
-import { useLayout } from '@/context/layout-provider'
 import {
   Sidebar,
   SidebarContent,
@@ -10,7 +9,8 @@ import { sidebarData } from './data/sidebar-data'
 import { NavGroup } from './nav-group'
 
 export function AppSidebar() {
-  const { collapsible, variant } = useLayout()
+  const collapsible = 'icon' // se pliega a iconos
+  const variant = 'inset'
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
       <SidebarHeader>
