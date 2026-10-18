@@ -5,7 +5,7 @@ y una cita literal de la oferta. Python comprueba que cada cita existe en la
 oferta y calcula la nota con pesos fijos. Lo que no se puede comprobar se
 marca, no se cree: una compuerta que no pasa sin cita verificada no veta.
 
-Rúbrica v1, sobre las de career-ops y ai-job-search (ver docs/repositorios.md):
+Rúbrica v2 (18-oct-2026), sobre las de career-ops y ai-job-search (ver docs/repositorios.md):
   - Compuertas (pasa / no pasa / marca): modalidad, elegibilidad, idioma.
     Cualquier "no pasa" con evidencia anula la nota; "marca" solo avisa.
   - Función: si el puesto no consiste en construir software (entrenar modelos
@@ -14,6 +14,12 @@ Rúbrica v1, sobre las de career-ops y ai-job-search (ver docs/repositorios.md):
     función técnica (10 %), seniority (10 %) y fuente (10 %).
   - Requisitos en dos pasadas: primero qué pide la oferta y cuánto importa;
     después, con qué competencia del perfil se cubre. Lo inferido nunca es crítico.
+  - Salario: si la oferta da cifras en el texto, el modelo las extrae con su cita. Cuenta en
+    Python frente al salario actual y el objetivo (ver «el salario, en Python»).
+
+Cambios de la v2 tras medir contra las etiquetas de Rubén: el ML clásico y la visión por
+computador tienen categoría propia (no son «sin IA»); un título que nombra IA es como mínimo
+«software con IA»; una compuerta solo dice «no pasa» con certeza; el salario del texto.
 """
 
 import hashlib
@@ -31,7 +37,7 @@ from job_radar.llm import MotorLLM, Uso
 from job_radar.perfil import verificar_cita
 from job_radar.preferencias import Preferencias
 
-RUBRICA = "rubrica/1"
+RUBRICA = "rubrica/2"
 MAX_DESCRIPCION = 12_000
 
 # --- lo que devuelve el modelo --------------------------------------------------
@@ -65,11 +71,12 @@ class Funcion(BaseModel):
 
 
 class RolIA(BaseModel):
-    valor: Literal["ia_principal", "software_con_ia", "software_sin_ia", "ninguno"] = Field(
+    valor: Literal["ia_principal", "software_con_ia", "ml_clasico", "software_sin_ia", "ninguno"] = Field(
         description="ia_principal: el puesto ES de IA/LLM (AI/LLM/GenAI Engineer, agentes en producción, arquitecto o "
                     "tech lead de IA, MLOps/plataforma LLM); software_con_ia: ingeniería de software donde la IA aparece "
-                    "en las tareas; software_sin_ia: ingeniería de software sin IA, o ML clásico sin LLM; ninguno. "
-                    "No fuerces un encaje que no hay")
+                    "en el título o en las tareas (un título que nombra AI/IA/LLM/ML es como mínimo esto); ml_clasico: "
+                    "machine learning, visión por computador o ciencia de datos con modelos, sin LLM; software_sin_ia: "
+                    "ingeniería de software sin IA en el título ni en las tareas; ninguno. No fuerces un encaje que no hay")
     cita: str | None = Field(None, description=CITA)
     motivo: str
 
@@ -90,6 +97,14 @@ class Fuente(BaseModel):
     motivo: str
 
 
+class SalarioDicho(BaseModel):
+    minimo: float | None = Field(None, description="Cifra tal cual (35000, no 35)")
+    maximo: float | None = None
+    moneda: str | None = Field(None, description="ISO 4217: EUR, USD, GBP")
+    periodo: Literal["ano", "mes", "dia", "hora"] | None = None
+    cita: str = Field(description="La frase LITERAL de la oferta con las cifras")
+
+
 class Veredictos(BaseModel):
     resumen: str = Field(description="Qué es el puesto, en una frase en español")
     requisitos: list[Requisito] = Field(description="Hasta 10, los que más pesan; primero los críticos")
@@ -104,6 +119,8 @@ class Veredictos(BaseModel):
     rol_ia: RolIA
     seniority: Seniority
     fuente: Fuente
+    salario: SalarioDicho | None = Field(None, description="Solo si el texto de la oferta da cifras de salario; "
+                                                           "si no, null. No lo estimes")
 
 
 SISTEMA = """Evalúas si un puesto de trabajo encaja con un candidato concreto. Tu salida no es una nota:
@@ -117,6 +134,8 @@ Reglas:
 - Requisitos, en dos pasadas: primero lee la oferta y anota qué pide y cuánto importa SIN mirar el
   perfil; después decide con qué competencia del perfil se cubre cada uno (nombre exacto o null).
 - Lo que deduces tú es 'inferido' y nunca 'critico'.
+- Compuertas: 'no_pasa' solo si la oferta deja claro que el candidato NO puede. Si dudas o es
+  probable que pueda, 'pasa' o 'sin_datos'. El motivo tiene que decir lo mismo que el veredicto.
 - Los motivos y el resumen, en español y breves."""
 
 
@@ -174,7 +193,8 @@ def huella_perfil(perfil_cv: dict, prefs: Preferencias) -> str:
 PESOS = {"rol_ia": 0.40, "requisitos": 0.30, "funcion": 0.10, "seniority": 0.10, "fuente": 0.10}
 VALORES = {
     "funcion": {"ingenieria": 1.0, "tecnica_adyacente": 0.5, "no_construye_software": 0.0},
-    "rol_ia": {"ia_principal": 1.0, "software_con_ia": 0.67, "software_sin_ia": 0.33, "ninguno": 0.0},
+    "rol_ia": {"ia_principal": 1.0, "software_con_ia": 0.67, "ml_clasico": 0.67, "software_sin_ia": 0.33,
+               "ninguno": 0.0},
     "seniority": {"encaja": 1.0, "reto": 0.6, "por_debajo": 0.6, "muy_por_encima": 0.0},
     "fuente": {"directa": 1.0, "intermediario": 0.6, "dudosa": 0.2},
 }
@@ -294,13 +314,28 @@ def cobertura(requisitos: list[Requisito]) -> float:
     return round(sum(p * c for p, c in pesados) / total, 3) if total else 0.5
 
 
-def calcular(v: Veredictos, texto_oferta: str, salario: AjusteSalario | None = None) -> Resultado:
+def elegir_salario(fuente: tuple[dict | None, bool], v: Veredictos) -> tuple[dict | None, bool]:
+    """El dato de la fuente si es real; si no, el que el modelo citó del texto; si no, el estimado."""
+    datos, estimado = fuente
+    if datos and not estimado:
+        return fuente
+    if v.salario and (v.salario.maximo or v.salario.minimo):
+        return {"salario_min": v.salario.minimo, "salario_max": v.salario.maximo,
+                "salario_moneda": v.salario.moneda, "salario_periodo": v.salario.periodo}, False
+    return fuente
+
+
+def calcular(v: Veredictos, texto_oferta: str, fuente_salario: tuple[dict | None, bool] = (None, False),
+             deseado=None) -> Resultado:
     falsas = []
     for nombre in ("modalidad", "elegibilidad", "idioma", "funcion", "rol_ia", "seniority", "fuente"):
         criterio = getattr(v, nombre)
         if criterio.cita and not verificar_cita(criterio.cita, texto_oferta):
             falsas.append(nombre)
             criterio.cita = None  # no cuenta como evidencia
+    if v.salario and not verificar_cita(v.salario.cita, texto_oferta):
+        falsas.append("salario")
+        v.salario = None
     requisitos = [r for r in v.requisitos if verificar_cita(r.requisito, texto_oferta) or r.origen == "inferido"]
     if len(requisitos) < len(v.requisitos):
         falsas.append(f"requisitos ({len(v.requisitos) - len(requisitos)})")
@@ -322,6 +357,7 @@ def calcular(v: Veredictos, texto_oferta: str, salario: AjusteSalario | None = N
         "seniority": VALORES["seniority"][v.seniority.valor],
         "fuente": VALORES["fuente"][v.fuente.valor],
     }
+    salario = ajuste_salario(*elegir_salario(fuente_salario, v), deseado) if deseado else None
     if salario and not veto:
         marcas.append(salario.marca)
     return Resultado(veredictos=v.model_copy(update={"requisitos": requisitos}), citas_falsas=falsas,
@@ -350,8 +386,8 @@ def evaluar(db, puesto_id: int, motor: MotorLLM, perfil_cv: dict, prefs: Prefere
     """Evalúa un puesto, guarda la evaluación y devuelve su id."""
     prompt, oferta = preparar(db, puesto_id, perfil_cv, prefs)
     veredictos, uso = motor.extraer(prompt, Veredictos, sistema=SISTEMA)
-    salario = ajuste_salario(*salario_de(db, puesto_id), prefs.salario)
-    return guardar(db, puesto_id, calcular(veredictos, oferta, salario), uso, huella_perfil(perfil_cv, prefs))
+    r = calcular(veredictos, oferta, salario_de(db, puesto_id), prefs.salario)
+    return guardar(db, puesto_id, r, uso, huella_perfil(perfil_cv, prefs))
 
 
 def evaluar_varios(db, ids: list[int], motor: MotorLLM, perfil_cv: dict, prefs: Preferencias,
@@ -372,8 +408,8 @@ def evaluar_varios(db, ids: list[int], motor: MotorLLM, perfil_cv: dict, prefs: 
                 if al_terminar:
                     al_terminar(pid, None, e)
                 continue
-            salario = ajuste_salario(*salario_de(db, pid), prefs.salario)
-            ev = guardar(db, pid, calcular(veredictos, preparados[pid][1], salario), uso, huella)
+            r = calcular(veredictos, preparados[pid][1], salario_de(db, pid), prefs.salario)
+            ev = guardar(db, pid, r, uso, huella)
             hechos.append(ev)
             if al_terminar:
                 al_terminar(pid, ev, None)
@@ -397,7 +433,8 @@ def recalcular(db, prefs: Preferencias) -> int:
     for ev in db.query("""SELECT * FROM evaluacion WHERE id IN (SELECT MAX(id) FROM evaluacion
                           WHERE rubrica = ? GROUP BY puesto_id)""", [RUBRICA]):
         r = Resultado.model_validate_json(ev["resultado"])
-        salario = ajuste_salario(*salario_de(db, ev["puesto_id"]), prefs.salario)
+        # La cita del salario ya se comprobó al evaluar: si era falsa, no está en los veredictos guardados.
+        salario = ajuste_salario(*elegir_salario(salario_de(db, ev["puesto_id"]), r.veredictos), prefs.salario)
         marcas = [m for m in r.marcas if not m.startswith("salario:")] + ([salario.marca] if salario and not r.vetado
                                                                           else [])
         nueva = r.model_copy(update={"salario": salario, "marcas": marcas,

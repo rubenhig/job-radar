@@ -30,6 +30,7 @@ export const VALORES: Record<string, string> = {
   sin_datos: 'No lo dice',
   ia_principal: 'Puesto de IA',
   software_con_ia: 'Software con IA',
+  ml_clasico: 'ML clásico o visión',
   software_sin_ia: 'Software sin IA',
   ninguno: 'Nada',
   ingenieria: 'Ingeniería',

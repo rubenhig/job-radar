@@ -146,7 +146,9 @@ def cmd_puntuar(args) -> int:
 def cmd_medir(args) -> int:
     from job_radar import medir
 
-    print(medir.informe(almacen.abrir(args.db), args.rubrica))
+    from job_radar.puntuacion import RUBRICA
+
+    print(medir.informe(almacen.abrir(args.db), args.rubrica or RUBRICA))
     return 0
 
 
@@ -199,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--limite", type=int)
     p.set_defaults(func=cmd_puntuar)
     p = sub.add_parser("medir", help="acuerdo de la puntuación con las etiquetas")
-    p.add_argument("--rubrica", default="rubrica/1")
+    p.add_argument("--rubrica", help="por defecto, la vigente")
     p.set_defaults(func=cmd_medir)
     args = ap.parse_args(argv)
 

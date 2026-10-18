@@ -32,7 +32,7 @@ def veredictos(**cambios):
         "fuente": {"valor": "directa", "cita": None, "motivo": "empresa"},
     }
     for k, v in cambios.items():
-        base[k] = base[k] | v if isinstance(v, dict) else v
+        base[k] = base[k] | v if isinstance(v, dict) and k in base else v
     return Veredictos.model_validate(base)
 
 
@@ -94,7 +94,7 @@ def test_evaluar_guarda_la_evaluacion(tmp_path):
     prefs = Preferencias.model_validate({"ubicaciones": [{"ciudad": "Málaga", "pais": "ES"}],
                                          "roles": {"principales": ["AI Engineer"]}})
     ev = db["evaluacion"].get(puntuacion.evaluar(db, 1, MotorFalso(), perfil_cv, prefs))
-    assert ev["nota"] == 90 and ev["rubrica"] == "rubrica/1" and ev["coste_usd"] == 0.01
+    assert ev["nota"] == 90 and ev["rubrica"] == puntuacion.RUBRICA and ev["coste_usd"] == 0.01
     assert json.loads(ev["resultado"])["veredictos"]["rol_ia"]["valor"] == "ia_principal"
 
 
@@ -158,3 +158,23 @@ def test_cifra_en_texto(texto, esperado):
 def test_mensual_imposible_es_anual():
     assert puntuacion.salario_anual({"salario_max": 24600, "salario_periodo": "mes"}) == 24600
     assert puntuacion.salario_anual({"salario_max": 3000, "salario_periodo": "mes"}) == 36000
+
+
+def test_salario_citado_del_texto_y_cita_falsa():
+    from job_radar.preferencias import SalarioDeseado
+
+    deseado = SalarioDeseado(actual=30000, objetivo=40000)
+    texto = OFERTA + "\nSalario: 25.000€ - 35.000€ brutos/año"
+    dicho = {"minimo": 25000, "maximo": 35000, "moneda": "EUR", "periodo": "ano", "cita": "25.000€ - 35.000€"}
+    r = calcular(veredictos(salario=dicho), texto, (None, False), deseado)
+    assert r.salario.techo == 45 and r.nota == 45
+    falso = calcular(veredictos(salario=dicho | {"cita": "60.000 €"}), texto, (None, False), deseado)
+    assert falso.salario is None and "salario" in falso.citas_falsas
+    # el dato real de la fuente manda sobre el del texto
+    fuente = ({"salario_max": 55000, "salario_periodo": "ano"}, False)
+    assert calcular(veredictos(salario=dicho), texto, fuente, deseado).salario.anual_eur == 55000
+
+
+def test_ml_clasico_no_tiene_techo():
+    v = veredictos(rol_ia={"valor": "ml_clasico", "motivo": "visión por computador"})
+    assert calcular(v, OFERTA).nota > 45
