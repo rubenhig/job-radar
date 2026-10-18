@@ -185,6 +185,10 @@ MIGRACIONES: list[str] = [
     """
     ALTER TABLE ejecucion ADD COLUMN ventana_h INTEGER;
     """,
+    # 8 · huella del texto puntuado: si el puesto cambia (otra descripción al reagrupar), se repuntúa
+    """
+    ALTER TABLE evaluacion ADD COLUMN texto_sha TEXT;
+    """,
 ]
 
 

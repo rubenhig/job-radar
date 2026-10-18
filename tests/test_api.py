@@ -22,7 +22,9 @@ def cliente(tmp_path):
     datos = tmp_path / "data"
     (datos / "perfil").mkdir(parents=True)
     shutil.copy(RAIZ / "config" / "preferencias.ejemplo.yaml", datos / "perfil" / "preferencias.yaml")
-    (datos / "perfil" / "perfil_cv.yaml").write_text("meta: {aprobado: true}\nperfil: {nombre: Ana}\n")
+    (datos / "perfil" / "perfil_cv.yaml").write_text(
+        "meta: {aprobado: true, cv_sha256: abc}\n"
+        "perfil: {nombre: Ana, titular: AI Engineer, resumen: '', competencias: [], experiencias: []}\n")
     db = almacen.abrir(datos / "job_radar.db")
     for f in ("infojobs", "linkedin"):
         almacen.registrar_fuente(db, f, "portal", f"{f}/1")

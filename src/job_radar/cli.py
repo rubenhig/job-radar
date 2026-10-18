@@ -170,15 +170,11 @@ def cmd_puntuar(args) -> int:
 
     db = almacen.abrir(args.db)
     perfil_cv, prefs = puntuacion.cargar_perfil()
-    huella = puntuacion.huella_perfil(perfil_cv, prefs)
-    base = "SELECT p.id FROM puesto p WHERE p.estado = 'abierto'"
-    if args.etiquetados:
-        base += " AND p.id IN (SELECT puesto_id FROM etiqueta)"
-    else:  # lo que la criba descarta no se paga
-        base += " AND p.descarte IS NULL"
-    if not args.rehacer:  # solo lo que no tiene evaluación con esta rúbrica y este perfil
-        base += " AND p.id NOT IN (SELECT puesto_id FROM evaluacion WHERE rubrica = ? AND perfil = ?)"
-    ids = [r[0] for r in db.execute(base, [] if args.rehacer else [puntuacion.RUBRICA, huella]).fetchall()]
+    if args.rehacer:
+        filtro = "p.id IN (SELECT puesto_id FROM etiqueta)" if args.etiquetados else "p.descarte IS NULL"
+        ids = [r[0] for r in db.execute(f"SELECT p.id FROM puesto p WHERE p.estado = 'abierto' AND {filtro}")]
+    else:
+        ids = puntuacion.pendientes(db, perfil_cv, prefs, args.etiquetados)
     if args.limite:
         ids = ids[: args.limite]
     log.info("puntuar: %d puestos con %s (%s)", len(ids), puntuacion.RUBRICA, args.modelo)

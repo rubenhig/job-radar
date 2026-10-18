@@ -5,7 +5,9 @@ Tres reglas, calibradas con las ofertas reales de Málaga (16-oct-2026):
   0. Siempre, títulos compatibles: uno contiene al otro, quitando seniority y
      palabras vacías. Ninguna medida difusa separa «Senior AI Engineer» de
      «Senior Backend Engineer» (91 y 89), pero cada uno tiene su palabra propia.
-  1. Misma empresa: la misma oferta en varias fuentes.
+  1. Misma empresa: la misma oferta en varias fuentes. Si los títulos no son
+     iguales, la descripción también tiene que parecerse (una empresa publica
+     varios puestos con títulos que se contienen: «Java Architect + AI» y «AI Architect»).
   2. Descripción casi idéntica: reenvíos de agregadores (EngRadar, WhatJobs)
      con otra empresa.
   3. Título parecido y descripción que comparte los términos raros: la misma
@@ -13,9 +15,14 @@ Tres reglas, calibradas con las ofertas reales de Málaga (16-oct-2026):
      anuncio, así que la similitud de texto normal no sirve (55-68 tanto para el
      mismo puesto como para puestos distintos). Lo que comparten son los términos
      poco frecuentes (MCP, SDD, LangGraph, el horario…), y eso se mide pesando
-     cada palabra por su rareza en el corpus (IDF).
+     cada palabra por su rareza en el corpus (IDF). Las consultoras no se anuncian
+     como tales («En X buscamos…»), así que no se puede exigir que lo sean.
 
-Solo se comparan ofertas de la misma zona (ciudad, o remoto en el mismo país).
+Los grupos no se encadenan: dos grupos se unen solo si la mayoría de los pares
+entre ellos cumple alguna regla (enlace medio), no por un único puente.
+
+Solo se comparan ofertas de la misma zona (ciudad, o remoto en el mismo país);
+una oferta sin modalidad está en las dos zonas.
 Los grupos se recalculan en una ventana de días, y cada grupo conserva el
 puesto que ya tenía la mayoría de sus ofertas, para que los ids sean estables.
 """
@@ -38,6 +45,9 @@ UMBRAL_EMPRESA = 90
 UMBRAL_TITULO_CONSULTORAS = 80
 UMBRAL_REENVIO = 0.9
 UMBRAL_CONSULTORAS = 0.35
+UMBRAL_MISMA_EMPRESA = 0.35  # descripción que deben compartir dos títulos distintos de la misma empresa
+ENLACE = 0.5                 # fracción de pares que deben casar para unir dos grupos
+FUERZA = {"misma_empresa": 0, "reenvio": 1, "consultoras": 2}
 
 # Para comparar títulos: palabras que no distinguen un puesto de otro, y sinónimos.
 VACIAS = {"senior", "junior", "mid", "de", "del", "la", "el", "los", "las", "y", "e", "a", "o", "en", "con",
@@ -64,11 +74,15 @@ def clave_empresa(nombre: str | None) -> str:
     return re.sub(r"\W+", " ", e).strip()
 
 
+# Lo que no es del puesto. Lo demás entre paréntesis sí lo es: «(AI Training)», «(Infraestructura IA)».
+RUIDO_TITULO = re.compile(
+    r"\b(m/f/d|m/w/d|f/m/d|x/f/m|h/m/x|h/m|m/f|all genders|ref|hibrido|hybrid|remoto|remote|presencial|teletrabajo|"
+    r"full|anywhere|worldwide|europe|emea|spain|espana|malaga|madrid|barcelona|sevilla|valencia)\b|100%")
+
+
 def clave_titulo(titulo: str) -> str:
     """Sin lo que no es del puesto: (m/f/d), modalidad, ciudad, códigos."""
-    t = _plano(titulo)
-    t = re.sub(r"\(.*?\)|\[.*?\]|\bm/f/d\b|\bh/m/x?\b|\bm/f\b", " ", t)
-    t = re.sub(r"\b(hibrido|hybrid|remoto|remote|presencial|malaga|teletrabajo|100%)\b", " ", t)
+    t = RUIDO_TITULO.sub(" ", _plano(titulo))
     t = re.sub(r"\b[0-9a-z]*\d[0-9a-z]*\b", " ", t)  # códigos internos como 02CC
     return re.sub(r"\W+", " ", t).strip()
 
@@ -102,37 +116,30 @@ def zona(o: dict) -> str | None:
     return None
 
 
-class _Grupos:
-    def __init__(self, ids):
-        self.padre = {i: i for i in ids}
-
-    def raiz(self, i):
-        while self.padre[i] != i:
-            self.padre[i] = self.padre[self.padre[i]]
-            i = self.padre[i]
-        return i
-
-    def unir(self, a, b):
-        self.padre[self.raiz(a)] = self.raiz(b)
-
-    def grupos(self):
-        g = defaultdict(list)
-        for i in self.padre:
-            g[self.raiz(i)].append(i)
-        return list(g.values())
+def zonas(o: dict) -> set[str]:
+    """Una oferta sin modalidad (Indeed casi nunca la da) puede ser la versión remota del puesto:
+    se compara también con las remotas de su país."""
+    salida = {z} if (z := zona(o)) else set()
+    if o.get("modalidad") is None and o.get("pais"):
+        salida.add("remoto:" + o["pais"])
+    return salida
 
 
 def mismo_puesto(a: dict, b: dict, idf: dict[str, float]) -> str | None:
     """La regla que los une, o None. `a` y `b` llevan `_titulo`, `_tokens`, `_empresa` y `_palabras` precalculados."""
     if not titulos_compatibles(a["_tokens"], b["_tokens"]):
         return None
-    if a["_empresa"] and b["_empresa"] and fuzz.token_set_ratio(a["_empresa"], b["_empresa"]) >= UMBRAL_EMPRESA:
+    misma_empresa = (a["_empresa"] and b["_empresa"]
+                     and fuzz.token_set_ratio(a["_empresa"], b["_empresa"]) >= UMBRAL_EMPRESA)
+    if misma_empresa and a["_tokens"] == b["_tokens"]:
         return "misma_empresa"
     if not a["_palabras"] or not b["_palabras"]:
         return None
     comunes = sum(idf.get(w, 0) for w in a["_palabras"] & b["_palabras"])
     menor = min(sum(idf.get(w, 0) for w in a["_palabras"]), sum(idf.get(w, 0) for w in b["_palabras"]))
     parecido = comunes / menor if menor else 0
+    if misma_empresa and parecido >= UMBRAL_MISMA_EMPRESA:
+        return "misma_empresa"
     if parecido >= UMBRAL_REENVIO:
         return "reenvio"
     titulo = (fuzz.token_set_ratio(a["_titulo"], b["_titulo"]) + fuzz.token_sort_ratio(a["_titulo"], b["_titulo"])) / 2
@@ -151,17 +158,31 @@ def agrupar(ofertas: list[dict]) -> list[list[int]]:
     frecuencia = Counter(w for o in ofertas for w in o["_palabras"])
     idf = {w: math.log(len(ofertas) / n) for w, n in frecuencia.items()}
 
-    grupos = _Grupos([o["id"] for o in ofertas])
     por_zona = defaultdict(list)
     for o in ofertas:
-        por_zona[zona(o)].append(o)
-    for z, lista in por_zona.items():
-        if z is None:
-            continue
+        for z in zonas(o):
+            por_zona[z].append(o)
+    pares = {}  # los que cumplen alguna regla → la regla
+    for lista in por_zona.values():
         for a, b in combinations(lista, 2):
-            if mismo_puesto(a, b, idf):
-                grupos.unir(a["id"], b["id"])
-    return grupos.grupos()
+            par = frozenset((a["id"], b["id"]))
+            if par not in pares and (regla := mismo_puesto(a, b, idf)):
+                pares[par] = regla
+
+    # Enlace medio: dos grupos se unen si al menos la mitad de sus pares casan. Así un título
+    # genérico («AI Engineer») no hace de puente entre puestos distintos de la misma empresa.
+    # Primero las reglas fuertes: la misma oferta en varias fuentes se junta antes de compararla con otras.
+    grupo_de = {o["id"]: frozenset([o["id"]]) for o in ofertas}
+    for par in sorted(pares, key=lambda p: (FUERZA[pares[p]], sorted(p))):
+        a, b = (grupo_de[i] for i in par)
+        if a is b:
+            continue
+        casan = sum(frozenset((x, y)) in pares for x in a for y in b)
+        if casan >= ENLACE * len(a) * len(b):
+            unido = a | b
+            for i in unido:
+                grupo_de[i] = unido
+    return [sorted(g) for g in set(grupo_de.values())]
 
 
 def fusionar(ofertas: list[dict]) -> dict:
@@ -204,15 +225,17 @@ def actualizar(db, dias: int = VENTANA_DIAS) -> dict[str, int]:
     por_id = {o["id"]: o for o in ofertas}
     m = Counter()
     ahora = almacen.ahora()
-    for ids in agrupar(ofertas):
+    usados = set()  # si un grupo se parte, cada trozo necesita su propio puesto
+    for ids in sorted(agrupar(ofertas), key=len, reverse=True):  # el trozo grande conserva el puesto
         miembros = [por_id[i] for i in ids]
-        previos = Counter(o["puesto_id"] for o in miembros if o["puesto_id"])
+        previos = Counter(o["puesto_id"] for o in miembros if o["puesto_id"] and o["puesto_id"] not in usados)
         if previos:
             # El que más ofertas tenía; a igualdad, el más antiguo. Los demás quedan fusionados en él.
             puesto_id = min(previos, key=lambda p: (-previos[p], p))
             for otro in set(previos) - {puesto_id}:
                 db["puesto"].update(otro, {"estado": f"fusionado:{puesto_id}", "actualizado_en": ahora})
                 heredar_etiqueta(db, otro, puesto_id)
+                usados.add(otro)
                 m["fusionados"] += 1
         else:
             puesto_id = None
@@ -226,6 +249,7 @@ def actualizar(db, dias: int = VENTANA_DIAS) -> dict[str, int]:
         elif json.loads(db["puesto"].get(puesto_id)["fusion"] or "{}") != fusion:
             db["puesto"].update(puesto_id, fila | {"estado": "abierto"})
             m["actualizados"] += 1
+        usados.add(puesto_id)
         sin_asignar = [o["id"] for o in miembros if o["puesto_id"] != puesto_id]
         if sin_asignar:
             db.execute(f"UPDATE oferta SET puesto_id = ? WHERE id IN ({','.join('?' * len(sin_asignar))})",

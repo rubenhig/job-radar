@@ -21,15 +21,22 @@ def _hace(**delta) -> str:
     return (datetime.now(UTC) - timedelta(**delta)).isoformat(timespec="seconds")
 
 
+def _sin_puntuar(db, carpeta: Path) -> int | None:
+    """Con el mismo criterio que `job-radar puntuar`. Sin perfil completo, no se sabe (no rompe la portada)."""
+    try:
+        return len(puntuacion.pendientes(db, *puntuacion.cargar_perfil(carpeta)))
+    except (OSError, KeyError, TypeError, ValueError):
+        return None
+
+
 @router.get("/resumen", response_model=Resumen, tags=["sistema"])
-def resumen(db: Annotated[Any, Depends(bd)]):
+def resumen(db: Annotated[Any, Depends(bd)], carpeta: Annotated[Path, Depends(datos)]):
     uno = lambda sql, *a: db.execute(sql, a).fetchone()[0]  # noqa: E731
     primera = "SELECT puesto_id FROM oferta GROUP BY puesto_id HAVING MIN(vista_primera) >= ?"
     return Resumen(
         puestos=uno("SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NULL"),
         descartados=uno("SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NOT NULL"),
-        sin_puntuar=uno("""SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NULL
-                           AND id NOT IN (SELECT puesto_id FROM evaluacion WHERE rubrica = ?)""", puntuacion.RUBRICA),
+        sin_puntuar=_sin_puntuar(db, carpeta),
         puestos_nuevos_24h=uno(f"SELECT COUNT(*) FROM ({primera})", _hace(days=1)),
         puestos_nuevos_7d=uno(f"SELECT COUNT(*) FROM ({primera})", _hace(days=7)),
         ofertas=uno("SELECT COUNT(*) FROM oferta"),

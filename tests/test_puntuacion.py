@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import pytest
 
@@ -178,3 +179,24 @@ def test_salario_citado_del_texto_y_cita_falsa():
 def test_ml_clasico_no_tiene_techo():
     v = veredictos(rol_ia={"valor": "ml_clasico", "motivo": "visión por computador"})
     assert calcular(v, OFERTA).nota > 45
+
+
+def test_se_repuntua_si_cambia_el_texto_del_puesto(tmp_path):
+    from job_radar.preferencias import cargar
+
+    db = almacen.abrir(tmp_path / "x.db")
+    prefs = cargar(Path(__file__).resolve().parents[1] / "config" / "preferencias.ejemplo.yaml")
+    cv = {"meta": {"cv_sha256": "abc"},
+          "perfil": {"titular": "AI Engineer", "resumen": "", "competencias": [], "experiencias": []}}
+    almacen.registrar_fuente(db, "f", "portal", "f/1")
+    o = {"fuente_id": "f", "id_externo": "1", "titulo": "AI Engineer", "descripcion": "Agentes LLM."}
+    e = almacen.iniciar_ejecucion(db, "f", "f/1")
+    almacen.guardar_oferta(db, o, almacen.guardar_bruto(db, e, "f", "1", o)[0], "f/1")
+    puestos.actualizar(db)
+    [pid] = puntuacion.pendientes(db, cv, prefs)
+    texto = puntuacion._texto(db, pid)
+    puntuacion.guardar(db, pid, calcular(veredictos(), OFERTA), Uso(motor="m", modelo="s"),
+                       puntuacion.huella_perfil(cv, prefs), texto)
+    assert puntuacion.pendientes(db, cv, prefs) == []
+    db.execute("UPDATE oferta SET descripcion = 'Agentes LLM y RAG.'")  # la descripción cambia
+    assert puntuacion.pendientes(db, cv, prefs) == [pid]

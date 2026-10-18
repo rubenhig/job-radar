@@ -182,6 +182,10 @@ def texto_puesto(puesto: dict, ofertas: list[dict]) -> str:
     return f"{cabecera}\n\nDescripción:\n{(oferta.get('descripcion') or '')[:MAX_DESCRIPCION]}"
 
 
+def huella_texto(texto_oferta: str) -> str:
+    return hashlib.sha256(texto_oferta.encode()).hexdigest()[:12]
+
+
 def huella_perfil(perfil_cv: dict, prefs: Preferencias) -> str:
     """Cambia solo si cambia lo que ve el modelo: tocar la criba o los términos de búsqueda no obliga a repuntuar."""
     base = json.dumps([perfil_cv["meta"].get("cv_sha256"), texto_perfil(perfil_cv, prefs)])
@@ -387,7 +391,7 @@ def evaluar(db, puesto_id: int, motor: MotorLLM, perfil_cv: dict, prefs: Prefere
     prompt, oferta = preparar(db, puesto_id, perfil_cv, prefs)
     veredictos, uso = motor.extraer(prompt, Veredictos, sistema=SISTEMA)
     r = calcular(veredictos, oferta, salario_de(db, puesto_id), prefs.salario)
-    return guardar(db, puesto_id, r, uso, huella_perfil(perfil_cv, prefs))
+    return guardar(db, puesto_id, r, uso, huella_perfil(perfil_cv, prefs), oferta)
 
 
 def evaluar_varios(db, ids: list[int], motor: MotorLLM, perfil_cv: dict, prefs: Preferencias,
@@ -405,7 +409,7 @@ def evaluar_varios(db, ids: list[int], motor: MotorLLM, perfil_cv: dict, prefs: 
             try:  # un puesto que falla (el modelo, o guardar con la base ocupada) no para los demás
                 veredictos, uso = f.result()
                 r = calcular(veredictos, preparados[pid][1], salario_de(db, pid), prefs.salario)
-                ev = guardar(db, pid, r, uso, huella)
+                ev = guardar(db, pid, r, uso, huella, preparados[pid][1])
             except Exception as e:  # noqa: BLE001
                 if al_terminar:
                     al_terminar(pid, None, e)
@@ -416,9 +420,10 @@ def evaluar_varios(db, ids: list[int], motor: MotorLLM, perfil_cv: dict, prefs: 
     return hechos
 
 
-def guardar(db, puesto_id: int, r: Resultado, uso: Uso, perfil: str) -> int:
+def guardar(db, puesto_id: int, r: Resultado, uso: Uso, perfil: str, texto_oferta: str | None = None) -> int:
     return db["evaluacion"].insert({
         "puesto_id": puesto_id, "rubrica": RUBRICA, "perfil": perfil, "motor": uso.motor, "modelo": uso.modelo,
+        "texto_sha": huella_texto(texto_oferta) if texto_oferta is not None else None,
         "resultado": r.model_dump_json(), "nota": r.nota, "vetado": int(r.vetado), "motivo_veto": r.motivo_veto,
         "marcas": json.dumps(r.marcas, ensure_ascii=False) if r.marcas else None,
         "coste_usd": uso.coste_usd, "tokens_entrada": uso.tokens_entrada, "tokens_salida": uso.tokens_salida,
@@ -446,3 +451,31 @@ def recalcular(db, prefs: Preferencias) -> int:
             cambios += 1
     db.conn.commit()
     return cambios
+
+
+def pendientes(db, perfil_cv: dict, prefs: Preferencias, etiquetados: bool = False) -> list[int]:
+    """Los puestos que hay que (re)puntuar, los más nuevos primero: sin evaluación con esta rúbrica y este
+    perfil, o con una evaluación de un texto que ya no es el suyo (otra descripción tras reagrupar).
+    Lo que la criba descarta no se paga, salvo que se pidan los etiquetados (para medir)."""
+    huella = huella_perfil(perfil_cv, prefs)
+    filtro = "p.id IN (SELECT puesto_id FROM etiqueta)" if etiquetados else "p.descarte IS NULL"
+    filas = db.execute(f"""
+        SELECT p.id, ev.texto_sha FROM puesto p
+        LEFT JOIN evaluacion ev ON ev.id = (SELECT MAX(x.id) FROM evaluacion x WHERE x.puesto_id = p.id
+                                            AND x.rubrica = ? AND x.perfil = ?)
+        WHERE p.estado = 'abierto' AND {filtro}
+        ORDER BY (SELECT MIN(o.vista_primera) FROM oferta o WHERE o.puesto_id = p.id) DESC""",
+                       [RUBRICA, huella]).fetchall()
+    salida = []
+    for pid, sha in filas:
+        if sha is None and db.execute("SELECT 1 FROM evaluacion WHERE puesto_id = ? AND rubrica = ? AND perfil = ?",
+                                      [pid, RUBRICA, huella]).fetchone():
+            continue  # evaluaciones de antes de guardar la huella del texto: se dan por buenas
+        if sha is None or sha != huella_texto(_texto(db, pid)):
+            salida.append(pid)
+    return salida
+
+
+def _texto(db, puesto_id: int) -> str:
+    ofertas = list(db.query("SELECT * FROM oferta WHERE puesto_id = ? ORDER BY vista_primera", [puesto_id]))
+    return texto_puesto(db["puesto"].get(puesto_id), ofertas)

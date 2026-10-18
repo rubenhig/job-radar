@@ -199,7 +199,7 @@ class Resumen(BaseModel):
 
     puestos: int
     descartados: int
-    sin_puntuar: int  # de los que pasan la criba, sin evaluación con la rúbrica vigente
+    sin_puntuar: int | None = None  # los que `job-radar puntuar` evaluaría ahora (None: sin perfil completo)
     puestos_nuevos_24h: int
     puestos_nuevos_7d: int
     ofertas: int
