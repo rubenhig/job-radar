@@ -3,14 +3,16 @@
     uv run job-radar ingesta            # lanza las búsquedas que tocan según su frecuencia
     uv run job-radar ingesta --todas    # todas, toque o no (cuidado con InfoJobs y la cuota de LinkedIn)
     uv run job-radar ingesta --fuente freehire
-    uv run job-radar ingesta --puntuar  # y después puntúa los puestos nuevos que pasan la criba
+    uv run job-radar ingesta --puntuar  # y después puntúa los puestos nuevos que pasan la criba (--limite-puntuar N)
     uv run job-radar resumen            # ofertas y puestos por fuente, exclusividad y salud
     uv run job-radar salud              # solo las alertas; sale con 1 si hay alguna
     uv run job-radar copia              # copia de seguridad de la base (también al empezar cada ingesta)
     uv run job-radar renormalizar       # reinterpreta lo guardado con la versión actual de los conectores
     uv run job-radar cribar             # recalcula los descartes (tras cambiar las preferencias)
     uv run job-radar puntuar            # puntúa los puestos nuevos que pasan la criba
+                                        #   (--etiquetados, --rehacer, --modelo, --paralelo, --limite)
     uv run job-radar recalcular         # rehace la nota sin llamar al modelo (p. ej. tras cambiar el salario)
+    uv run job-radar medir              # acuerdo de la puntuación con las etiquetas (--rubrica)
 """
 
 import argparse

@@ -5,7 +5,9 @@ el resto del sistema.
 Motores:
   - ClaudeCLI: `claude -p` con la suscripción del usuario (Pro/Max). Sin coste
     por token, pero comparte los límites de uso con el uso interactivo.
-  - (Fase 4) API de Anthropic con clave, para la puntuación diaria.
+    Es el motor de la puntuación diaria (`ingesta --puntuar`).
+  - (Pendiente, #44) Dentro de Docker en la Pi: `claude -p` con un token de la
+    suscripción (CLAUDE_CODE_OAUTH_TOKEN) o la API de Anthropic con clave.
 """
 
 import json

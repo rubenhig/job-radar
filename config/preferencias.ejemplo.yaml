@@ -43,7 +43,8 @@ roles:
                sap, linux, kubernetes, ciberseguridad, security, snowflake, databricks, automation, automatizacion,
                platform, plataforma, "computer vision", nlp, mlops, analyst, analista, consultor, consultant]
 
-# Si un puesto pide más nivel: "marcar" (avisa igual, con la advertencia) o "excluir".
+# Si un puesto pide más nivel, la puntuación lo marca (compuerta de idioma).
+# `efecto: excluir` todavía no está implementado: hoy se comporta como "marcar".
 idiomas:
   ingles:
     nivel: B2
@@ -59,6 +60,7 @@ salario:
 tipo_empresa:
   filtra: false
 
+# Avisos (Fase 5, aparcada): todavía no se usan. El corte de «top» en la web es 50.
 avisos:
-  inmediato_desde: 85   # puntuación (0-100) para avisar al momento; el resto va al resumen
+  inmediato_desde: 85   # puntuación (0-100) para avisar al momento; el resto iría al resumen
   resumen: semanal

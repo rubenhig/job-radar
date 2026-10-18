@@ -28,7 +28,6 @@ fuentes:
     frecuencia_h: 24
     plan_b:
       - freehire (incluye InfoJobs, pero el 16-oct su copia iba 9 días por detrás)
-      - Emails de alerta de InfoJobs (#10)
 
   linkedin:
     tipo: api_terceros
@@ -43,9 +42,9 @@ fuentes:
     frecuencia_h: 24
     frecuencia_remoto_h: 168
     plan_b:
-      - La misma API en RapidAPI (linkedin-fantastic-rapidapi/2; plan gratuito de 250 ofertas al mes)
+      - La misma API en RapidAPI (linkedin-fantastic-rapidapi/2; plan gratuito de 250 ofertas al mes; la API permite buscar por ID de LinkedIn)
       - JobSpy con pausas largas
-      - Emails de alerta de LinkedIn (#9)
+    # Los emails de alerta de LinkedIn se descartaron (#9, #10, 18-oct): ataban el sistema a filtros puestos a mano.
 
   indeed:
     tipo: portal

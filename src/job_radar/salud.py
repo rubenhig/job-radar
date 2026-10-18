@@ -2,8 +2,9 @@
 
 Las reglas son las de docs/modelo.md#monitorización y solo leen el almacén:
 cada ejecución ya deja sus métricas. Que la ingesta haya corrido lo vigila
-Healthchecks desde fuera (#39); aquí se comprueba que cada fuente activa ha
-corrido según su frecuencia.
+Healthchecks desde fuera, si HEALTHCHECKS_URL está en .env (#39); aquí se
+comprueba que cada fuente activa ha corrido según su frecuencia y que la
+puntuación no se ha atascado (puestos sin nota tras ATASCO_H).
 
 Uso:
     uv run python -m job_radar.salud

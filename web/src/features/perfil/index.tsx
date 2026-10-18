@@ -487,7 +487,7 @@ function Formulario({ data }: { data: Preferencias }) {
         <CardContent className='grid gap-5 md:grid-cols-2'>
           <Campo
             titulo='Tu nivel de inglés'
-            ayuda='Si un puesto pide más: marcarlo o descartarlo.'
+            ayuda='Si un puesto pide más nivel, se marca (no se descarta).'
           >
             <div className='flex gap-2'>
               <Select
@@ -528,7 +528,6 @@ function Formulario({ data }: { data: Preferencias }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='marcar'>Marcar</SelectItem>
-                  <SelectItem value='excluir'>Descartar</SelectItem>
                 </SelectContent>
               </Select>
             </div>

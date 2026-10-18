@@ -28,5 +28,5 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # worker: la cola de tareas (huey) y la ingesta programada. Llega al cerrar la
-  # semana de prueba de la Fase 3; hasta entonces la ingesta sigue en launchd.
+  # worker: la cola de tareas (huey) y la ingesta programada. Llega con la Fase 6
+  # (Raspberry Pi, #41); hasta entonces la ingesta sigue en launchd, fuera de Docker.

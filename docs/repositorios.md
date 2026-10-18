@@ -1,5 +1,7 @@
 # Catálogo de herramientas por bloque
 
+> Informe del 15/16-oct-2026, foto fija: las decisiones vigentes están en [`docs/arquitectura.md`](arquitectura.md).
+
 Antes de escribir código en cualquier bloque, se consulta aquí. **No inventamos nada:** usamos lo que existe y solo construimos el pegamento y lo que falte. Issue de seguimiento: [#24](https://github.com/rubenhig/job-radar/issues/24).
 
 Veredictos: **usar** (entra como dependencia o se adapta su código) · **referencia** (se lee y se copia la idea) · **descartar**.
