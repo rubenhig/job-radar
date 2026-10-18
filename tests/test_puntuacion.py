@@ -96,3 +96,19 @@ def test_evaluar_guarda_la_evaluacion(tmp_path):
     ev = db["evaluacion"].get(puntuacion.evaluar(db, 1, MotorFalso(), perfil_cv, prefs))
     assert ev["nota"] == 90 and ev["rubrica"] == "rubrica/1" and ev["coste_usd"] == 0.01
     assert json.loads(ev["resultado"])["veredictos"]["rol_ia"]["valor"] == "ia_principal"
+
+
+def test_la_huella_ignora_lo_que_no_ve_el_modelo():
+    from pathlib import Path
+
+    from job_radar.preferencias import cargar
+
+    prefs = cargar(Path(__file__).resolve().parents[1] / "config" / "preferencias.ejemplo.yaml")
+    cv = {"meta": {"cv_sha256": "abc"},
+          "perfil": {"titular": "AI Engineer", "resumen": "", "competencias": [], "experiencias": []}}
+    antes = puntuacion.huella_perfil(cv, prefs)
+    prefs.roles.excluir.append("cocinero")
+    prefs.roles.terminos.amplios.append("rust")
+    assert puntuacion.huella_perfil(cv, prefs) == antes
+    prefs.roles.principales.append("MLOps Engineer")
+    assert puntuacion.huella_perfil(cv, prefs) != antes

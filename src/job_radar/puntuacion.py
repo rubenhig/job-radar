@@ -163,7 +163,8 @@ def texto_puesto(puesto: dict, ofertas: list[dict]) -> str:
 
 
 def huella_perfil(perfil_cv: dict, prefs: Preferencias) -> str:
-    base = json.dumps([perfil_cv["meta"].get("cv_sha256"), prefs.model_dump(mode="json")], sort_keys=True)
+    """Cambia solo si cambia lo que ve el modelo: tocar la criba o los términos de búsqueda no obliga a repuntuar."""
+    base = json.dumps([perfil_cv["meta"].get("cv_sha256"), texto_perfil(perfil_cv, prefs)])
     return hashlib.sha256(base.encode()).hexdigest()[:12]
 
 
