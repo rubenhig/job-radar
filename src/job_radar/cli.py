@@ -13,7 +13,11 @@
 """
 
 import argparse
+import contextlib
+import dataclasses
+import fcntl
 import logging
+import math
 import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -29,22 +33,68 @@ from job_radar.preferencias import cargar as cargar_preferencias
 RUTA_PREFERENCIAS = almacen.DATOS / "perfil" / "preferencias.yaml"
 RUTA_LOG = almacen.DATOS / "logs" / "ingesta.log"
 HOLGURA_H = 2  # una ejecución diaria a hora fija no debe saltarse un día por unos minutos
+VENTANA_MAX_H = 30 * 24  # tras un parón largo no se pide más de un mes
+COLGADA_H = 6  # una ejecución «en curso» desde hace más es que se interrumpió
 
 log = logging.getLogger("job_radar")
 
 
+def ultima_buena(db, busqueda_id: str) -> datetime | None:
+    """Inicio de la última ejecución que trajo datos (ok o parcial). Un error no cuenta como hecha."""
+    ultima = db.execute("SELECT MAX(inicio) FROM ejecucion WHERE busqueda_id = ? AND estado IN ('ok', 'parcial')",
+                        [busqueda_id]).fetchone()[0]
+    return datetime.fromisoformat(ultima) if ultima else None
+
+
 def tocan(db, lista: list[Busqueda], ahora: datetime) -> list[Busqueda]:
-    """Las búsquedas cuya última ejecución es más antigua que su frecuencia."""
+    """Las búsquedas que tocan, cada una con su ventana: desde su última ejecución buena (no se pierden
+    huecos si un día no corre o falla), como mínimo su frecuencia y como mucho VENTANA_MAX_H."""
     salida = []
     for b in lista:
-        ultima = db.execute("SELECT MAX(inicio) FROM ejecucion WHERE busqueda_id = ?", [b.id]).fetchone()[0]
-        if ultima is None or ahora - datetime.fromisoformat(ultima) >= timedelta(hours=b.frecuencia_h - HOLGURA_H):
+        ultima = ultima_buena(db, b.id)
+        if ultima is None:
             salida.append(b)
+        elif ahora - ultima >= timedelta(hours=b.frecuencia_h - HOLGURA_H):
+            hueco = math.ceil((ahora - ultima).total_seconds() / 3600)
+            salida.append(dataclasses.replace(b, ventana_h=min(max(hueco, b.frecuencia_h), VENTANA_MAX_H)))
     return salida
 
 
+def cerrar_colgadas(db, ahora: datetime) -> int:
+    """Las ejecuciones que se quedaron «en curso» (Ctrl-C, proceso matado) pasan a error."""
+    limite = (ahora - timedelta(hours=COLGADA_H)).isoformat(timespec="seconds")
+    n = db.execute("""UPDATE ejecucion SET estado = 'error', fin = ?, error = 'interrumpida (quedó en curso)'
+                      WHERE estado = 'en_curso' AND inicio < ?""", [ahora.isoformat(timespec="seconds"),
+                                                                    limite]).rowcount
+    db.conn.commit()
+    return n
+
+
+@contextlib.contextmanager
+def cerrojo(ruta: Path):
+    """Una sola ingesta a la vez (launchd, la mano y, en la Pi, el worker). Si ya hay una, se sale."""
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    with open(ruta, "w") as f:
+        try:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            yield False
+            return
+        yield True
+
+
 def cmd_ingesta(args) -> int:
+    with cerrojo(args.db.parent / ".ingesta.lock") as libre:
+        if not libre:
+            log.warning("ingesta: ya hay otra en marcha; no se lanza")
+            return 0
+        return _ingesta(args)
+
+
+def _ingesta(args) -> int:
     db = almacen.abrir(args.db)
+    if n := cerrar_colgadas(db, datetime.now(UTC)):
+        log.warning("ingesta: %d ejecuciones colgadas pasan a error", n)
     log.info("copia: %s", almacen.copiar(db, args.db.parent / "copias").name)  # antes de cambiar nada
     registro = reg.cargar()
     activas = registro.activas()
@@ -59,8 +109,8 @@ def cmd_ingesta(args) -> int:
     log.info("ingesta: %d de %d búsquedas tocan", len(pendientes), len(lista))
     for b in pendientes:  # una fuente caída no tumba las demás: `ejecutar` no lanza
         e = db["ejecucion"].get(ingesta.ejecutar(db, conectores[b.fuente], b))
-        log.info("%-22s %-7s recibidas %3d · nuevas %3d · errores %d%s", b.id, e["estado"], e["recibidos"],
-                 e["nuevos"], e["errores_norm"], f" · {e['error'][:120]}" if e["error"] else "")
+        log.info("%-22s %-7s %4dh · recibidas %3d · nuevas %3d · errores %d%s", b.id, e["estado"], b.horas,
+                 e["recibidos"], e["nuevos"], e["errores_norm"], f" · {e['error'][:120]}" if e["error"] else "")
     log.info("puestos: %s", puestos.actualizar(db) or "sin cambios")
     log.info("criba: %s", dict(criba.aplicar(db, prefs)))
 

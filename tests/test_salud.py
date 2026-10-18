@@ -84,3 +84,12 @@ def test_frescura(db):
                          "publicada_en": (AHORA - timedelta(days=5)).isoformat(), "vista_primera": "x",
                          "vista_ultima": "x"})
     assert "frescura" in senales(db)
+
+
+def test_el_error_de_una_busqueda_semanal_avisa(db):
+    historia(db)  # la diaria va bien
+    almacen.guardar_busqueda(db, "f:remoto", "f", {}, 168)
+    db["ejecucion"].insert({"fuente_id": "f", "busqueda_id": "f:remoto", "conector": "f/1", "estado": "error",
+                            "inicio": (AHORA - timedelta(hours=40)).isoformat(), "fin": AHORA.isoformat(),
+                            "error": "Apify: RUNNING"})
+    assert "error" in senales(db)  # antes, a las 36 h ya no estaba en «la última tanda»

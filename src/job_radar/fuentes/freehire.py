@@ -62,7 +62,7 @@ class Freehire:
         return [{**donde, "q": q, "q_fields": "title"} for q in consultas(i.terminos)]
 
     def traer(self, busqueda: Busqueda) -> Iterator[Bruto]:
-        dias = max(2, math.ceil(busqueda.frecuencia_h / 24) + 1)  # con solape: mejor repetido que perdido
+        dias = max(2, math.ceil(busqueda.horas / 24) + 1)  # con solape: mejor repetido que perdido
         base = {**busqueda.parametros, "open_within_days": dias, "sort": "created_at", "order": "desc",
                 "description_format": "text", "limit": POR_PAGINA}
         cli = self.cliente or httpx.Client(headers={"User-Agent": UA}, timeout=60)

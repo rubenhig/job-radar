@@ -181,6 +181,10 @@ MIGRACIONES: list[str] = [
         actualizado_en  TEXT NOT NULL
     );
     """,
+    # 7 · la ventana que pidió de verdad cada ejecución (horas hacia atrás): trazabilidad de los huecos
+    """
+    ALTER TABLE ejecucion ADD COLUMN ventana_h INTEGER;
+    """,
 ]
 
 
@@ -226,9 +230,10 @@ def guardar_busqueda(db, id: str, fuente_id: str, parametros: dict, frecuencia_h
                            "parametros": json.dumps(parametros, ensure_ascii=False, sort_keys=True)}, pk="id")
 
 
-def iniciar_ejecucion(db, fuente_id: str, conector: str, busqueda_id: str | None = None) -> int:
-    return db["ejecucion"].insert({"fuente_id": fuente_id, "busqueda_id": busqueda_id,
-                                   "conector": conector, "inicio": ahora()}).last_pk
+def iniciar_ejecucion(db, fuente_id: str, conector: str, busqueda_id: str | None = None,
+                      ventana_h: int | None = None) -> int:
+    return db["ejecucion"].insert({"fuente_id": fuente_id, "busqueda_id": busqueda_id, "conector": conector,
+                                   "inicio": ahora(), "ventana_h": ventana_h}).last_pk
 
 
 def cerrar_ejecucion(db, ejecucion_id: int, estado: str, **metricas) -> None:

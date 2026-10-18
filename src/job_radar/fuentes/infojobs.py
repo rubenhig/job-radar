@@ -21,6 +21,7 @@ saltara el captcha en todas las búsquedas (16-oct-2026). Por eso:
 
 import asyncio
 import html
+import logging
 import time
 import unicodedata
 from collections.abc import Iterator
@@ -29,6 +30,8 @@ from typing import Any
 
 from job_radar.fuentes.base import Bruto, Busqueda, ErrorFuente, Intencion, Oferta, limpio, numero
 from job_radar.preferencias import Modalidad
+
+log = logging.getLogger(__name__)
 
 LISTADO = "https://www.infojobs.net/ofertas-trabajo"
 INFORMATICA = 150      # categoryIds: Informática y telecomunicaciones
@@ -103,13 +106,14 @@ class InfoJobs:
         if i.remota:
             return [{"teleworkingIds": SOLO_TELETRABAJO, "categoryIds": INFORMATICA}]
         provincia = PROVINCIAS.get(_sin_acentos(i.ciudad))
-        if provincia is None:
-            raise ValueError(f"InfoJobs: no sé el provinceIds de '{i.ciudad}'; añádelo a PROVINCIAS")
+        if provincia is None:  # una ubicación nueva no debe tumbar la ingesta de las demás fuentes
+            log.warning("InfoJobs: no sé el provinceIds de '%s'; añádelo a PROVINCIAS. No se busca ahí.", i.ciudad)
+            return []
         return [{"provinceIds": provincia, "categoryIds": INFORMATICA}]
 
     def traer(self, busqueda: Busqueda) -> Iterator[Bruto]:
         """Por fecha de publicación, y se para en la página que ya llega a ofertas más viejas que la ventana."""
-        desde = datetime.now(UTC) - timedelta(hours=busqueda.frecuencia_h + MARGEN_H)
+        desde = datetime.now(UTC) - timedelta(hours=busqueda.horas + MARGEN_H)
         parametros = {**busqueda.parametros, "sinceDate": "_7_DAYS", "sortBy": "PUBLICATION_DATE"}
         consulta = "&".join(f"{k}={v}" for k, v in parametros.items())
         for pagina in range(1, MAX_PAGINAS + 1):

@@ -19,8 +19,8 @@ def test_parametros_por_provincia_y_categoria():
     assert c.parametros(Intencion("remoto-es", ("AI",), "ES", (Modalidad.REMOTO,))) == [
         {"teleworkingIds": 2, "categoryIds": 150}]
     assert c.parametros(Intencion("remoto-pt", ("AI",), "PT", (Modalidad.REMOTO,))) == []
-    with pytest.raises(ValueError):
-        c.parametros(Intencion("x-es", ("AI",), "ES", (), ciudad="Atlántida"))
+    # Una ciudad sin provincia conocida no se busca, pero no tumba la ingesta de las demás fuentes.
+    assert c.parametros(Intencion("x-es", ("AI",), "ES", (), ciudad="Atlántida")) == []
 
 
 @pytest.mark.parametrize("texto,esperado", [

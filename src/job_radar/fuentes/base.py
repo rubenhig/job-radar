@@ -74,6 +74,13 @@ class Busqueda:
     fuente: str
     parametros: dict[str, Any]
     frecuencia_h: int
+    ventana_h: int | None = None              # cuánto hacia atrás pedir; None = la frecuencia
+
+    @property
+    def horas(self) -> int:
+        """La ventana que pide cada conector: desde la última ejecución buena, no solo la frecuencia.
+        Si un día no corre (Mac dormido, fallo de la fuente), el siguiente recupera el hueco."""
+        return self.ventana_h or self.frecuencia_h
 
 
 # --- lo que trae la fuente ------------------------------------------------------

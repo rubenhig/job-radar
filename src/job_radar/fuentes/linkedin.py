@@ -29,10 +29,13 @@ PAISES = {"Spain": "ES", "Portugal": "PT", "France": "FR", "Germany": "DE", "Ita
 NOMBRE_PAIS = {v: k for k, v in PAISES.items()}
 
 
-def ventana(frecuencia_h: int) -> str:
-    """`time_frame` de la API: el menor que cubre la frecuencia."""
+TOLERANCIA = 1.1  # con launchd a hora fija, la diaria llega a las ~24,2 h: no saltar a 7 días por minutos
+
+
+def ventana(horas_pedidas: int) -> str:
+    """`time_frame` de la API: el menor que cubre la ventana (cada oferta se paga, así que no de más)."""
     for horas, valor in ((1, "1h"), (24, "24h"), (168, "7d")):
-        if frecuencia_h <= horas:
+        if horas_pedidas <= horas * TOLERANCIA:
             return valor
     return "6m"
 
@@ -48,6 +51,10 @@ def _unico(valores: list | None) -> Any:
 
 def _primero(valores: list | None, mapa: dict) -> Any:
     return next((mapa[v] for v in valores or [] if v in mapa), None)
+
+
+ESPERA_S = 60       # máximo de `waitForFinish` que admite la API de Apify
+MAX_ESPERAS = 10    # hasta ~10 minutos por ejecución
 
 
 class _LinkedIn:
@@ -134,7 +141,7 @@ class LinkedInRapidAPI(_LinkedIn):
             raise ErrorFuente("LinkedIn: falta RAPIDAPI_KEY en .env")
         host = os.environ.get("RAPIDAPI_HOST_LINKEDIN", self.HOST)
         cli = self.cliente or httpx.Client(headers={"X-RapidAPI-Key": clave, "X-RapidAPI-Host": host}, timeout=90)
-        base = {**busqueda.parametros, "time_frame": ventana(busqueda.frecuencia_h),
+        base = {**busqueda.parametros, "time_frame": ventana(busqueda.horas),
                 "description_format": "text", "limit": self.POR_PAGINA}
         try:
             for pagina in range(self.MAX_PAGINAS):
@@ -200,17 +207,25 @@ class LinkedInApify(_LinkedIn):
         token = os.environ.get("APIFY_TOKEN")
         if self.cliente is None and not token:
             raise ErrorFuente("LinkedIn: falta APIFY_TOKEN en .env")
-        cli = self.cliente or httpx.Client(headers={"Authorization": f"Bearer {token}"}, timeout=330)
+        cli = self.cliente or httpx.Client(headers={"Authorization": f"Bearer {token}"}, timeout=ESPERA_S + 30)
+        self.coste_usd = self.cuota = None  # la instancia se reutiliza entre búsquedas: nada heredado
         try:
             gastado = _json(_get(cli, f"{self.API}/users/me/limits", {}))["data"]["current"]["monthlyUsageUsd"]
             queda = round(self.PRESUPUESTO_MES - gastado, 4)
             self.cuota = {"usd-limit": str(self.PRESUPUESTO_MES), "usd-remaining": str(max(queda, 0))}
             if queda < self.PRECIO_EJECUCION + 10 * self.PRECIO_OFERTA:
                 raise ErrorFuente(f"LinkedIn (Apify): presupuesto del mes agotado ({gastado:.2f} $ gastados)")
-            entrada = {**busqueda.parametros, "timeRange": ventana(busqueda.frecuencia_h), "descriptionType": "text"}
+            entrada = {**busqueda.parametros, "timeRange": ventana(busqueda.horas), "descriptionType": "text"}
             r = _post(cli, f"{self.API}/acts/{self.ACTOR}/runs", entrada,
-                      {"waitForFinish": 300, "maxTotalChargeUsd": min(self.TOPE_EJECUCION, queda)})
+                      {"waitForFinish": ESPERA_S, "maxTotalChargeUsd": min(self.TOPE_EJECUCION, queda)})
             ejecucion = _json(r)["data"]
+            self.coste_usd = self.PRECIO_EJECUCION  # aceptada: ya se cobra, acabe como acabe
+            # El endpoint espera como mucho 60 s: una búsqueda larga sigue en marcha y se consulta hasta que acabe.
+            for _ in range(MAX_ESPERAS):
+                if ejecucion["status"] not in ("READY", "RUNNING"):
+                    break
+                ejecucion = _json(_get(cli, f"{self.API}/actor-runs/{ejecucion['id']}",
+                                       {"waitForFinish": ESPERA_S}))["data"]
             if ejecucion["status"] != "SUCCEEDED":
                 raise ErrorFuente(f"LinkedIn (Apify): la ejecución {ejecucion['id']} acabó en {ejecucion['status']}")
             trabajos = _json(_get(cli, f"{self.API}/datasets/{ejecucion['defaultDatasetId']}/items", {}))
@@ -229,7 +244,7 @@ def _json(r: httpx.Response) -> Any:
     return r.json()
 
 
-@reintentar
+# Sin @reintentar: repetir el POST tras un timeout lanzaría (y cobraría) otra ejecución.
 def _post(cli: httpx.Client, url: str, cuerpo: dict, parametros: dict) -> httpx.Response:
     r = cli.post(url, json=cuerpo, params=parametros)
     if r.status_code >= 500:

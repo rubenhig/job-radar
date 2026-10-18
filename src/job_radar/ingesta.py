@@ -22,7 +22,7 @@ def ejecutar(db, conector: Conector, busqueda: Busqueda) -> int:
     """Devuelve el id de la Ejecución. No lanza: un fallo de la fuente queda registrado en ella."""
     # Se guarda la búsqueda tal como se lanza: la ejecución apunta a sus parámetros exactos.
     almacen.guardar_busqueda(db, busqueda.id, busqueda.fuente, busqueda.parametros, busqueda.frecuencia_h)
-    ejecucion = almacen.iniciar_ejecucion(db, conector.fuente, conector.version, busqueda.id)
+    ejecucion = almacen.iniciar_ejecucion(db, conector.fuente, conector.version, busqueda.id, busqueda.horas)
     m = {"recibidos": 0, "nuevos": 0, "actualizados": 0, "errores_norm": 0}
     rellenos = Counter()
     estado, error = "ok", None

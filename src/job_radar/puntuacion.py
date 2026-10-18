@@ -402,14 +402,14 @@ def evaluar_varios(db, ids: list[int], motor: MotorLLM, perfil_cv: dict, prefs: 
                    for pid, (prompt, _) in preparados.items()}
         for f in as_completed(futuros):
             pid = futuros[f]
-            try:
+            try:  # un puesto que falla (el modelo, o guardar con la base ocupada) no para los demás
                 veredictos, uso = f.result()
-            except Exception as e:  # noqa: BLE001 — un puesto que falla no para los demás
+                r = calcular(veredictos, preparados[pid][1], salario_de(db, pid), prefs.salario)
+                ev = guardar(db, pid, r, uso, huella)
+            except Exception as e:  # noqa: BLE001
                 if al_terminar:
                     al_terminar(pid, None, e)
                 continue
-            r = calcular(veredictos, preparados[pid][1], salario_de(db, pid), prefs.salario)
-            ev = guardar(db, pid, r, uso, huella)
             hechos.append(ev)
             if al_terminar:
                 al_terminar(pid, ev, None)

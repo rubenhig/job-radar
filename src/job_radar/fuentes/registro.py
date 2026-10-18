@@ -5,6 +5,7 @@ traduce a su vocabulario (Búsquedas). Así, añadir una ubicación o un rol en
 `preferencias.yaml` cambia las búsquedas de todas las fuentes a la vez.
 """
 
+import logging
 import re
 import unicodedata
 from collections.abc import Mapping
@@ -19,6 +20,7 @@ from job_radar.fuentes.base import Busqueda, Conector, Intencion
 from job_radar.preferencias import Modalidad, Preferencias
 
 RUTA_REGISTRO = almacen.RAIZ / "config" / "fuentes.yaml"
+log = logging.getLogger(__name__)
 
 
 class Fuente(BaseModel):
@@ -81,7 +83,11 @@ def busquedas(p: Preferencias, registro: Registro, conectores: Mapping[str, Cone
         for intencion in intenciones(p):
             if intencion.mercado and not fuente.mercados:
                 continue
-            varias = conector.parametros(intencion)
+            try:
+                varias = conector.parametros(intencion)
+            except Exception as e:  # noqa: BLE001 — una fuente mal configurada no tumba las demás
+                log.error("%s: no se pudo preparar la búsqueda %s: %s", fuente_id, intencion.id, e)
+                continue
             for n, parametros in enumerate(varias, start=1):
                 sufijo = f"-{n}" if len(varias) > 1 else ""
                 frecuencia = (fuente.frecuencia_remoto_h if intencion.remota and fuente.frecuencia_remoto_h

@@ -61,7 +61,7 @@ class Indeed:
         buscar = self._buscar
         if buscar is None:
             from jobspy import scrape_jobs as buscar
-        df = buscar(site_name=["indeed"], results_wanted=RESULTADOS, hours_old=busqueda.frecuencia_h + MARGEN_H,
+        df = buscar(site_name=["indeed"], results_wanted=RESULTADOS, hours_old=busqueda.horas + MARGEN_H,
                     description_format="markdown", verbose=0, **busqueda.parametros)
         for fila in df.to_dict(orient="records"):
             fila = {k: _a_json(v) for k, v in fila.items()}

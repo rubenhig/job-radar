@@ -69,12 +69,14 @@ def comprobar(db, registro: reg.Registro, ahora: datetime | None = None) -> list
         if ahora - _fecha(ultima["inicio"]) > timedelta(hours=fuente.frecuencia_h * RETRASO):
             alertas.append(Alerta(fuente_id, "no ha corrido", f"la última fue el {ultima['inicio'][:16]}"))
 
-        # La última tanda: una ejecución por búsqueda, de la pasada más reciente.
+        # La última tanda: la ejecución más reciente de cada búsqueda, si es de su último periodo.
+        # Cada búsqueda con su frecuencia: la semanal de remoto no se cae de la tanda a las 36 h.
+        frecuencia = dict(db.execute("SELECT id, frecuencia_h FROM busqueda WHERE fuente_id = ?", [fuente_id]))
         tanda = {}
         for e in ejecuciones:
-            if ahora - _fecha(e["inicio"]) > timedelta(hours=fuente.frecuencia_h * RETRASO):
-                break
-            tanda.setdefault(e["busqueda_id"], e)
+            horas = frecuencia.get(e["busqueda_id"]) or fuente.frecuencia_h
+            if e["busqueda_id"] not in tanda and ahora - _fecha(e["inicio"]) <= timedelta(hours=horas * RETRASO):
+                tanda[e["busqueda_id"]] = e
         for e in tanda.values():
             if e["estado"] == "error":
                 alertas.append(Alerta(fuente_id, "error", f"{e['busqueda_id']}: {(e['error'] or '')[:200]}"))

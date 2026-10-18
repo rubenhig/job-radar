@@ -15,7 +15,7 @@ C = LinkedInRapidAPI()
 
 
 def test_ventana_y_expresion():
-    assert [ventana(h) for h in (1, 24, 72, 168, 500)] == ["1h", "24h", "7d", "7d", "6m"]
+    assert [ventana(h) for h in (1, 24, 26, 72, 168, 500)] == ["1h", "24h", "24h", "7d", "7d", "6m"]
     assert expresion(("AI", "machine learning")) == 'AI OR "machine learning"'
 
 
@@ -78,7 +78,7 @@ def test_traer_error_http_conserva_la_cuota():
 from job_radar.fuentes.linkedin import LinkedInApify  # noqa: E402
 
 
-def apify(gastado=0.0, estado="SUCCEEDED"):
+def apify(gastado=0.0, estado="SUCCEEDED", despues="SUCCEEDED"):
     pedidos = []
 
     def manejar(req):
@@ -87,6 +87,8 @@ def apify(gastado=0.0, estado="SUCCEEDED"):
             return httpx.Response(200, json={"data": {"current": {"monthlyUsageUsd": gastado}}})
         if req.url.path.endswith("/runs"):
             return httpx.Response(201, json={"data": {"id": "r1", "status": estado, "defaultDatasetId": "d1"}})
+        if req.url.path.endswith("/actor-runs/r1"):  # la consulta tras los 60 s de espera
+            return httpx.Response(200, json={"data": {"id": "r1", "status": despues, "defaultDatasetId": "d1"}})
         trabajo = dict(FIXTURE[0], recruiter_name="Ana Pérez", recruiter_url="https://linkedin.com/in/ana")
         return httpx.Response(200, json=[trabajo, FIXTURE[1]])
 
@@ -123,3 +125,15 @@ def test_apify_ejecucion_fallida():
     cli, _ = apify(estado="FAILED")
     with pytest.raises(ErrorFuente, match="FAILED"):
         list(LinkedInApify(cli).traer(Busqueda("linkedin:x", "linkedin", {}, 24)))
+
+
+def test_apify_espera_a_una_ejecucion_larga_y_no_hereda_costes():
+    cli, pedidos = apify(estado="RUNNING")
+    c = LinkedInApify(cli)
+    assert len(list(c.traer(Busqueda("linkedin:remoto-es", "linkedin", {}, 168)))) == 2
+    assert any(p.url.path.endswith("/actor-runs/r1") for p in pedidos) and c.coste_usd == 0.02
+    cli2, _ = apify(estado="FAILED")
+    c.cliente = cli2
+    with pytest.raises(ErrorFuente):
+        list(c.traer(Busqueda("linkedin:malaga-es", "linkedin", {}, 24)))
+    assert c.coste_usd == c.PRECIO_EJECUCION  # la fallida cuesta su arranque, no lo de la anterior
