@@ -182,6 +182,65 @@
       }
      },
      {
+      "name": "guardado",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Guardado"
+      }
+     },
+     {
+      "name": "estado_lista",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "array",
+         "items": {
+          "enum": [
+           "interesante",
+           "voy_a_aplicar",
+           "aplicado",
+           "entrevista",
+           "oferta",
+           "descartado"
+          ],
+          "type": "string"
+         }
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Estado Lista"
+      }
+     },
+     {
+      "name": "mi_etiqueta",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Mi Etiqueta"
+      }
+     },
+     {
       "name": "orden",
       "in": "query",
       "required": false,
@@ -190,7 +249,8 @@
         "recientes",
         "publicadas",
         "vias",
-        "nota"
+        "nota",
+        "prioridad"
        ],
        "type": "string",
        "default": "recientes",
@@ -365,6 +425,144 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/puestos/{puesto_id}/guardado": {
+   "put": {
+    "tags": [
+     "puestos"
+    ],
+    "summary": "Guardar",
+    "description": "Guarda el puesto en Mi lista o cambia lo que venga (estado, prioridad, notas, etiquetas).\nLa primera vez cuenta además como «top» si aún no tenía etiqueta: guardar es la señal más clara de\nque algo gusta, y así la puntuación aprende de ello (y la criba no lo descarta).",
+    "operationId": "puestos-guardar",
+    "parameters": [
+     {
+      "name": "puesto_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Puesto Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GuardadoEntrada"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Guardado"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "tags": [
+     "puestos"
+    ],
+    "summary": "Quitar Guardado",
+    "operationId": "puestos-quitar_guardado",
+    "parameters": [
+     {
+      "name": "puesto_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Puesto Id"
+      }
+     }
+    ],
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/lista/etiquetas": {
+   "get": {
+    "tags": [
+     "lista"
+    ],
+    "summary": "Mis Etiquetas",
+    "description": "Las etiquetas propias que ya se usan, con cuántos puestos: para sugerirlas y filtrar.",
+    "operationId": "lista-mis_etiquetas",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "integer"
+         },
+         "type": "object",
+         "title": "Response Lista-Mis Etiquetas"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/vivo": {
+   "get": {
+    "tags": [
+     "sistema"
+    ],
+    "summary": "Vivo",
+    "description": "Para el healthcheck de Docker: la API responde y la base se abre. Barato (no calcula nada).",
+    "operationId": "sistema-vivo",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "boolean"
+         },
+         "type": "object",
+         "title": "Response Sistema-Vivo"
         }
        }
       }
@@ -663,6 +861,32 @@
     "additionalProperties": false,
     "type": "object",
     "title": "Avisos"
+   },
+   "CambioEstado": {
+    "properties": {
+     "estado": {
+      "type": "string",
+      "enum": [
+       "interesante",
+       "voy_a_aplicar",
+       "aplicado",
+       "entrevista",
+       "oferta",
+       "descartado"
+      ],
+      "title": "Estado"
+     },
+     "en": {
+      "type": "string",
+      "title": "En"
+     }
+    },
+    "type": "object",
+    "required": [
+     "estado",
+     "en"
+    ],
+    "title": "CambioEstado"
    },
    "CampoFusionado": {
     "properties": {
@@ -1080,6 +1304,136 @@
      "alertas"
     ],
     "title": "Fuentes"
+   },
+   "Guardado": {
+    "properties": {
+     "estado": {
+      "type": "string",
+      "enum": [
+       "interesante",
+       "voy_a_aplicar",
+       "aplicado",
+       "entrevista",
+       "oferta",
+       "descartado"
+      ],
+      "title": "Estado"
+     },
+     "prioridad": {
+      "type": "integer",
+      "title": "Prioridad",
+      "default": 0
+     },
+     "notas": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notas"
+     },
+     "etiquetas": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Etiquetas",
+      "default": []
+     },
+     "historial": {
+      "items": {
+       "$ref": "#/components/schemas/CambioEstado"
+      },
+      "type": "array",
+      "title": "Historial",
+      "default": []
+     },
+     "creado_en": {
+      "type": "string",
+      "title": "Creado En"
+     },
+     "actualizado_en": {
+      "type": "string",
+      "title": "Actualizado En"
+     }
+    },
+    "type": "object",
+    "required": [
+     "estado",
+     "creado_en",
+     "actualizado_en"
+    ],
+    "title": "Guardado",
+    "description": "Un puesto en Mi lista: dónde está en el proceso y lo que Rubén piensa de él."
+   },
+   "GuardadoEntrada": {
+    "properties": {
+     "estado": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "interesante",
+         "voy_a_aplicar",
+         "aplicado",
+         "entrevista",
+         "oferta",
+         "descartado"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Estado"
+     },
+     "prioridad": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 3.0,
+        "minimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Prioridad"
+     },
+     "notas": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 5000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notas"
+     },
+     "etiquetas": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array",
+        "maxItems": 20
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Etiquetas"
+     }
+    },
+    "type": "object",
+    "title": "GuardadoEntrada",
+    "description": "Lo que se cambia; lo que no viene se queda como estaba."
    },
    "HTTPValidationError": {
     "properties": {
@@ -1570,9 +1924,20 @@
       ],
       "title": "Descarte"
      },
+     "guardado": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Guardado"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "estado": {
       "type": "string",
-      "title": "Estado"
+      "title": "Estado",
+      "default": "abierto"
      },
      "fusion": {
       "additionalProperties": {
@@ -1607,7 +1972,6 @@
      "vista_ultima",
      "vias",
      "ofertas",
-     "estado",
      "fusion",
      "lista_ofertas"
     ],
@@ -1737,6 +2101,21 @@
        }
       ],
       "title": "Descarte"
+     },
+     "guardado": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Guardado"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "estado": {
+      "type": "string",
+      "title": "Estado",
+      "default": "abierto"
      }
     },
     "type": "object",
@@ -1841,7 +2220,14 @@
       "title": "Descartados"
      },
      "sin_puntuar": {
-      "type": "integer",
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
       "title": "Sin Puntuar"
      },
      "puestos_nuevos_24h": {
@@ -1884,7 +2270,6 @@
     "required": [
      "puestos",
      "descartados",
-     "sin_puntuar",
      "puestos_nuevos_24h",
      "puestos_nuevos_7d",
      "ofertas",

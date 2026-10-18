@@ -220,6 +220,17 @@ def heredar_etiqueta(db, origen: int, destino: int) -> None:
     db.execute("DELETE FROM etiqueta WHERE puesto_id = ?", [origen])
 
 
+def heredar_guardado(db, origen: int, destino: int) -> None:
+    """Al fusionar puestos, lo guardado en Mi lista pasa al que queda (si este no estaba ya guardado)."""
+    if "guardado" not in db.table_names():
+        return
+    db.execute("""INSERT OR IGNORE INTO guardado (puesto_id, estado, prioridad, notas, etiquetas, historial,
+                                                  creado_en, actualizado_en)
+                  SELECT ?, estado, prioridad, notas, etiquetas, historial, creado_en, actualizado_en
+                  FROM guardado WHERE puesto_id = ?""", [destino, origen])
+    db.execute("DELETE FROM guardado WHERE puesto_id = ?", [origen])
+
+
 def actualizar(db, dias: int = VENTANA_DIAS) -> dict[str, int]:
     """Recalcula los puestos de las ofertas vistas en la ventana. Devuelve cuántos se crean, cambian y fusionan."""
     desde = (datetime.now(UTC) - timedelta(days=dias)).isoformat(timespec="seconds")
@@ -237,6 +248,7 @@ def actualizar(db, dias: int = VENTANA_DIAS) -> dict[str, int]:
             for otro in set(previos) - {puesto_id}:
                 db["puesto"].update(otro, {"estado": f"fusionado:{puesto_id}", "actualizado_en": ahora})
                 heredar_etiqueta(db, otro, puesto_id)
+                heredar_guardado(db, otro, puesto_id)
                 usados.add(otro)
                 m["fusionados"] += 1
         else:

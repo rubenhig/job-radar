@@ -39,6 +39,7 @@ import {
 } from '@/components/ui/table'
 import { Cabecera } from '@/components/layout/cabecera'
 import { Main } from '@/components/layout/main'
+import { InsigniaGuardado } from '@/features/lista/componentes/guardado'
 import { InsigniaEtiqueta } from './componentes/etiqueta'
 import { Nota } from './componentes/nota'
 import { Vias } from './componentes/vias'
@@ -422,6 +423,7 @@ function Fila({
         </Link>
         <div className='flex items-center gap-2 text-sm text-muted-foreground'>
           {p.empresa ?? '—'} <InsigniaEtiqueta etiqueta={p.etiqueta} />
+          <InsigniaGuardado guardado={p.guardado} />
           {esNuevo(p.vista_primera, desde) && <Nuevo />}
         </div>
         {p.descarte && (
@@ -468,6 +470,7 @@ function Tarjeta({
         <span className='leading-snug font-medium'>{p.titulo}</span>
         <div className='flex shrink-0 items-center gap-1.5'>
           {esNuevo(p.vista_primera, desde) && <Nuevo />}
+          <InsigniaGuardado guardado={p.guardado} />
           <InsigniaEtiqueta etiqueta={p.etiqueta} />
           {p.valoracion && <Nota valoracion={p.valoracion} />}
         </div>

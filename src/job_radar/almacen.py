@@ -194,6 +194,20 @@ MIGRACIONES: list[str] = [
     """
     ALTER TABLE oferta ADD COLUMN valida_hasta TEXT;
     """,
+    # 10 · Mi lista: los puestos que Rubén guarda y sigue (no confundir con `etiqueta`, que mide la puntuación)
+    """
+    CREATE TABLE guardado (
+        puesto_id       INTEGER PRIMARY KEY REFERENCES puesto(id),
+        estado          TEXT NOT NULL DEFAULT 'interesante' CHECK (estado IN
+                            ('interesante', 'voy_a_aplicar', 'aplicado', 'entrevista', 'oferta', 'descartado')),
+        prioridad       INTEGER NOT NULL DEFAULT 0 CHECK (prioridad BETWEEN 0 AND 3),
+        notas           TEXT,
+        etiquetas       TEXT,                       -- JSON: las etiquetas propias de Rubén («plan B», «sueño»…)
+        historial       TEXT,                       -- JSON: [{estado, en}], para saber cuándo aplicó
+        creado_en       TEXT NOT NULL,
+        actualizado_en  TEXT NOT NULL
+    );
+    """,
 ]
 
 

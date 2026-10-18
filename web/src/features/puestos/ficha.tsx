@@ -26,6 +26,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Cabecera } from '@/components/layout/cabecera'
 import { Main } from '@/components/layout/main'
+import { TarjetaGuardado } from '@/features/lista/componentes/guardado'
 import { BotonesEtiqueta } from './componentes/etiqueta'
 import { TarjetaPuntuacion } from './componentes/puntuacion'
 import { Vias } from './componentes/vias'
@@ -136,6 +137,11 @@ export function FichaPuesto() {
               </Badge>
             ))}
           </div>
+          {p.estado === 'cerrado' && (
+            <p className='text-sm text-muted-foreground'>
+              Cerrado: la oferta ha caducado o ya no se publica.
+            </p>
+          )}
           {p.descarte && (
             <p className='text-sm text-destructive'>
               Descartado sin puntuar: {p.descarte}. Si es un error, márcalo como
@@ -184,6 +190,11 @@ export function FichaPuesto() {
           </div>
 
           <div className='flex flex-col gap-6 lg:order-2'>
+            <TarjetaGuardado
+              key={`${p.id}-${p.guardado?.actualizado_en ?? ''}`}
+              puestoId={p.id}
+              guardado={p.guardado}
+            />
             <Card>
               <CardHeader>
                 <CardTitle>¿Es top para ti?</CardTitle>

@@ -13,6 +13,7 @@ import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppEtiquetarRouteImport } from './routes/_app/etiquetar'
 import { Route as AppFuentesRouteImport } from './routes/_app/fuentes'
+import { Route as AppListaRouteImport } from './routes/_app/lista'
 import { Route as AppPerfilRouteImport } from './routes/_app/perfil'
 import { Route as AppPuntuacionRouteImport } from './routes/_app/puntuacion'
 import { Route as AppPuestosIndexRouteImport } from './routes/_app/puestos/index'
@@ -35,6 +36,11 @@ const AppEtiquetarRoute = AppEtiquetarRouteImport.update({
 const AppFuentesRoute = AppFuentesRouteImport.update({
   id: '/fuentes',
   path: '/fuentes',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppListaRoute = AppListaRouteImport.update({
+  id: '/lista',
+  path: '/lista',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppPerfilRoute = AppPerfilRouteImport.update({
@@ -62,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/etiquetar': typeof AppEtiquetarRoute
   '/fuentes': typeof AppFuentesRoute
+  '/lista': typeof AppListaRoute
   '/perfil': typeof AppPerfilRoute
   '/puntuacion': typeof AppPuntuacionRoute
   '/puestos/$puestoId': typeof AppPuestosPuestoIdRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/etiquetar': typeof AppEtiquetarRoute
   '/fuentes': typeof AppFuentesRoute
+  '/lista': typeof AppListaRoute
   '/perfil': typeof AppPerfilRoute
   '/puntuacion': typeof AppPuntuacionRoute
   '/': typeof AppIndexRoute
@@ -81,6 +89,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteRouteWithChildren
   '/_app/etiquetar': typeof AppEtiquetarRoute
   '/_app/fuentes': typeof AppFuentesRoute
+  '/_app/lista': typeof AppListaRoute
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/puntuacion': typeof AppPuntuacionRoute
   '/_app/': typeof AppIndexRoute
@@ -93,6 +102,7 @@ export interface FileRouteTypes {
     | '/'
     | '/etiquetar'
     | '/fuentes'
+    | '/lista'
     | '/perfil'
     | '/puntuacion'
     | '/puestos/$puestoId'
@@ -101,6 +111,7 @@ export interface FileRouteTypes {
   to:
     | '/etiquetar'
     | '/fuentes'
+    | '/lista'
     | '/perfil'
     | '/puntuacion'
     | '/'
@@ -111,6 +122,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/_app/etiquetar'
     | '/_app/fuentes'
+    | '/_app/lista'
     | '/_app/perfil'
     | '/_app/puntuacion'
     | '/_app/'
@@ -152,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFuentesRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/lista': {
+      id: '/_app/lista'
+      path: '/lista'
+      fullPath: '/lista'
+      preLoaderRoute: typeof AppListaRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/perfil': {
       id: '/_app/perfil'
       path: '/perfil'
@@ -186,6 +205,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteRouteChildren {
   AppEtiquetarRoute: typeof AppEtiquetarRoute
   AppFuentesRoute: typeof AppFuentesRoute
+  AppListaRoute: typeof AppListaRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppPuntuacionRoute: typeof AppPuntuacionRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -196,6 +216,7 @@ interface AppRouteRouteChildren {
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppEtiquetarRoute: AppEtiquetarRoute,
   AppFuentesRoute: AppFuentesRoute,
+  AppListaRoute: AppListaRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppPuntuacionRoute: AppPuntuacionRoute,
   AppIndexRoute: AppIndexRoute,

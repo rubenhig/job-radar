@@ -8,6 +8,8 @@ import type {
 } from './client'
 import { client } from './client.gen'
 import type {
+  ListaMisEtiquetasData,
+  ListaMisEtiquetasResponses,
   PerfilGuardarPreferenciasData,
   PerfilGuardarPreferenciasErrors,
   PerfilGuardarPreferenciasResponses,
@@ -21,12 +23,18 @@ import type {
   PuestosFichaData,
   PuestosFichaErrors,
   PuestosFichaResponses,
+  PuestosGuardarData,
+  PuestosGuardarErrors,
+  PuestosGuardarResponses,
   PuestosListarData,
   PuestosListarErrors,
   PuestosListarResponses,
   PuestosQuitarEtiquetaData,
   PuestosQuitarEtiquetaErrors,
   PuestosQuitarEtiquetaResponses,
+  PuestosQuitarGuardadoData,
+  PuestosQuitarGuardadoErrors,
+  PuestosQuitarGuardadoResponses,
   PuntuacionAcuerdoData,
   PuntuacionAcuerdoResponses,
   SistemaFuentesData,
@@ -35,6 +43,8 @@ import type {
   SistemaResumenResponses,
   SistemaVisitaData,
   SistemaVisitaResponses,
+  SistemaVivoData,
+  SistemaVivoResponses,
 } from './types.gen'
 
 export type Options<
@@ -116,6 +126,72 @@ export const puestosEtiquetar = <ThrowOnError extends boolean = false>(
       'Content-Type': 'application/json',
       ...options.headers,
     },
+  })
+
+/**
+ * Quitar Guardado
+ */
+export const puestosQuitarGuardado = <ThrowOnError extends boolean = false>(
+  options: Options<PuestosQuitarGuardadoData, ThrowOnError>
+): RequestResult<
+  PuestosQuitarGuardadoResponses,
+  PuestosQuitarGuardadoErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    PuestosQuitarGuardadoResponses,
+    PuestosQuitarGuardadoErrors,
+    ThrowOnError
+  >({ url: '/api/puestos/{puesto_id}/guardado', ...options })
+
+/**
+ * Guardar
+ *
+ * Guarda el puesto en Mi lista o cambia lo que venga (estado, prioridad, notas, etiquetas).
+ * La primera vez cuenta además como «top» si aún no tenía etiqueta: guardar es la señal más clara de
+ * que algo gusta, y así la puntuación aprende de ello (y la criba no lo descarta).
+ */
+export const puestosGuardar = <ThrowOnError extends boolean = false>(
+  options: Options<PuestosGuardarData, ThrowOnError>
+): RequestResult<PuestosGuardarResponses, PuestosGuardarErrors, ThrowOnError> =>
+  (options.client ?? client).put<
+    PuestosGuardarResponses,
+    PuestosGuardarErrors,
+    ThrowOnError
+  >({
+    url: '/api/puestos/{puesto_id}/guardado',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Mis Etiquetas
+ *
+ * Las etiquetas propias que ya se usan, con cuántos puestos: para sugerirlas y filtrar.
+ */
+export const listaMisEtiquetas = <ThrowOnError extends boolean = false>(
+  options?: Options<ListaMisEtiquetasData, ThrowOnError>
+): RequestResult<ListaMisEtiquetasResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<
+    ListaMisEtiquetasResponses,
+    unknown,
+    ThrowOnError
+  >({ url: '/api/lista/etiquetas', ...options })
+
+/**
+ * Vivo
+ *
+ * Para el healthcheck de Docker: la API responde y la base se abre. Barato (no calcula nada).
+ */
+export const sistemaVivo = <ThrowOnError extends boolean = false>(
+  options?: Options<SistemaVivoData, ThrowOnError>
+): RequestResult<SistemaVivoResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<SistemaVivoResponses, unknown, ThrowOnError>({
+    url: '/api/vivo',
+    ...options,
   })
 
 /**

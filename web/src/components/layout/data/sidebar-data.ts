@@ -1,5 +1,6 @@
 import {
   Activity,
+  Bookmark,
   Gauge,
   BriefcaseBusiness,
   LayoutDashboard,
@@ -16,6 +17,7 @@ export const sidebarData: SidebarData = {
       items: [
         { title: 'Inicio', url: '/', icon: LayoutDashboard },
         { title: 'Puestos', url: '/puestos', icon: BriefcaseBusiness },
+        { title: 'Mi lista', url: '/lista', icon: Bookmark },
         { title: 'Etiquetar', url: '/etiquetar', icon: Tags },
         { title: 'Puntuación', url: '/puntuacion', icon: Gauge },
       ],

@@ -18,6 +18,35 @@ class EtiquetaEntrada(BaseModel):
     motivo: str | None = Field(None, max_length=1000)
 
 
+EstadoLista = Literal["interesante", "voy_a_aplicar", "aplicado", "entrevista", "oferta", "descartado"]
+
+
+class CambioEstado(BaseModel):
+    estado: EstadoLista
+    en: str
+
+
+class Guardado(BaseModel):
+    """Un puesto en Mi lista: dónde está en el proceso y lo que Rubén piensa de él."""
+
+    estado: EstadoLista
+    prioridad: int = 0                  # 0-3 estrellas
+    notas: str | None = None
+    etiquetas: list[str] = []
+    historial: list[CambioEstado] = []
+    creado_en: str
+    actualizado_en: str
+
+
+class GuardadoEntrada(BaseModel):
+    """Lo que se cambia; lo que no viene se queda como estaba."""
+
+    estado: EstadoLista | None = None
+    prioridad: int | None = Field(None, ge=0, le=3)
+    notas: str | None = Field(None, max_length=5000)
+    etiquetas: list[str] | None = Field(None, max_length=20)
+
+
 class Salario(BaseModel):
     salario_min: float | None = None
     salario_max: float | None = None
@@ -59,6 +88,8 @@ class PuestoResumen(BaseModel):
     etiqueta: Etiqueta | None = None
     valoracion: Valoracion | None = None
     descarte: str | None = None  # por qué la criba lo deja fuera (job_radar.criba); None = pasa
+    guardado: Guardado | None = None
+    estado: str = "abierto"      # abierto o cerrado (la oferta caducó); en Mi lista se ven los dos
 
 
 class PaginaPuestos(BaseModel):
@@ -133,7 +164,6 @@ class Evaluacion(BaseModel):
 
 
 class PuestoDetalle(PuestoResumen):
-    estado: str
     fusion: dict[str, CampoFusionado]
     lista_ofertas: list[Oferta]
     evaluacion: Evaluacion | None = None

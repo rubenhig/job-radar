@@ -152,3 +152,35 @@ def test_visitas_y_nuevos_desde_la_anterior(cliente, monkeypatch):
     assert otra["desde"] == "2026-10-01T10:10:00+00:00"
     assert cliente.get("/api/puestos", params={"nuevos_desde": "2000-01-01"}).json()["total"] == 2
     assert cliente.get("/api/puestos", params={"nuevos_desde": "2999-01-01"}).json()["total"] == 0
+
+
+def test_mi_lista_guardar_cambiar_filtrar_y_quitar(cliente):
+    ai = next(p for p in cliente.get("/api/puestos").json()["items"] if p["titulo"] == "AI Engineer")["id"]
+    g = cliente.put(f"/api/puestos/{ai}/guardado", json={"prioridad": 3, "etiquetas": ["sueño", " Málaga "]}).json()
+    assert g["estado"] == "interesante" and g["prioridad"] == 3 and g["etiquetas"] == ["Málaga", "sueño"]
+    # guardar es señal de que gusta: cuenta como top si no tenía etiqueta
+    assert cliente.get(f"/api/puestos/{ai}").json()["etiqueta"]["valor"] == "top"
+    g = cliente.put(f"/api/puestos/{ai}/guardado", json={"estado": "aplicado", "notas": "Envié CV"}).json()
+    assert [h["estado"] for h in g["historial"]] == ["interesante", "aplicado"]
+    assert g["prioridad"] == 3 and g["etiquetas"] == ["Málaga", "sueño"]  # lo que no viene, no cambia
+    assert cliente.get("/api/puestos", params={"guardado": True}).json()["total"] == 1
+    assert cliente.get("/api/puestos", params={"estado_lista": "aplicado"}).json()["total"] == 1
+    assert cliente.get("/api/puestos", params={"estado_lista": "entrevista"}).json()["total"] == 0
+    assert cliente.get("/api/puestos", params={"mi_etiqueta": "sueño"}).json()["items"][0]["guardado"]["notas"] \
+        == "Envié CV"
+    assert cliente.get("/api/lista/etiquetas").json() == {"Málaga": 1, "sueño": 1}
+    assert cliente.put(f"/api/puestos/{ai}/guardado", json={"prioridad": 5}).status_code == 422
+    assert cliente.delete(f"/api/puestos/{ai}/guardado").status_code == 204
+    assert cliente.get("/api/puestos", params={"guardado": True}).json()["total"] == 0
+
+
+def test_lo_guardado_pasa_al_puesto_que_queda_al_fusionar(tmp_path):
+    db = almacen.abrir(tmp_path / "x.db")
+    ahora = almacen.ahora()
+    for i in (1, 2):
+        db["puesto"].insert({"id": i, "titulo": "AI Engineer", "estado": "abierto", "creado_en": ahora,
+                             "actualizado_en": ahora})
+    db["guardado"].insert({"puesto_id": 1, "estado": "aplicado", "prioridad": 2, "creado_en": ahora,
+                           "actualizado_en": ahora})
+    puestos.heredar_guardado(db, 1, 2)
+    assert [(g["puesto_id"], g["estado"]) for g in db["guardado"].rows] == [(2, "aplicado")]

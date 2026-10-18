@@ -8,9 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from job_radar import almacen
 from job_radar.api.base import bd
-from job_radar.api.esquemas import (CampoFusionado, Criterio, Etiqueta, EtiquetaEntrada, Evaluacion, Oferta,
-                                    PaginaPuestos, PuestoDetalle, PuestoResumen, RequisitoEvaluado, Salario, Valoracion,
-                                    Via)
+from job_radar.api.esquemas import (CampoFusionado, Criterio, EstadoLista, Etiqueta, EtiquetaEntrada, Evaluacion,
+                                    Guardado, GuardadoEntrada, Oferta, PaginaPuestos, PuestoDetalle, PuestoResumen,
+                                    RequisitoEvaluado, Salario, Valoracion, Via)
 from job_radar.puntuacion import RUBRICA
 
 router = APIRouter(prefix="/puestos", tags=["puestos"])
@@ -31,8 +31,13 @@ def _resumen(fila: dict) -> dict:
                              marcas=json.loads(fila["marcas"]) if fila["marcas"] else [],
                              resumen=fila["ev_resumen"], rol_ia=fila["ev_rol"])
                   if fila["nota"] is not None else None)
+    guardado = (Guardado(estado=fila["g_estado"], prioridad=fila["g_prioridad"], notas=fila["g_notas"],
+                         etiquetas=json.loads(fila["g_etiquetas"] or "[]"),
+                         historial=json.loads(fila["g_historial"] or "[]"),
+                         creado_en=fila["g_creado_en"], actualizado_en=fila["g_actualizado_en"])
+                if fila["g_estado"] else None)
     return dict(
-        valoracion=valoracion,
+        valoracion=valoracion, guardado=guardado, estado=fila["estado"],
         id=fila["id"], titulo=fila["titulo"], empresa=(fusion.get("empresa") or {}).get("valor"),
         ciudad=fila["ciudad"], pais=fila["pais"], modalidad=fila["modalidad"],
         salario=_salario((fusion.get("salario") or {}).get("valor")),
@@ -49,16 +54,20 @@ CONSULTA = """
            e.valor AS etiqueta, e.motivo, e.actualizada_en AS etiquetada_en,
            ev.id AS evaluacion_id, ev.nota, ev.vetado, ev.motivo_veto, ev.marcas,
            json_extract(ev.resultado, '$.veredictos.resumen') AS ev_resumen,
-           json_extract(ev.resultado, '$.veredictos.rol_ia.valor') AS ev_rol
+           json_extract(ev.resultado, '$.veredictos.rol_ia.valor') AS ev_rol,
+           g.estado AS g_estado, g.prioridad AS g_prioridad, g.notas AS g_notas, g.etiquetas AS g_etiquetas,
+           g.historial AS g_historial, g.creado_en AS g_creado_en, g.actualizado_en AS g_actualizado_en
     FROM puesto p JOIN oferta o ON o.puesto_id = p.id LEFT JOIN etiqueta e ON e.puesto_id = p.id
+    LEFT JOIN guardado g ON g.puesto_id = p.id
     LEFT JOIN evaluacion ev ON ev.id = (SELECT MAX(x.id) FROM evaluacion x
                                         WHERE x.puesto_id = p.id AND x.rubrica = '""" + RUBRICA + """')
 """
 
-Orden = Literal["recientes", "publicadas", "vias", "nota"]
+Orden = Literal["recientes", "publicadas", "vias", "nota", "prioridad"]
 ORDEN_SQL = {"recientes": "vista_primera DESC", "vias": "ofertas DESC, vista_primera DESC",
              "nota": "COALESCE(ev.nota, -1) DESC, vista_primera DESC",
-             "publicadas": "json_extract(p.fusion, '$.publicada_en.valor') DESC"}
+             "publicadas": "json_extract(p.fusion, '$.publicada_en.valor') DESC",
+             "prioridad": "COALESCE(g.prioridad, -1) DESC, g.actualizado_en DESC"}
 
 
 @router.get("", response_model=PaginaPuestos)
@@ -73,12 +82,27 @@ def listar(db: Annotated[object, Depends(bd)],
            puntuado: bool | None = None,
            descartados: bool = False,
            nuevos_desde: str | None = None,
+           guardado: bool | None = None,
+           estado_lista: Annotated[list[EstadoLista] | None, Query()] = None,
+           mi_etiqueta: str | None = None,
            orden: Orden = "recientes",
            limite: Annotated[int, Query(gt=0, le=200)] = 50,
            desde: Annotated[int, Query(ge=0)] = 0):
-    # Por defecto, lo que pasa la criba; con `descartados`, solo lo descartado.
-    donde = ["p.estado = 'abierto'", "p.descarte IS NOT NULL" if descartados else "p.descarte IS NULL"]
-    args = []
+    if guardado or estado_lista or mi_etiqueta:
+        # Mi lista: lo guardado, aunque la oferta ya haya caducado (a un puesto cerrado puedes haber aplicado).
+        donde, args = ["p.estado IN ('abierto', 'cerrado')", "g.puesto_id IS NOT NULL"], []
+        if estado_lista:
+            donde.append(f"g.estado IN ({','.join('?' * len(estado_lista))})")
+            args += estado_lista
+        if mi_etiqueta:
+            donde.append("EXISTS (SELECT 1 FROM json_each(g.etiquetas) WHERE value = ?)")
+            args.append(mi_etiqueta)
+    else:
+        # Por defecto, lo que pasa la criba; con `descartados`, solo lo descartado.
+        donde = ["p.estado = 'abierto'", "p.descarte IS NOT NULL" if descartados else "p.descarte IS NULL"]
+        args = []
+        if guardado is False:
+            donde.append("g.puesto_id IS NULL")
     if q:
         donde.append("p.id IN (SELECT puesto_id FROM oferta WHERE titulo LIKE ? OR empresa LIKE ? OR descripcion LIKE ?)")
         args += [f"%{q}%"] * 3
@@ -133,8 +157,7 @@ def ficha(puesto_id: int, db: Annotated[object, Depends(bd)]):
     fusion = {k: CampoFusionado(**v) for k, v in json.loads(fila["fusion"] or "{}").items()}
     evaluacion = _evaluacion(db.execute("SELECT * FROM evaluacion WHERE id = ?", [fila["evaluacion_id"]]).fetchone()
                              if fila["evaluacion_id"] else None)
-    return PuestoDetalle(**_resumen(fila), estado=fila["estado"], fusion=fusion, lista_ofertas=ofertas,
-                         evaluacion=evaluacion)
+    return PuestoDetalle(**_resumen(fila), fusion=fusion, lista_ofertas=ofertas, evaluacion=evaluacion)
 
 
 def _evaluacion(f) -> Evaluacion | None:
@@ -173,3 +196,53 @@ def etiquetar(puesto_id: int, entrada: EtiquetaEntrada, db: Annotated[object, De
 def quitar_etiqueta(puesto_id: int, db: Annotated[object, Depends(bd)]):
     db.execute("DELETE FROM etiqueta WHERE puesto_id = ?", [puesto_id])
     db.conn.commit()
+
+
+# --- Mi lista ----------------------------------------------------------------------
+
+
+@router.put("/{puesto_id}/guardado", response_model=Guardado)
+def guardar(puesto_id: int, entrada: GuardadoEntrada, db: Annotated[object, Depends(bd)]):
+    """Guarda el puesto en Mi lista o cambia lo que venga (estado, prioridad, notas, etiquetas).
+    La primera vez cuenta además como «top» si aún no tenía etiqueta: guardar es la señal más clara de
+    que algo gusta, y así la puntuación aprende de ello (y la criba no lo descarta)."""
+    if not db.execute("SELECT 1 FROM puesto WHERE id = ?", [puesto_id]).fetchone():
+        raise HTTPException(404, "No existe ese puesto")
+    ahora = almacen.ahora()
+    previo = db.execute("SELECT * FROM guardado WHERE puesto_id = ?", [puesto_id]).fetchone()
+    previo = dict(previo) if previo else None
+    estado = entrada.estado or (previo["estado"] if previo else "interesante")
+    historial = json.loads(previo["historial"] or "[]") if previo else []
+    if not historial or historial[-1]["estado"] != estado:
+        historial.append({"estado": estado, "en": ahora})
+    etiquetas = (sorted({t.strip() for t in entrada.etiquetas if t.strip()}) if entrada.etiquetas is not None
+                 else json.loads(previo["etiquetas"] or "[]") if previo else [])
+    fila = {"puesto_id": puesto_id, "estado": estado,
+            "prioridad": entrada.prioridad if entrada.prioridad is not None else (previo or {}).get("prioridad", 0),
+            "notas": entrada.notas if entrada.notas is not None else (previo or {}).get("notas"),
+            "etiquetas": json.dumps(etiquetas, ensure_ascii=False), "historial": json.dumps(historial),
+            "creado_en": (previo or {}).get("creado_en", ahora), "actualizado_en": ahora}
+    db["guardado"].upsert(fila, pk="puesto_id")
+    if previo is None:
+        db.execute("""INSERT OR IGNORE INTO etiqueta (puesto_id, valor, motivo, creada_en, actualizada_en)
+                      VALUES (?, 'top', 'Guardado en Mi lista', ?, ?)""", [puesto_id, ahora, ahora])
+        db.execute("""UPDATE puesto SET descarte = NULL WHERE id = ?
+                      AND (SELECT valor FROM etiqueta WHERE puesto_id = ?) = 'top'""", [puesto_id, puesto_id])
+    db.conn.commit()
+    return Guardado(**fila | {"etiquetas": etiquetas, "historial": historial})
+
+
+@router.delete("/{puesto_id}/guardado", status_code=204)
+def quitar_guardado(puesto_id: int, db: Annotated[object, Depends(bd)]):
+    db.execute("DELETE FROM guardado WHERE puesto_id = ?", [puesto_id])
+    db.conn.commit()
+
+
+lista = APIRouter(prefix="/lista", tags=["lista"])
+
+
+@lista.get("/etiquetas", response_model=dict[str, int])
+def mis_etiquetas(db: Annotated[object, Depends(bd)]):
+    """Las etiquetas propias que ya se usan, con cuántos puestos: para sugerirlas y filtrar."""
+    return dict(db.execute("""SELECT j.value, COUNT(*) FROM guardado g, json_each(g.etiquetas) j
+                              GROUP BY j.value ORDER BY COUNT(*) DESC, j.value""").fetchall())

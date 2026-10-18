@@ -75,6 +75,26 @@ export type Avisos = {
 }
 
 /**
+ * CambioEstado
+ */
+export type CambioEstado = {
+  /**
+   * Estado
+   */
+  estado:
+    | 'interesante'
+    | 'voy_a_aplicar'
+    | 'aplicado'
+    | 'entrevista'
+    | 'oferta'
+    | 'descartado'
+  /**
+   * En
+   */
+  en: string
+}
+
+/**
  * CampoFusionado
  *
  * Un campo del puesto y de qué oferta sale.
@@ -319,6 +339,79 @@ export type Fuentes = {
 }
 
 /**
+ * Guardado
+ *
+ * Un puesto en Mi lista: dónde está en el proceso y lo que Rubén piensa de él.
+ */
+export type Guardado = {
+  /**
+   * Estado
+   */
+  estado:
+    | 'interesante'
+    | 'voy_a_aplicar'
+    | 'aplicado'
+    | 'entrevista'
+    | 'oferta'
+    | 'descartado'
+  /**
+   * Prioridad
+   */
+  prioridad?: number
+  /**
+   * Notas
+   */
+  notas?: string | null
+  /**
+   * Etiquetas
+   */
+  etiquetas?: Array<string>
+  /**
+   * Historial
+   */
+  historial?: Array<CambioEstado>
+  /**
+   * Creado En
+   */
+  creado_en: string
+  /**
+   * Actualizado En
+   */
+  actualizado_en: string
+}
+
+/**
+ * GuardadoEntrada
+ *
+ * Lo que se cambia; lo que no viene se queda como estaba.
+ */
+export type GuardadoEntrada = {
+  /**
+   * Estado
+   */
+  estado?:
+    | 'interesante'
+    | 'voy_a_aplicar'
+    | 'aplicado'
+    | 'entrevista'
+    | 'oferta'
+    | 'descartado'
+    | null
+  /**
+   * Prioridad
+   */
+  prioridad?: number | null
+  /**
+   * Notas
+   */
+  notas?: string | null
+  /**
+   * Etiquetas
+   */
+  etiquetas?: Array<string> | null
+}
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -546,10 +639,11 @@ export type PuestoDetalle = {
    * Descarte
    */
   descarte?: string | null
+  guardado?: Guardado | null
   /**
    * Estado
    */
-  estado: string
+  estado?: string
   /**
    * Fusion
    */
@@ -618,6 +712,11 @@ export type PuestoResumen = {
    * Descarte
    */
   descarte?: string | null
+  guardado?: Guardado | null
+  /**
+   * Estado
+   */
+  estado?: string
 }
 
 /**
@@ -695,7 +794,7 @@ export type Resumen = {
   /**
    * Sin Puntuar
    */
-  sin_puntuar: number
+  sin_puntuar?: number | null
   /**
    * Puestos Nuevos 24H
    */
@@ -980,9 +1079,28 @@ export type PuestosListarData = {
      */
     nuevos_desde?: string | null
     /**
+     * Guardado
+     */
+    guardado?: boolean | null
+    /**
+     * Estado Lista
+     */
+    estado_lista?: Array<
+      | 'interesante'
+      | 'voy_a_aplicar'
+      | 'aplicado'
+      | 'entrevista'
+      | 'oferta'
+      | 'descartado'
+    > | null
+    /**
+     * Mi Etiqueta
+     */
+    mi_etiqueta?: string | null
+    /**
      * Orden
      */
-    orden?: 'recientes' | 'publicadas' | 'vias' | 'nota'
+    orden?: 'recientes' | 'publicadas' | 'vias' | 'nota' | 'prioridad'
     /**
      * Limite
      */
@@ -1108,6 +1226,112 @@ export type PuestosEtiquetarResponses = {
 
 export type PuestosEtiquetarResponse =
   PuestosEtiquetarResponses[keyof PuestosEtiquetarResponses]
+
+export type PuestosQuitarGuardadoData = {
+  body?: never
+  path: {
+    /**
+     * Puesto Id
+     */
+    puesto_id: number
+  }
+  query?: never
+  url: '/api/puestos/{puesto_id}/guardado'
+}
+
+export type PuestosQuitarGuardadoErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type PuestosQuitarGuardadoError =
+  PuestosQuitarGuardadoErrors[keyof PuestosQuitarGuardadoErrors]
+
+export type PuestosQuitarGuardadoResponses = {
+  /**
+   * Successful Response
+   */
+  204: void
+}
+
+export type PuestosQuitarGuardadoResponse =
+  PuestosQuitarGuardadoResponses[keyof PuestosQuitarGuardadoResponses]
+
+export type PuestosGuardarData = {
+  body: GuardadoEntrada
+  path: {
+    /**
+     * Puesto Id
+     */
+    puesto_id: number
+  }
+  query?: never
+  url: '/api/puestos/{puesto_id}/guardado'
+}
+
+export type PuestosGuardarErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type PuestosGuardarError =
+  PuestosGuardarErrors[keyof PuestosGuardarErrors]
+
+export type PuestosGuardarResponses = {
+  /**
+   * Successful Response
+   */
+  200: Guardado
+}
+
+export type PuestosGuardarResponse =
+  PuestosGuardarResponses[keyof PuestosGuardarResponses]
+
+export type ListaMisEtiquetasData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/lista/etiquetas'
+}
+
+export type ListaMisEtiquetasResponses = {
+  /**
+   * Response Lista-Mis Etiquetas
+   *
+   * Successful Response
+   */
+  200: {
+    [key: string]: number
+  }
+}
+
+export type ListaMisEtiquetasResponse =
+  ListaMisEtiquetasResponses[keyof ListaMisEtiquetasResponses]
+
+export type SistemaVivoData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/vivo'
+}
+
+export type SistemaVivoResponses = {
+  /**
+   * Response Sistema-Vivo
+   *
+   * Successful Response
+   */
+  200: {
+    [key: string]: boolean
+  }
+}
+
+export type SistemaVivoResponse =
+  SistemaVivoResponses[keyof SistemaVivoResponses]
 
 export type SistemaResumenData = {
   body?: never

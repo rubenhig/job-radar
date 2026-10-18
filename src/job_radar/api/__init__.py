@@ -33,6 +33,7 @@ def crear(ruta_db: Path = almacen.RUTA_DB, datos: Path = almacen.DATOS, web: Pat
 
     api = APIRouter(prefix="/api")
     api.include_router(puestos.router)
+    api.include_router(puestos.lista)
     api.include_router(sistema.router)
     app.include_router(api)
 

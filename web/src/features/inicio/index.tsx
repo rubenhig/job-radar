@@ -64,7 +64,7 @@ export function Inicio() {
         )}
 
         <Novedades />
-        <ParaTi sinPuntuar={r?.sin_puntuar} />
+        <ParaTi sinPuntuar={r?.sin_puntuar ?? undefined} />
 
         <div className='grid grid-cols-2 gap-4 lg:grid-cols-4'>
           <Kpi

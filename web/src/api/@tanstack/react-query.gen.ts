@@ -6,20 +6,26 @@ import {
 } from '@tanstack/react-query'
 import { client } from '../client.gen'
 import {
+  listaMisEtiquetas,
   type Options,
   perfilGuardarPreferencias,
   perfilLeerPreferencias,
   perfilPerfil,
   puestosEtiquetar,
   puestosFicha,
+  puestosGuardar,
   puestosListar,
   puestosQuitarEtiqueta,
+  puestosQuitarGuardado,
   puntuacionAcuerdo,
   sistemaFuentes,
   sistemaResumen,
   sistemaVisita,
+  sistemaVivo,
 } from '../sdk.gen'
 import type {
+  ListaMisEtiquetasData,
+  ListaMisEtiquetasResponse,
   PerfilGuardarPreferenciasData,
   PerfilGuardarPreferenciasError,
   PerfilGuardarPreferenciasResponse,
@@ -33,12 +39,18 @@ import type {
   PuestosFichaData,
   PuestosFichaError,
   PuestosFichaResponse,
+  PuestosGuardarData,
+  PuestosGuardarError,
+  PuestosGuardarResponse,
   PuestosListarData,
   PuestosListarError,
   PuestosListarResponse,
   PuestosQuitarEtiquetaData,
   PuestosQuitarEtiquetaError,
   PuestosQuitarEtiquetaResponse,
+  PuestosQuitarGuardadoData,
+  PuestosQuitarGuardadoError,
+  PuestosQuitarGuardadoResponse,
   PuntuacionAcuerdoData,
   PuntuacionAcuerdoResponse,
   SistemaFuentesData,
@@ -47,6 +59,8 @@ import type {
   SistemaResumenResponse,
   SistemaVisitaData,
   SistemaVisitaResponse,
+  SistemaVivoData,
+  SistemaVivoResponse,
 } from '../types.gen'
 
 export type QueryKey<TOptions extends Options> = [
@@ -192,6 +206,121 @@ export const puestosEtiquetarMutation = (
   }
   return mutationOptions
 }
+
+/**
+ * Quitar Guardado
+ */
+export const puestosQuitarGuardadoMutation = (
+  options?: Partial<Options<PuestosQuitarGuardadoData>>
+): UseMutationOptions<
+  PuestosQuitarGuardadoResponse,
+  PuestosQuitarGuardadoError,
+  Options<PuestosQuitarGuardadoData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PuestosQuitarGuardadoResponse,
+    PuestosQuitarGuardadoError,
+    Options<PuestosQuitarGuardadoData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await puestosQuitarGuardado({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Guardar
+ *
+ * Guarda el puesto en Mi lista o cambia lo que venga (estado, prioridad, notas, etiquetas).
+ * La primera vez cuenta además como «top» si aún no tenía etiqueta: guardar es la señal más clara de
+ * que algo gusta, y así la puntuación aprende de ello (y la criba no lo descarta).
+ */
+export const puestosGuardarMutation = (
+  options?: Partial<Options<PuestosGuardarData>>
+): UseMutationOptions<
+  PuestosGuardarResponse,
+  PuestosGuardarError,
+  Options<PuestosGuardarData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PuestosGuardarResponse,
+    PuestosGuardarError,
+    Options<PuestosGuardarData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await puestosGuardar({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const listaMisEtiquetasQueryKey = (
+  options?: Options<ListaMisEtiquetasData>
+) => createQueryKey('listaMisEtiquetas', options)
+
+/**
+ * Mis Etiquetas
+ *
+ * Las etiquetas propias que ya se usan, con cuántos puestos: para sugerirlas y filtrar.
+ */
+export const listaMisEtiquetasOptions = (
+  options?: Options<ListaMisEtiquetasData>
+) =>
+  queryOptions<
+    ListaMisEtiquetasResponse,
+    DefaultError,
+    ListaMisEtiquetasResponse,
+    ReturnType<typeof listaMisEtiquetasQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await listaMisEtiquetas({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: listaMisEtiquetasQueryKey(options),
+  })
+
+export const sistemaVivoQueryKey = (options?: Options<SistemaVivoData>) =>
+  createQueryKey('sistemaVivo', options)
+
+/**
+ * Vivo
+ *
+ * Para el healthcheck de Docker: la API responde y la base se abre. Barato (no calcula nada).
+ */
+export const sistemaVivoOptions = (options?: Options<SistemaVivoData>) =>
+  queryOptions<
+    SistemaVivoResponse,
+    DefaultError,
+    SistemaVivoResponse,
+    ReturnType<typeof sistemaVivoQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await sistemaVivo({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: sistemaVivoQueryKey(options),
+  })
 
 export const sistemaResumenQueryKey = (options?: Options<SistemaResumenData>) =>
   createQueryKey('sistemaResumen', options)
