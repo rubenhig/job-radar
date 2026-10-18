@@ -217,7 +217,7 @@ Estados: ⬜ por probar · 🟡 probada a medias · ✅ aprobada · ❌ descarta
 | Remoto con elegibilidad | **API pública de [freehire](https://github.com/strelov1/freehire)** (agrega InfoJobs, Manfred, Get on Board, Himalayas, RemoteOK, Remotive…); adaptadores de ats-scrapers; API de Himalayas (`country=Spain`) | Ofertas remotas que admiten España, con descripción; medir cobertura y frescura frente a las fuentes directas | ✅ Cubierto por freehire + LinkedIn; la elegibilidad desde España se decide al puntuar |
 | ATS europeos y detección | Adaptadores de [maccydee/job-radar](https://github.com/maccydee/job-radar) (Personio, Teamtailor, Recruitee, Workable) + su `discover` + dataset de 17.814 boards | Resolver el ATS de una lista corta de empresas de Málaga | ➡️ Pasa a la Fase 7 (#25) |
 | Tecnoempleo | RSS (solo últimas 80) o búsqueda a baja frecuencia, **solo con código Python** (su robots.txt bloquea agentes LLM) | Ofertas filtradas por ubicación y tecnología | ⏸️ Aparcado (#8) |
-| Emails de alerta (LinkedIn) | Por buscar: parsers existentes de alertas | Extraer ofertas de un email real | ⏸️ Aparcado (#9, #10): LinkedIn e InfoJobs llegan directos |
+| Emails de alerta (LinkedIn) | Parser propio del texto plano (probado con 14 días de correos reales) | Extraer ofertas de un email real | ❌ Descartado (#9, 18-oct): lo que aportaba era sobre todo Madrid, y ataba el sistema a los filtros puestos a mano en LinkedIn. La API de fantastic.jobs busca por ID de LinkedIn si algún día hace falta |
 
 **Detalle de ATS.**
 - Ebury: 149 ofertas con descripción en menos de 1 s.
