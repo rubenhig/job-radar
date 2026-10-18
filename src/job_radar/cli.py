@@ -8,6 +8,7 @@
     uv run job-radar salud              # solo las alertas; sale con 1 si hay alguna
     uv run job-radar cribar             # recalcula los descartes (tras cambiar las preferencias)
     uv run job-radar puntuar            # puntúa los puestos nuevos que pasan la criba
+    uv run job-radar recalcular         # rehace la nota sin llamar al modelo (p. ej. tras cambiar el salario)
 """
 
 import argparse
@@ -155,6 +156,14 @@ def cmd_cribar(args) -> int:
     return 0
 
 
+def cmd_recalcular(args) -> int:
+    from job_radar import puntuacion
+
+    n = puntuacion.recalcular(almacen.abrir(args.db), cargar_preferencias(args.preferencias))
+    print(f"{n} evaluaciones cambian")
+    return 0
+
+
 def cmd_salud(args) -> int:
     alertas = salud.comprobar(almacen.abrir(args.db), reg.cargar())
     print("\n".join(map(str, alertas)) or "Todas las fuentes, bien.")
@@ -179,6 +188,9 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("cribar", help="recalcula qué puestos se descartan sin puntuar")
     p.add_argument("--preferencias", type=Path, default=RUTA_PREFERENCIAS)
     p.set_defaults(func=cmd_cribar)
+    p = sub.add_parser("recalcular", help="rehace la nota sin llamar al modelo (salario)")
+    p.add_argument("--preferencias", type=Path, default=RUTA_PREFERENCIAS)
+    p.set_defaults(func=cmd_recalcular)
     p = sub.add_parser("puntuar", help="evalúa puestos contra el perfil (Fase 4)")
     p.add_argument("--etiquetados", action="store_true", help="solo los que Rubén ha etiquetado")
     p.add_argument("--rehacer", action="store_true", help="también los ya evaluados con esta rúbrica")

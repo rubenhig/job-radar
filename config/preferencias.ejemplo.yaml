@@ -47,9 +47,13 @@ idiomas:
     nivel: B2
     efecto: marcar
 
-# Se guardan y se muestran, pero no filtran.
+# Bruto anual en euros. Si la oferta da salario, cuenta en la nota: por debajo del
+# actual es una rebaja (no llega a top); hasta el objetivo suma poco a poco.
 salario:
-  filtra: false
+  actual: 30000
+  objetivo: 40000
+
+# Se guarda y se muestra, pero no filtra.
 tipo_empresa:
   filtra: false
 

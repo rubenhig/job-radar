@@ -486,7 +486,7 @@ export type Preferencias = {
     idiomas?: {
         [key: string]: Idioma;
     };
-    salario?: Informativo;
+    salario?: SalarioDeseado;
     tipo_empresa?: Informativo;
     avisos?: Avisos;
 };
@@ -767,6 +767,26 @@ export type Salario = {
      * Salario Periodo
      */
     salario_periodo?: string | null;
+};
+
+/**
+ * SalarioDeseado
+ *
+ * Bruto anual en euros. Cuenta en la nota cuando la oferta da salario (job_radar.puntuacion).
+ */
+export type SalarioDeseado = {
+    /**
+     * Actual
+     *
+     * Por debajo de esto, el cambio es una rebaja
+     */
+    actual?: number | null;
+    /**
+     * Objetivo
+     *
+     * Desde aquí, la nota suma lo máximo
+     */
+    objetivo?: number | null;
 };
 
 /**

@@ -72,6 +72,19 @@ class Informativo(Estricto):
     filtra: Literal[False] = False
 
 
+class SalarioDeseado(Estricto):
+    """Bruto anual en euros. Cuenta en la nota cuando la oferta da salario (job_radar.puntuacion)."""
+
+    actual: int | None = Field(None, gt=0, description="Por debajo de esto, el cambio es una rebaja")
+    objetivo: int | None = Field(None, gt=0, description="Desde aquí, la nota suma lo máximo")
+
+    @model_validator(mode="after")
+    def ordenado(self):
+        if self.actual and self.objetivo and self.objetivo < self.actual:
+            raise ValueError("el objetivo no puede ser menor que el salario actual")
+        return self
+
+
 class Avisos(Estricto):
     inmediato_desde: int = Field(85, ge=0, le=100, description="Puntuación mínima para avisar al momento")
     resumen: Literal["diario", "semanal"] = "semanal"
@@ -83,7 +96,7 @@ class Preferencias(Estricto):
     remoto: Remoto | None = None
     roles: Roles
     idiomas: dict[str, Idioma] = {}
-    salario: Informativo = Informativo()
+    salario: SalarioDeseado = SalarioDeseado()
     tipo_empresa: Informativo = Informativo()
     avisos: Avisos = Avisos()
 

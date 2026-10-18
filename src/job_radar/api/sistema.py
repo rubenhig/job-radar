@@ -8,12 +8,11 @@ from typing import Annotated, Any
 import yaml
 from fastapi import APIRouter, Depends, HTTPException
 
-from job_radar import criba, salud
+from job_radar import criba, puntuacion, salud
 from job_radar.api.base import bd, datos
 from job_radar.api.esquemas import Acuerdo, Alerta, CasoAcuerdo, EstadoFuente, Fuentes, Resumen
 from job_radar.fuentes import registro as reg
 from job_radar.preferencias import Preferencias
-from job_radar.puntuacion import RUBRICA
 
 router = APIRouter()
 
@@ -30,7 +29,7 @@ def resumen(db: Annotated[Any, Depends(bd)]):
         puestos=uno("SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NULL"),
         descartados=uno("SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NOT NULL"),
         sin_puntuar=uno("""SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NULL
-                           AND id NOT IN (SELECT puesto_id FROM evaluacion WHERE rubrica = ?)""", RUBRICA),
+                           AND id NOT IN (SELECT puesto_id FROM evaluacion WHERE rubrica = ?)""", puntuacion.RUBRICA),
         puestos_nuevos_24h=uno(f"SELECT COUNT(*) FROM ({primera})", _hace(days=1)),
         puestos_nuevos_7d=uno(f"SELECT COUNT(*) FROM ({primera})", _hace(days=7)),
         ofertas=uno("SELECT COUNT(*) FROM oferta"),
@@ -85,7 +84,7 @@ def leer_preferencias(carpeta: Annotated[Path, Depends(datos)]):
 @router.put("/preferencias", response_model=Preferencias, tags=["perfil"])
 def guardar_preferencias(nuevas: Preferencias, carpeta: Annotated[Path, Depends(datos)],
                          db: Annotated[Any, Depends(bd)]):
-    """Guarda las preferencias (ya validadas) y rehace la criba con ellas.
+    """Guarda las preferencias (ya validadas) y rehace con ellas la criba y la parte de la nota en Python.
     La versión anterior queda en `preferencias.anterior.yaml`."""
     ruta = carpeta / "perfil" / "preferencias.yaml"
     if ruta.exists():
@@ -94,6 +93,7 @@ def guardar_preferencias(nuevas: Preferencias, carpeta: Annotated[Path, Depends(
     ruta.write_text(yaml.safe_dump(nuevas.model_dump(mode="json"), allow_unicode=True, sort_keys=False),
                     encoding="utf-8")
     criba.aplicar(db, nuevas)
+    puntuacion.recalcular(db, nuevas)
     return nuevas
 
 
@@ -102,8 +102,8 @@ def acuerdo(db: Annotated[Any, Depends(bd)]):
     """La puntuación frente a las etiquetas de Rubén (ver job_radar.medir)."""
     from job_radar import medir
 
-    cs = medir.casos(db, RUBRICA)
-    salida = Acuerdo(rubrica=RUBRICA, casos=[], coste_usd=round(sum(c.coste_usd or 0 for c in cs), 4))
+    cs = medir.casos(db, puntuacion.RUBRICA)
+    salida = Acuerdo(rubrica=puntuacion.RUBRICA, casos=[], coste_usd=round(sum(c.coste_usd or 0 for c in cs), 4))
     if len(cs) >= 5:
         u = medir.mejor_umbral(cs)
         salida.umbral, salida.acuerdo = u, medir.acierto(cs, u)

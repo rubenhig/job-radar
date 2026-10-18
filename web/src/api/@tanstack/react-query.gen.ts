@@ -186,7 +186,7 @@ export const perfilLeerPreferenciasOptions = (options?: Options<PerfilLeerPrefer
 /**
  * Guardar Preferencias
  *
- * Guarda las preferencias (ya validadas) y rehace la criba con ellas.
+ * Guarda las preferencias (ya validadas) y rehace con ellas la criba y la parte de la nota en Python.
  * La versión anterior queda en `preferencias.anterior.yaml`.
  */
 export const perfilGuardarPreferenciasMutation = (options?: Partial<Options<PerfilGuardarPreferenciasData>>): UseMutationOptions<PerfilGuardarPreferenciasResponse, PerfilGuardarPreferenciasError, Options<PerfilGuardarPreferenciasData>> => {

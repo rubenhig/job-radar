@@ -465,7 +465,7 @@ function Formulario({ data }: { data: Preferencias }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Inglés y avisos</CardTitle>
+          <CardTitle>Inglés, salario y avisos</CardTitle>
         </CardHeader>
         <CardContent className='grid gap-5 md:grid-cols-2'>
           <Campo
@@ -514,6 +514,33 @@ function Formulario({ data }: { data: Preferencias }) {
                   <SelectItem value='excluir'>Descartar</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </Campo>
+          <Campo
+            titulo='Salario (bruto anual, €)'
+            ayuda='Si la oferta da salario: por debajo del actual no llega a top; hasta el objetivo suma poco a poco.'
+          >
+            <div className='flex flex-wrap items-center gap-2'>
+              {(['actual', 'objetivo'] as const).map((k) => (
+                <label key={k} className='flex items-center gap-2 text-sm'>
+                  {k === 'actual' ? 'Actual' : 'Objetivo'}
+                  <Input
+                    type='number'
+                    min={0}
+                    step={1000}
+                    className='w-28'
+                    value={p.salario?.[k] ?? ''}
+                    onChange={(e) =>
+                      set({
+                        salario: {
+                          ...p.salario,
+                          [k]: e.target.value ? Number(e.target.value) : null,
+                        },
+                      })
+                    }
+                  />
+                </label>
+              ))}
             </div>
           </Campo>
           <Campo

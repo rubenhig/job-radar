@@ -447,7 +447,7 @@
      "perfil"
     ],
     "summary": "Guardar Preferencias",
-    "description": "Guarda las preferencias (ya validadas) y rehace la criba con ellas.\nLa versión anterior queda en `preferencias.anterior.yaml`.",
+    "description": "Guarda las preferencias (ya validadas) y rehace con ellas la criba y la parte de la nota en Python.\nLa versión anterior queda en `preferencias.anterior.yaml`.",
     "operationId": "perfil-guardar_preferencias",
     "requestBody": {
      "content": {
@@ -1383,10 +1383,8 @@
       "default": {}
      },
      "salario": {
-      "$ref": "#/components/schemas/Informativo",
-      "default": {
-       "filtra": false
-      }
+      "$ref": "#/components/schemas/SalarioDeseado",
+      "default": {}
      },
      "tipo_empresa": {
       "$ref": "#/components/schemas/Informativo",
@@ -1944,6 +1942,40 @@
     },
     "type": "object",
     "title": "Salario"
+   },
+   "SalarioDeseado": {
+    "properties": {
+     "actual": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actual",
+      "description": "Por debajo de esto, el cambio es una rebaja"
+     },
+     "objetivo": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "exclusiveMinimum": 0.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Objetivo",
+      "description": "Desde aquí, la nota suma lo máximo"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "SalarioDeseado",
+    "description": "Bruto anual en euros. Cuenta en la nota cuando la oferta da salario (job_radar.puntuacion)."
    },
    "Terminos": {
     "properties": {

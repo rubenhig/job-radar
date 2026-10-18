@@ -112,3 +112,49 @@ def test_la_huella_ignora_lo_que_no_ve_el_modelo():
     assert puntuacion.huella_perfil(cv, prefs) == antes
     prefs.roles.principales.append("MLOps Engineer")
     assert puntuacion.huella_perfil(cv, prefs) != antes
+
+
+@pytest.mark.parametrize("salario, estimado, puntos, techo", [
+    ({"salario_min": 25000, "salario_max": 35000, "salario_moneda": "EUR", "salario_periodo": "ano"}, False, 0, 45),
+    ({"salario_max": 35000, "salario_periodo": "ano"}, True, -15, None),        # estimado: resta, sin techo
+    ({"salario_min": 40000, "salario_max": 43500, "salario_periodo": "ano"}, False, 5, None),
+    ({"salario_max": 4500, "salario_moneda": "EUR", "salario_periodo": "mes"}, False, 10, None),  # 54k
+    ({"salario_max": 60, "salario_moneda": "USD", "salario_periodo": "hora"}, False, 10, None),
+])
+def test_ajuste_salario(salario, estimado, puntos, techo):
+    from job_radar.preferencias import SalarioDeseado
+
+    a = puntuacion.ajuste_salario(salario, estimado, SalarioDeseado(actual=30000, objetivo=40000))
+    assert (a.puntos, a.techo) == (puntos, techo)
+
+
+def test_sin_salario_o_sin_deseo_no_cambia_nada():
+    from job_radar.preferencias import SalarioDeseado
+
+    assert puntuacion.ajuste_salario(None, False, SalarioDeseado(actual=30000)) is None
+    assert puntuacion.ajuste_salario({"salario_max": 30000}, False, SalarioDeseado()) is None
+    assert puntuacion.ajuste_salario({"salario_max": 12}, False, SalarioDeseado(actual=30000)) is None  # no creíble
+
+
+def test_nota_final_con_salario():
+    parciales = {"rol_ia": 1.0, "requisitos": 0.6, "funcion": 1.0, "seniority": 1.0, "fuente": 0.6}  # 84
+    rebaja = puntuacion.AjusteSalario(anual_eur=35000, estimado=False, puntos=0, techo=45, marca="x")
+    objetivo = puntuacion.AjusteSalario(anual_eur=55000, estimado=False, puntos=10, marca="x")
+    assert puntuacion.nota_final(parciales, False, None, "ia_principal") == 84
+    assert puntuacion.nota_final(parciales, False, rebaja, "ia_principal") == 45
+    assert puntuacion.nota_final(parciales, False, objetivo, "ia_principal") == 94
+    assert puntuacion.nota_final(parciales, True, objetivo, "ia_principal") == 0
+    assert puntuacion.nota_final(parciales, False, objetivo, "software_sin_ia") == 45  # sin IA no es top
+
+
+@pytest.mark.parametrize("texto, esperado", [
+    ("💸 25.000€ - 35.000€", True), ("Salary: 35,000 EUR", True), ("hasta 35k", True), ("35 000 €", True),
+    ("135.000 €", False), ("3.500 € al mes", False), ("sin salario", False),
+])
+def test_cifra_en_texto(texto, esperado):
+    assert puntuacion._cifra_en_texto(35000, texto) is esperado
+
+
+def test_mensual_imposible_es_anual():
+    assert puntuacion.salario_anual({"salario_max": 24600, "salario_periodo": "mes"}) == 24600
+    assert puntuacion.salario_anual({"salario_max": 3000, "salario_periodo": "mes"}) == 36000

@@ -18,6 +18,7 @@ Rúbrica v1, sobre las de career-ops y ai-job-search (ver docs/repositorios.md):
 
 import hashlib
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
@@ -181,6 +182,16 @@ PESO_IMPORTANCIA = {"critico": 2.0, "alto": 1.0}
 COBERTURA = {"fuerte": 1.0, "parcial": 0.5, "falta": 0.0}
 
 
+class AjusteSalario(BaseModel):
+    """Lo que el salario de la oferta suma o limita, frente al actual y el objetivo de Rubén."""
+
+    anual_eur: int                    # lo máximo que ofrece, en bruto anual y euros
+    estimado: bool                    # el salario lo infirió un modelo de la fuente, no lo dice la oferta
+    puntos: float                     # se suman a la nota
+    techo: int | None = None          # la nota no pasa de aquí (rebaja de sueldo)
+    marca: str
+
+
 class Resultado(BaseModel):
     """La evaluación ya calculada: veredictos, citas comprobadas, nota y avisos."""
 
@@ -191,6 +202,88 @@ class Resultado(BaseModel):
     motivo_veto: str | None
     marcas: list[str]
     parciales: dict[str, float]
+    salario: AjusteSalario | None = None
+
+
+# --- el salario, en Python: no lo ve el modelo, así que se recalcula gratis ----------
+
+CAMBIO_EUR = {"EUR": 1.0, "USD": 0.92, "GBP": 1.17}  # aproximado (oct-2026): basta para comparar con el salario deseado
+AL_ANO = {"ano": 1, "mes": 12, "semana": 46, "dia": 220, "hora": 1760}
+BONUS_SALARIO = 10      # puntos al llegar al objetivo
+TECHO_REBAJA = 45       # una rebaja no llega al corte de top (50)
+TECHO_SIN_IA = 45       # software sin IA: se ve, pero no es top (Rubén, 18-oct)
+CASTIGO_ESTIMADO = 15   # rebaja según un salario estimado: resta, pero no pone techo
+
+
+def salario_anual(s: dict | None) -> int | None:
+    """El máximo de la horquilla en bruto anual y euros; None si falta o no es creíble."""
+    if not s:
+        return None
+    tope = s.get("salario_max") or s.get("salario_min")
+    cambio = CAMBIO_EUR.get((s.get("salario_moneda") or "EUR").upper())
+    periodo = s.get("salario_periodo") or "ano"
+    if periodo == "mes" and tope and tope >= 10_000:  # JobSpy lee «24.600 €» anuales como mensuales
+        periodo = "ano"
+    al_ano = AL_ANO.get(periodo)
+    if not (tope and cambio and al_ano):
+        return None
+    anual = round(tope * cambio * al_ano)
+    return anual if 8_000 <= anual <= 1_000_000 else None
+
+
+def ajuste_salario(s: dict | None, estimado: bool, deseado) -> AjusteSalario | None:
+    anual = salario_anual(s)
+    if anual is None or not deseado.actual:
+        return None
+    objetivo = deseado.objetivo or deseado.actual
+    k = f"{anual / 1000:.0f}k" + (" estimado" if estimado else "")
+    if anual < deseado.actual:
+        if estimado:
+            return AjusteSalario(anual_eur=anual, estimado=True, puntos=-CASTIGO_ESTIMADO,
+                                 marca=f"salario: {k}, por debajo de tu actual")
+        return AjusteSalario(anual_eur=anual, estimado=False, puntos=0, techo=TECHO_REBAJA,
+                             marca=f"salario: {k}, por debajo de tu actual (rebaja)")
+    tramo = 1.0 if anual >= objetivo else (anual - deseado.actual) / max(1, objetivo - deseado.actual)
+    return AjusteSalario(anual_eur=anual, estimado=estimado, puntos=round(BONUS_SALARIO * tramo, 1),
+                         marca=f"salario: {k}" + (", llega a tu objetivo" if anual >= objetivo else ""))
+
+
+def nota_final(parciales: dict[str, float], vetado: bool, salario: AjusteSalario | None, rol_ia: str) -> int:
+    """La suma ponderada, más el salario; los techos (rebaja, sin IA) se aplican al final."""
+    if vetado:
+        return 0
+    nota = 100 * sum(PESOS[k] * parciales[k] for k in PESOS) + (salario.puntos if salario else 0)
+    techos = [100]
+    if salario and salario.techo is not None:
+        techos.append(salario.techo)
+    if rol_ia in ("software_sin_ia", "ninguno"):
+        techos.append(TECHO_SIN_IA)
+    return round(max(0.0, min(nota, *techos)))
+
+
+def _cifra_en_texto(valor: float, texto: str) -> bool:
+    """¿Dice el anuncio esta cifra? 35000 → «35.000», «35,000», «35 000», «35000» o «35k»."""
+    n = int(valor)
+    formas = {str(n), f"{n:,}", f"{n:,}".replace(",", "."), f"{n:,}".replace(",", " ")}
+    if n % 1000 == 0:
+        formas |= {f"{n // 1000}k", f"{n // 1000} k"}
+    t = texto.lower()
+    return any(re.search(rf"(?<![\d.,]){re.escape(f)}(?![\d])", t) for f in formas)
+
+
+def salario_de(db, puesto_id: int) -> tuple[dict | None, bool]:
+    """El salario fusionado del puesto y si es estimado. Una fuente puede marcarlo como inferido por su
+    modelo (`derivados`) y aun así venir del texto: si la cifra está en el anuncio, cuenta como dicha."""
+    fusion = json.loads(db["puesto"].get(puesto_id)["fusion"] or "{}").get("salario")
+    if not fusion:
+        return None, False
+    oferta = db.execute("SELECT derivados, descripcion FROM oferta WHERE id = ?", [fusion.get("oferta_id")]).fetchone()
+    derivados = json.loads(oferta[0]) if oferta and oferta[0] else []
+    estimado = any(c.startswith("salario") for c in derivados)
+    tope = fusion["valor"].get("salario_max") or fusion["valor"].get("salario_min")
+    if estimado and tope and oferta and oferta[1] and _cifra_en_texto(tope, oferta[1]):
+        estimado = False
+    return fusion["valor"], estimado
 
 
 def cobertura(requisitos: list[Requisito]) -> float:
@@ -201,7 +294,7 @@ def cobertura(requisitos: list[Requisito]) -> float:
     return round(sum(p * c for p, c in pesados) / total, 3) if total else 0.5
 
 
-def calcular(v: Veredictos, texto_oferta: str) -> Resultado:
+def calcular(v: Veredictos, texto_oferta: str, salario: AjusteSalario | None = None) -> Resultado:
     falsas = []
     for nombre in ("modalidad", "elegibilidad", "idioma", "funcion", "rol_ia", "seniority", "fuente"):
         criterio = getattr(v, nombre)
@@ -229,9 +322,11 @@ def calcular(v: Veredictos, texto_oferta: str) -> Resultado:
         "seniority": VALORES["seniority"][v.seniority.valor],
         "fuente": VALORES["fuente"][v.fuente.valor],
     }
-    nota = 0 if veto else round(100 * sum(PESOS[k] * x for k, x in parciales.items()))
-    return Resultado(veredictos=v.model_copy(update={"requisitos": requisitos}), citas_falsas=falsas, nota=nota,
-                     vetado=bool(veto), motivo_veto=veto, marcas=marcas, parciales=parciales)
+    if salario and not veto:
+        marcas.append(salario.marca)
+    return Resultado(veredictos=v.model_copy(update={"requisitos": requisitos}), citas_falsas=falsas,
+                     nota=nota_final(parciales, bool(veto), salario, v.rol_ia.valor), vetado=bool(veto), motivo_veto=veto,
+                     marcas=marcas, parciales=parciales, salario=salario)
 
 
 # --- evaluar y guardar ------------------------------------------------------------
@@ -255,7 +350,8 @@ def evaluar(db, puesto_id: int, motor: MotorLLM, perfil_cv: dict, prefs: Prefere
     """Evalúa un puesto, guarda la evaluación y devuelve su id."""
     prompt, oferta = preparar(db, puesto_id, perfil_cv, prefs)
     veredictos, uso = motor.extraer(prompt, Veredictos, sistema=SISTEMA)
-    return guardar(db, puesto_id, calcular(veredictos, oferta), uso, huella_perfil(perfil_cv, prefs))
+    salario = ajuste_salario(*salario_de(db, puesto_id), prefs.salario)
+    return guardar(db, puesto_id, calcular(veredictos, oferta, salario), uso, huella_perfil(perfil_cv, prefs))
 
 
 def evaluar_varios(db, ids: list[int], motor: MotorLLM, perfil_cv: dict, prefs: Preferencias,
@@ -276,7 +372,8 @@ def evaluar_varios(db, ids: list[int], motor: MotorLLM, perfil_cv: dict, prefs: 
                 if al_terminar:
                     al_terminar(pid, None, e)
                 continue
-            ev = guardar(db, pid, calcular(veredictos, preparados[pid][1]), uso, huella)
+            salario = ajuste_salario(*salario_de(db, pid), prefs.salario)
+            ev = guardar(db, pid, calcular(veredictos, preparados[pid][1], salario), uso, huella)
             hechos.append(ev)
             if al_terminar:
                 al_terminar(pid, ev, None)
@@ -291,3 +388,24 @@ def guardar(db, puesto_id: int, r: Resultado, uso: Uso, perfil: str) -> int:
         "coste_usd": uso.coste_usd, "tokens_entrada": uso.tokens_entrada, "tokens_salida": uso.tokens_salida,
         "duracion_ms": uso.duracion_ms, "creada_en": datetime.now(UTC).isoformat(timespec="seconds"),
     }).last_pk
+
+
+def recalcular(db, prefs: Preferencias) -> int:
+    """Rehace la parte en Python de la última evaluación de cada puesto (hoy, el salario) sin llamar al
+    modelo: cambiar el salario deseado, o que una oferta lo publique, no cuesta nada. Devuelve cuántas cambian."""
+    cambios = 0
+    for ev in db.query("""SELECT * FROM evaluacion WHERE id IN (SELECT MAX(id) FROM evaluacion
+                          WHERE rubrica = ? GROUP BY puesto_id)""", [RUBRICA]):
+        r = Resultado.model_validate_json(ev["resultado"])
+        salario = ajuste_salario(*salario_de(db, ev["puesto_id"]), prefs.salario)
+        marcas = [m for m in r.marcas if not m.startswith("salario:")] + ([salario.marca] if salario and not r.vetado
+                                                                          else [])
+        nueva = r.model_copy(update={"salario": salario, "marcas": marcas,
+                                     "nota": nota_final(r.parciales, r.vetado, salario,
+                                                          r.veredictos.rol_ia.valor)})
+        if nueva != r:
+            db["evaluacion"].update(ev["id"], {"resultado": nueva.model_dump_json(), "nota": nueva.nota,
+                                               "marcas": json.dumps(marcas, ensure_ascii=False) if marcas else None})
+            cambios += 1
+    db.conn.commit()
+    return cambios
