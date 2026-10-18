@@ -123,8 +123,23 @@ export function FichaPuesto() {
           <h1 className='text-2xl font-bold tracking-tight break-words'>
             {p.titulo}
           </h1>
-          <div className='text-muted-foreground'>
-            {p.empresa ?? 'Empresa sin indicar'}
+          <div className='flex flex-wrap items-center gap-2 text-muted-foreground'>
+            {p.empresa_id ? (
+              <Link
+                to='/empresas/$empresaId'
+                params={{ empresaId: String(p.empresa_id) }}
+                className='hover:text-foreground hover:underline'
+              >
+                {p.empresa ?? 'Empresa sin indicar'}
+              </Link>
+            ) : (
+              (p.empresa ?? 'Empresa sin indicar')
+            )}
+            {p.empresa_estado === 'seguida' && (
+              <span className='rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400'>
+                Empresa que sigues
+              </span>
+            )}
           </div>
           <div className='flex flex-wrap gap-2'>
             {datos.map((d) => (

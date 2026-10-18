@@ -15,7 +15,7 @@ from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 
 from job_radar import almacen
-from job_radar.api import puestos, sistema
+from job_radar.api import empresas, puestos, sistema
 
 WEB = Path(os.environ.get("JOB_RADAR_WEB", almacen.RAIZ / "web" / "dist"))
 
@@ -34,6 +34,7 @@ def crear(ruta_db: Path = almacen.RUTA_DB, datos: Path = almacen.DATOS, web: Pat
     api = APIRouter(prefix="/api")
     api.include_router(puestos.router)
     api.include_router(puestos.lista)
+    api.include_router(empresas.router)
     api.include_router(sistema.router)
     app.include_router(api)
 

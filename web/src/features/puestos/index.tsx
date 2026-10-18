@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, getRouteApi } from '@tanstack/react-router'
 import type { PuestoResumen } from '@/api'
-import { ChevronLeft, ChevronRight, Filter, Trash2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Eye, Filter, Trash2, X } from 'lucide-react'
 import {
   puestosListarOptions,
   sistemaResumenOptions,
@@ -422,7 +422,14 @@ function Fila({
           {p.titulo}
         </Link>
         <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-          {p.empresa ?? '—'} <InsigniaEtiqueta etiqueta={p.etiqueta} />
+          {p.empresa ?? '—'}
+          {p.empresa_estado === 'seguida' && (
+            <Eye
+              className='size-3.5 text-emerald-600'
+              aria-label='Empresa que sigues'
+            />
+          )}
+          <InsigniaEtiqueta etiqueta={p.etiqueta} />
           <InsigniaGuardado guardado={p.guardado} />
           {esNuevo(p.vista_primera, desde) && <Nuevo />}
         </div>

@@ -10,6 +10,8 @@ Reglas deterministas y explicables, en este orden:
   3. Título no técnico: no contiene ninguna palabra técnica (`roles.terminos`: principales,
      amplios y técnicos). Las búsquedas amplias en Málaga traen «Limpiador/a» o «Electricista».
 
+  0. Empresa descartada por Rubén (pantalla Empresas).
+
 Lo descartado no se borra: queda en `puesto.descarte` con su motivo y se puede consultar.
 Un puesto que Rubén ha etiquetado como top nunca se descarta.
 """
@@ -36,6 +38,8 @@ class Criba:
         self.tecnico = _patron(t.principales + t.amplios + t.tecnicos) if t.tecnicos else None
 
     def motivo(self, puesto: dict) -> str | None:
+        if puesto.get("empresa_estado") == "descartada":
+            return f"empresa descartada ({puesto.get('empresa_nombre') or '?'})"
         if puesto.get("modalidad") != "remoto" and puesto.get("pais") and puesto["pais"] not in self.paises:
             return f"fuera de tus países ({puesto['pais']})"
         titulo = _plano(puesto["titulo"])
@@ -50,8 +54,10 @@ def aplicar(db, prefs: Preferencias) -> Counter:
     """Recalcula el descarte de todos los puestos abiertos. Devuelve cuántos quedan por motivo."""
     criba = Criba(prefs)
     cuenta, cambios = Counter(), []
-    for p in db.query("""SELECT p.id, p.titulo, p.pais, p.modalidad, p.descarte, e.valor AS etiqueta FROM puesto p
-                         LEFT JOIN etiqueta e ON e.puesto_id = p.id WHERE p.estado = 'abierto'"""):
+    for p in db.query("""SELECT p.id, p.titulo, p.pais, p.modalidad, p.descarte, e.valor AS etiqueta,
+                                em.estado AS empresa_estado, em.nombre AS empresa_nombre
+                         FROM puesto p LEFT JOIN etiqueta e ON e.puesto_id = p.id
+                         LEFT JOIN empresa em ON em.id = p.empresa_id WHERE p.estado = 'abierto'"""):
         motivo = None if p["etiqueta"] == "top" else criba.motivo(p)
         cuenta[motivo.split(" (")[0].split(":")[0] if motivo else "pasan"] += 1
         if motivo != p["descarte"]:

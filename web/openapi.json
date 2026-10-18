@@ -241,6 +241,22 @@
       }
      },
      {
+      "name": "empresa_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Empresa Id"
+      }
+     },
+     {
       "name": "orden",
       "in": "query",
       "required": false,
@@ -537,6 +553,246 @@
          },
          "type": "object",
          "title": "Response Lista-Mis Etiquetas"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/empresas": {
+   "get": {
+    "tags": [
+     "empresas"
+    ],
+    "summary": "Listar",
+    "description": "Las empresas con algún puesto. Por defecto, las que tienen alguno abierto, de mejor a peor nota.",
+    "operationId": "empresas-listar",
+    "parameters": [
+     {
+      "name": "q",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Q"
+      }
+     },
+     {
+      "name": "estado",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "array",
+         "items": {
+          "anyOf": [
+           {
+            "enum": [
+             "seguida",
+             "pendiente",
+             "descartada"
+            ],
+            "type": "string"
+           },
+           {
+            "const": "sin_revisar",
+            "type": "string"
+           }
+          ]
+         }
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Estado"
+      }
+     },
+     {
+      "name": "consultoras",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Consultoras"
+      }
+     },
+     {
+      "name": "solo_abiertas",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": true,
+       "title": "Solo Abiertas"
+      }
+     },
+     {
+      "name": "orden",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "nota",
+        "puestos",
+        "recientes",
+        "nombre"
+       ],
+       "type": "string",
+       "default": "nota",
+       "title": "Orden"
+      }
+     },
+     {
+      "name": "limite",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 200,
+       "exclusiveMinimum": 0,
+       "default": 50,
+       "title": "Limite"
+      }
+     },
+     {
+      "name": "desde",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Desde"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PaginaEmpresas"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/empresas/{empresa_id}": {
+   "get": {
+    "tags": [
+     "empresas"
+    ],
+    "summary": "Ficha",
+    "operationId": "empresas-ficha",
+    "parameters": [
+     {
+      "name": "empresa_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Empresa Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EmpresaResumen"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "put": {
+    "tags": [
+     "empresas"
+    ],
+    "summary": "Decidir",
+    "description": "Seguir, dejar pendiente o descartar (y notas). Descartar una empresa descarta sus puestos en la criba.",
+    "operationId": "empresas-decidir",
+    "parameters": [
+     {
+      "name": "empresa_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Empresa Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EmpresaEntrada"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EmpresaResumen"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
         }
        }
       }
@@ -1009,6 +1265,155 @@
      "motivo"
     ],
     "title": "Criterio"
+   },
+   "EmpresaEntrada": {
+    "properties": {
+     "estado": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "seguida",
+         "pendiente",
+         "descartada"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Estado"
+     },
+     "notas": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 5000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notas"
+     }
+    },
+    "type": "object",
+    "title": "EmpresaEntrada",
+    "description": "Lo que se cambia; `estado: null` lo deja «sin revisar»."
+   },
+   "EmpresaResumen": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "nombre": {
+      "type": "string",
+      "title": "Nombre"
+     },
+     "alias": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Alias",
+      "default": []
+     },
+     "consultora": {
+      "type": "boolean",
+      "title": "Consultora"
+     },
+     "estado": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "seguida",
+         "pendiente",
+         "descartada"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Estado"
+     },
+     "notas": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notas"
+     },
+     "puestos_abiertos": {
+      "type": "integer",
+      "title": "Puestos Abiertos"
+     },
+     "puestos_total": {
+      "type": "integer",
+      "title": "Puestos Total"
+     },
+     "puestos_buenos": {
+      "type": "integer",
+      "title": "Puestos Buenos"
+     },
+     "puestos_ia": {
+      "type": "integer",
+      "title": "Puestos Ia"
+     },
+     "puestos_remotos": {
+      "type": "integer",
+      "title": "Puestos Remotos"
+     },
+     "mejor_nota": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Mejor Nota"
+     },
+     "ciudades": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Ciudades",
+      "default": []
+     },
+     "vista_ultima": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Vista Ultima"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "nombre",
+     "consultora",
+     "puestos_abiertos",
+     "puestos_total",
+     "puestos_buenos",
+     "puestos_ia",
+     "puestos_remotos"
+    ],
+    "title": "EmpresaResumen",
+    "description": "Una empresa y su encaje, calculado con sus puestos (no escrito a mano)."
    },
    "EstadoFuente": {
     "properties": {
@@ -1717,6 +2122,27 @@
     ],
     "title": "Oferta"
    },
+   "PaginaEmpresas": {
+    "properties": {
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     },
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/EmpresaResumen"
+      },
+      "type": "array",
+      "title": "Items"
+     }
+    },
+    "type": "object",
+    "required": [
+     "total",
+     "items"
+    ],
+    "title": "PaginaEmpresas"
+   },
    "PaginaPuestos": {
     "properties": {
      "total": {
@@ -1939,6 +2365,28 @@
       "title": "Estado",
       "default": "abierto"
      },
+     "empresa_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Empresa Id"
+     },
+     "empresa_estado": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Empresa Estado"
+     },
      "fusion": {
       "additionalProperties": {
        "$ref": "#/components/schemas/CampoFusionado"
@@ -2116,6 +2564,28 @@
       "type": "string",
       "title": "Estado",
       "default": "abierto"
+     },
+     "empresa_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Empresa Id"
+     },
+     "empresa_estado": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Empresa Estado"
      }
     },
     "type": "object",

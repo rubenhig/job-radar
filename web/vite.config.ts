@@ -36,6 +36,10 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Con autoUpdate, el service worker nuevo tiene que tomar el control él solo: sin esto se queda
+        // «esperando» y la app sigue con la versión vieja (comprobado el 18-oct).
+        skipWaiting: true,
+        clientsClaim: true,
         navigateFallbackDenylist: [/^\/api\//],
         // urlPattern recibe la URL completa: se compara la ruta, no el texto («http://…/api/» no empieza por «/api/»).
         runtimeCaching: [

@@ -90,6 +90,8 @@ class PuestoResumen(BaseModel):
     descarte: str | None = None  # por qué la criba lo deja fuera (job_radar.criba); None = pasa
     guardado: Guardado | None = None
     estado: str = "abierto"      # abierto o cerrado (la oferta caducó); en Mi lista se ven los dos
+    empresa_id: int | None = None
+    empresa_estado: str | None = None  # seguida, pendiente o descartada (pantalla Empresas)
 
 
 class PaginaPuestos(BaseModel):
@@ -197,6 +199,40 @@ class Visita(BaseModel):
 
     desde: str | None = None  # None en la primera visita
     actual: str
+
+
+EstadoEmpresa = Literal["seguida", "pendiente", "descartada"]
+
+
+class EmpresaResumen(BaseModel):
+    """Una empresa y su encaje, calculado con sus puestos (no escrito a mano)."""
+
+    id: int
+    nombre: str
+    alias: list[str] = []
+    consultora: bool                 # la fuente lo dice, o la puntuación ve «intermediario» en la mayoría
+    estado: EstadoEmpresa | None = None
+    notas: str | None = None
+    puestos_abiertos: int
+    puestos_total: int
+    puestos_buenos: int              # con nota de top (≥ 50)
+    puestos_ia: int                  # de IA, software con IA o ML
+    puestos_remotos: int
+    mejor_nota: int | None = None
+    ciudades: list[str] = []
+    vista_ultima: str | None = None
+
+
+class PaginaEmpresas(BaseModel):
+    total: int
+    items: list[EmpresaResumen]
+
+
+class EmpresaEntrada(BaseModel):
+    """Lo que se cambia; `estado: null` lo deja «sin revisar»."""
+
+    estado: EstadoEmpresa | None = None
+    notas: str | None = Field(None, max_length=5000)
 
 
 class EstadoFuente(BaseModel):

@@ -8,6 +8,15 @@ import type {
 } from './client'
 import { client } from './client.gen'
 import type {
+  EmpresasDecidirData,
+  EmpresasDecidirErrors,
+  EmpresasDecidirResponses,
+  EmpresasFichaData,
+  EmpresasFichaErrors,
+  EmpresasFichaResponses,
+  EmpresasListarData,
+  EmpresasListarErrors,
+  EmpresasListarResponses,
   ListaMisEtiquetasData,
   ListaMisEtiquetasResponses,
   PerfilGuardarPreferenciasData,
@@ -180,6 +189,57 @@ export const listaMisEtiquetas = <ThrowOnError extends boolean = false>(
     unknown,
     ThrowOnError
   >({ url: '/api/lista/etiquetas', ...options })
+
+/**
+ * Listar
+ *
+ * Las empresas con algún puesto. Por defecto, las que tienen alguno abierto, de mejor a peor nota.
+ */
+export const empresasListar = <ThrowOnError extends boolean = false>(
+  options?: Options<EmpresasListarData, ThrowOnError>
+): RequestResult<EmpresasListarResponses, EmpresasListarErrors, ThrowOnError> =>
+  (options?.client ?? client).get<
+    EmpresasListarResponses,
+    EmpresasListarErrors,
+    ThrowOnError
+  >({ url: '/api/empresas', ...options })
+
+/**
+ * Ficha
+ */
+export const empresasFicha = <ThrowOnError extends boolean = false>(
+  options: Options<EmpresasFichaData, ThrowOnError>
+): RequestResult<EmpresasFichaResponses, EmpresasFichaErrors, ThrowOnError> =>
+  (options.client ?? client).get<
+    EmpresasFichaResponses,
+    EmpresasFichaErrors,
+    ThrowOnError
+  >({ url: '/api/empresas/{empresa_id}', ...options })
+
+/**
+ * Decidir
+ *
+ * Seguir, dejar pendiente o descartar (y notas). Descartar una empresa descarta sus puestos en la criba.
+ */
+export const empresasDecidir = <ThrowOnError extends boolean = false>(
+  options: Options<EmpresasDecidirData, ThrowOnError>
+): RequestResult<
+  EmpresasDecidirResponses,
+  EmpresasDecidirErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).put<
+    EmpresasDecidirResponses,
+    EmpresasDecidirErrors,
+    ThrowOnError
+  >({
+    url: '/api/empresas/{empresa_id}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
 
 /**
  * Vivo

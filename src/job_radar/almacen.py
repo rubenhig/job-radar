@@ -208,6 +208,14 @@ MIGRACIONES: list[str] = [
         actualizado_en  TEXT NOT NULL
     );
     """,
+    # 11 · Empresas: lo que decide Rubén de cada una (job_radar.empresas) y los enlaces que por fin se usan
+    """
+    ALTER TABLE empresa ADD COLUMN estado TEXT CHECK (estado IN ('seguida', 'pendiente', 'descartada'));
+    ALTER TABLE empresa ADD COLUMN notas TEXT;
+    ALTER TABLE empresa ADD COLUMN actualizada_en TEXT;
+    CREATE INDEX oferta_empresa ON oferta (empresa_id);
+    CREATE INDEX puesto_empresa ON puesto (empresa_id);
+    """,
 ]
 
 

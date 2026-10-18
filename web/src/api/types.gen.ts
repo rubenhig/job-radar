@@ -171,6 +171,86 @@ export type Criterio = {
 }
 
 /**
+ * EmpresaEntrada
+ *
+ * Lo que se cambia; `estado: null` lo deja «sin revisar».
+ */
+export type EmpresaEntrada = {
+  /**
+   * Estado
+   */
+  estado?: 'seguida' | 'pendiente' | 'descartada' | null
+  /**
+   * Notas
+   */
+  notas?: string | null
+}
+
+/**
+ * EmpresaResumen
+ *
+ * Una empresa y su encaje, calculado con sus puestos (no escrito a mano).
+ */
+export type EmpresaResumen = {
+  /**
+   * Id
+   */
+  id: number
+  /**
+   * Nombre
+   */
+  nombre: string
+  /**
+   * Alias
+   */
+  alias?: Array<string>
+  /**
+   * Consultora
+   */
+  consultora: boolean
+  /**
+   * Estado
+   */
+  estado?: 'seguida' | 'pendiente' | 'descartada' | null
+  /**
+   * Notas
+   */
+  notas?: string | null
+  /**
+   * Puestos Abiertos
+   */
+  puestos_abiertos: number
+  /**
+   * Puestos Total
+   */
+  puestos_total: number
+  /**
+   * Puestos Buenos
+   */
+  puestos_buenos: number
+  /**
+   * Puestos Ia
+   */
+  puestos_ia: number
+  /**
+   * Puestos Remotos
+   */
+  puestos_remotos: number
+  /**
+   * Mejor Nota
+   */
+  mejor_nota?: number | null
+  /**
+   * Ciudades
+   */
+  ciudades?: Array<string>
+  /**
+   * Vista Ultima
+   */
+  vista_ultima?: string | null
+}
+
+/**
  * EstadoFuente
  */
 export type EstadoFuente = {
@@ -546,6 +626,20 @@ export type Oferta = {
 }
 
 /**
+ * PaginaEmpresas
+ */
+export type PaginaEmpresas = {
+  /**
+   * Total
+   */
+  total: number
+  /**
+   * Items
+   */
+  items: Array<EmpresaResumen>
+}
+
+/**
  * PaginaPuestos
  */
 export type PaginaPuestos = {
@@ -645,6 +739,14 @@ export type PuestoDetalle = {
    */
   estado?: string
   /**
+   * Empresa Id
+   */
+  empresa_id?: number | null
+  /**
+   * Empresa Estado
+   */
+  empresa_estado?: string | null
+  /**
    * Fusion
    */
   fusion: {
@@ -717,6 +819,14 @@ export type PuestoResumen = {
    * Estado
    */
   estado?: string
+  /**
+   * Empresa Id
+   */
+  empresa_id?: number | null
+  /**
+   * Empresa Estado
+   */
+  empresa_estado?: string | null
 }
 
 /**
@@ -1098,6 +1208,10 @@ export type PuestosListarData = {
      */
     mi_etiqueta?: string | null
     /**
+     * Empresa Id
+     */
+    empresa_id?: number | null
+    /**
      * Orden
      */
     orden?: 'recientes' | 'publicadas' | 'vias' | 'nota' | 'prioridad'
@@ -1311,6 +1425,127 @@ export type ListaMisEtiquetasResponses = {
 
 export type ListaMisEtiquetasResponse =
   ListaMisEtiquetasResponses[keyof ListaMisEtiquetasResponses]
+
+export type EmpresasListarData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Q
+     */
+    q?: string | null
+    /**
+     * Estado
+     */
+    estado?: Array<
+      'seguida' | 'pendiente' | 'descartada' | 'sin_revisar'
+    > | null
+    /**
+     * Consultoras
+     */
+    consultoras?: boolean | null
+    /**
+     * Solo Abiertas
+     */
+    solo_abiertas?: boolean
+    /**
+     * Orden
+     */
+    orden?: 'nota' | 'puestos' | 'recientes' | 'nombre'
+    /**
+     * Limite
+     */
+    limite?: number
+    /**
+     * Desde
+     */
+    desde?: number
+  }
+  url: '/api/empresas'
+}
+
+export type EmpresasListarErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type EmpresasListarError =
+  EmpresasListarErrors[keyof EmpresasListarErrors]
+
+export type EmpresasListarResponses = {
+  /**
+   * Successful Response
+   */
+  200: PaginaEmpresas
+}
+
+export type EmpresasListarResponse =
+  EmpresasListarResponses[keyof EmpresasListarResponses]
+
+export type EmpresasFichaData = {
+  body?: never
+  path: {
+    /**
+     * Empresa Id
+     */
+    empresa_id: number
+  }
+  query?: never
+  url: '/api/empresas/{empresa_id}'
+}
+
+export type EmpresasFichaErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type EmpresasFichaError = EmpresasFichaErrors[keyof EmpresasFichaErrors]
+
+export type EmpresasFichaResponses = {
+  /**
+   * Successful Response
+   */
+  200: EmpresaResumen
+}
+
+export type EmpresasFichaResponse =
+  EmpresasFichaResponses[keyof EmpresasFichaResponses]
+
+export type EmpresasDecidirData = {
+  body: EmpresaEntrada
+  path: {
+    /**
+     * Empresa Id
+     */
+    empresa_id: number
+  }
+  query?: never
+  url: '/api/empresas/{empresa_id}'
+}
+
+export type EmpresasDecidirErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type EmpresasDecidirError =
+  EmpresasDecidirErrors[keyof EmpresasDecidirErrors]
+
+export type EmpresasDecidirResponses = {
+  /**
+   * Successful Response
+   */
+  200: EmpresaResumen
+}
+
+export type EmpresasDecidirResponse =
+  EmpresasDecidirResponses[keyof EmpresasDecidirResponses]
 
 export type SistemaVivoData = {
   body?: never

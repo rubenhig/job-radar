@@ -29,7 +29,7 @@ from pathlib import Path
 
 import httpx
 
-from job_radar import almacen, criba, ingesta, puestos, salud
+from job_radar import almacen, criba, empresas, ingesta, puestos, salud
 from job_radar.fuentes import conector
 from job_radar.fuentes import registro as reg
 from job_radar.fuentes.base import Busqueda, cargar_env
@@ -126,6 +126,7 @@ def _ingesta(args) -> int:
                  e["recibidos"], e["nuevos"], e["errores_norm"], f" · {e['error'][:120]}" if e["error"] else "")
     log.info("puestos: %s", puestos.actualizar(db) or "sin cambios")
     log.info("cierre: %s", puestos.cerrar(db) or "nada que cerrar")
+    log.info("empresas: %s", empresas.actualizar(db) or "sin cambios")
     log.info("criba: %s", dict(criba.aplicar(db, prefs)))
 
     codigo = 0
@@ -228,6 +229,7 @@ def cmd_renormalizar(args) -> int:
         print(f"{fuente_id:10} {dict(ingesta.renormalizar(db, conector(f.conector)))}")
     print("puestos:", puestos.actualizar(db) or "sin cambios")
     print("cierre:", puestos.cerrar(db) or "nada que cerrar")
+    print("empresas:", empresas.actualizar(db) or "sin cambios")
     print("criba:", dict(criba.aplicar(db, cargar_preferencias(RUTA_PREFERENCIAS))))
     return 0
 

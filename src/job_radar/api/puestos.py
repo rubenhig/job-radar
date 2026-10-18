@@ -38,6 +38,7 @@ def _resumen(fila: dict) -> dict:
                 if fila["g_estado"] else None)
     return dict(
         valoracion=valoracion, guardado=guardado, estado=fila["estado"],
+        empresa_id=fila["empresa_id"], empresa_estado=fila["empresa_estado"],
         id=fila["id"], titulo=fila["titulo"], empresa=(fusion.get("empresa") or {}).get("valor"),
         ciudad=fila["ciudad"], pais=fila["pais"], modalidad=fila["modalidad"],
         salario=_salario((fusion.get("salario") or {}).get("valor")),
@@ -49,6 +50,7 @@ def _resumen(fila: dict) -> dict:
 
 CONSULTA = """
     SELECT p.id, p.titulo, p.ciudad, p.pais, p.modalidad, p.fusion, p.estado, p.descarte,
+           p.empresa_id, em.estado AS empresa_estado,
            MIN(o.vista_primera) AS vista_primera, MAX(o.vista_ultima) AS vista_ultima, COUNT(o.id) AS ofertas,
            GROUP_CONCAT(o.fuente_id || char(31) || COALESCE(o.empresa, ''), char(30)) AS vias,
            e.valor AS etiqueta, e.motivo, e.actualizada_en AS etiquetada_en,
@@ -58,7 +60,7 @@ CONSULTA = """
            g.estado AS g_estado, g.prioridad AS g_prioridad, g.notas AS g_notas, g.etiquetas AS g_etiquetas,
            g.historial AS g_historial, g.creado_en AS g_creado_en, g.actualizado_en AS g_actualizado_en
     FROM puesto p JOIN oferta o ON o.puesto_id = p.id LEFT JOIN etiqueta e ON e.puesto_id = p.id
-    LEFT JOIN guardado g ON g.puesto_id = p.id
+    LEFT JOIN guardado g ON g.puesto_id = p.id LEFT JOIN empresa em ON em.id = p.empresa_id
     LEFT JOIN evaluacion ev ON ev.id = (SELECT MAX(x.id) FROM evaluacion x
                                         WHERE x.puesto_id = p.id AND x.rubrica = '""" + RUBRICA + """')
 """
@@ -85,10 +87,14 @@ def listar(db: Annotated[object, Depends(bd)],
            guardado: bool | None = None,
            estado_lista: Annotated[list[EstadoLista] | None, Query()] = None,
            mi_etiqueta: str | None = None,
+           empresa_id: int | None = None,
            orden: Orden = "recientes",
            limite: Annotated[int, Query(gt=0, le=200)] = 50,
            desde: Annotated[int, Query(ge=0)] = 0):
-    if guardado or estado_lista or mi_etiqueta:
+    if empresa_id is not None:
+        # La ficha de una empresa: todos sus puestos, abiertos o cerrados, también los descartados (con su motivo).
+        donde, args = ["p.estado IN ('abierto', 'cerrado')", "p.empresa_id = ?"], [empresa_id]
+    elif guardado or estado_lista or mi_etiqueta:
         # Mi lista: lo guardado, aunque la oferta ya haya caducado (a un puesto cerrado puedes haber aplicado).
         donde, args = ["p.estado IN ('abierto', 'cerrado')", "g.puesto_id IS NOT NULL"], []
         if estado_lista:

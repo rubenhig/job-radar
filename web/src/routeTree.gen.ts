@@ -16,6 +16,8 @@ import { Route as AppFuentesRouteImport } from './routes/_app/fuentes'
 import { Route as AppListaRouteImport } from './routes/_app/lista'
 import { Route as AppPerfilRouteImport } from './routes/_app/perfil'
 import { Route as AppPuntuacionRouteImport } from './routes/_app/puntuacion'
+import { Route as AppEmpresasIndexRouteImport } from './routes/_app/empresas/index'
+import { Route as AppEmpresasEmpresaIdRouteImport } from './routes/_app/empresas/$empresaId'
 import { Route as AppPuestosIndexRouteImport } from './routes/_app/puestos/index'
 import { Route as AppPuestosPuestoIdRouteImport } from './routes/_app/puestos/$puestoId'
 
@@ -53,6 +55,16 @@ const AppPuntuacionRoute = AppPuntuacionRouteImport.update({
   path: '/puntuacion',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppEmpresasIndexRoute = AppEmpresasIndexRouteImport.update({
+  id: '/empresas/',
+  path: '/empresas/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppEmpresasEmpresaIdRoute = AppEmpresasEmpresaIdRouteImport.update({
+  id: '/empresas/$empresaId',
+  path: '/empresas/$empresaId',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppPuestosIndexRoute = AppPuestosIndexRouteImport.update({
   id: '/puestos/',
   path: '/puestos/',
@@ -71,7 +83,9 @@ export interface FileRoutesByFullPath {
   '/lista': typeof AppListaRoute
   '/perfil': typeof AppPerfilRoute
   '/puntuacion': typeof AppPuntuacionRoute
+  '/empresas/$empresaId': typeof AppEmpresasEmpresaIdRoute
   '/puestos/$puestoId': typeof AppPuestosPuestoIdRoute
+  '/empresas/': typeof AppEmpresasIndexRoute
   '/puestos/': typeof AppPuestosIndexRoute
 }
 export interface FileRoutesByTo {
@@ -81,7 +95,9 @@ export interface FileRoutesByTo {
   '/perfil': typeof AppPerfilRoute
   '/puntuacion': typeof AppPuntuacionRoute
   '/': typeof AppIndexRoute
+  '/empresas/$empresaId': typeof AppEmpresasEmpresaIdRoute
   '/puestos/$puestoId': typeof AppPuestosPuestoIdRoute
+  '/empresas': typeof AppEmpresasIndexRoute
   '/puestos': typeof AppPuestosIndexRoute
 }
 export interface FileRoutesById {
@@ -93,7 +109,9 @@ export interface FileRoutesById {
   '/_app/perfil': typeof AppPerfilRoute
   '/_app/puntuacion': typeof AppPuntuacionRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/empresas/$empresaId': typeof AppEmpresasEmpresaIdRoute
   '/_app/puestos/$puestoId': typeof AppPuestosPuestoIdRoute
+  '/_app/empresas/': typeof AppEmpresasIndexRoute
   '/_app/puestos/': typeof AppPuestosIndexRoute
 }
 export interface FileRouteTypes {
@@ -105,7 +123,9 @@ export interface FileRouteTypes {
     | '/lista'
     | '/perfil'
     | '/puntuacion'
+    | '/empresas/$empresaId'
     | '/puestos/$puestoId'
+    | '/empresas/'
     | '/puestos/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -115,7 +135,9 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/puntuacion'
     | '/'
+    | '/empresas/$empresaId'
     | '/puestos/$puestoId'
+    | '/empresas'
     | '/puestos'
   id:
     | '__root__'
@@ -126,7 +148,9 @@ export interface FileRouteTypes {
     | '/_app/perfil'
     | '/_app/puntuacion'
     | '/_app/'
+    | '/_app/empresas/$empresaId'
     | '/_app/puestos/$puestoId'
+    | '/_app/empresas/'
     | '/_app/puestos/'
   fileRoutesById: FileRoutesById
 }
@@ -185,6 +209,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPuntuacionRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/empresas/': {
+      id: '/_app/empresas/'
+      path: '/empresas'
+      fullPath: '/empresas/'
+      preLoaderRoute: typeof AppEmpresasIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/empresas/$empresaId': {
+      id: '/_app/empresas/$empresaId'
+      path: '/empresas/$empresaId'
+      fullPath: '/empresas/$empresaId'
+      preLoaderRoute: typeof AppEmpresasEmpresaIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/puestos/': {
       id: '/_app/puestos/'
       path: '/puestos'
@@ -209,7 +247,9 @@ interface AppRouteRouteChildren {
   AppPerfilRoute: typeof AppPerfilRoute
   AppPuntuacionRoute: typeof AppPuntuacionRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppEmpresasEmpresaIdRoute: typeof AppEmpresasEmpresaIdRoute
   AppPuestosPuestoIdRoute: typeof AppPuestosPuestoIdRoute
+  AppEmpresasIndexRoute: typeof AppEmpresasIndexRoute
   AppPuestosIndexRoute: typeof AppPuestosIndexRoute
 }
 
@@ -220,7 +260,9 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppPerfilRoute: AppPerfilRoute,
   AppPuntuacionRoute: AppPuntuacionRoute,
   AppIndexRoute: AppIndexRoute,
+  AppEmpresasEmpresaIdRoute: AppEmpresasEmpresaIdRoute,
   AppPuestosPuestoIdRoute: AppPuestosPuestoIdRoute,
+  AppEmpresasIndexRoute: AppEmpresasIndexRoute,
   AppPuestosIndexRoute: AppPuestosIndexRoute,
 }
 

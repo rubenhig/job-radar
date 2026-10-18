@@ -1,6 +1,7 @@
 import {
   Activity,
   Bookmark,
+  Building2,
   Gauge,
   BriefcaseBusiness,
   LayoutDashboard,
@@ -18,6 +19,7 @@ export const sidebarData: SidebarData = {
         { title: 'Inicio', url: '/', icon: LayoutDashboard },
         { title: 'Puestos', url: '/puestos', icon: BriefcaseBusiness },
         { title: 'Mi lista', url: '/lista', icon: Bookmark },
+        { title: 'Empresas', url: '/empresas', icon: Building2 },
         { title: 'Etiquetar', url: '/etiquetar', icon: Tags },
         { title: 'Puntuación', url: '/puntuacion', icon: Gauge },
       ],

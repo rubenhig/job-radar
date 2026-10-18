@@ -184,3 +184,25 @@ def test_lo_guardado_pasa_al_puesto_que_queda_al_fusionar(tmp_path):
                            "actualizado_en": ahora})
     puestos.heredar_guardado(db, 1, 2)
     assert [(g["puesto_id"], g["estado"]) for g in db["guardado"].rows] == [(2, "aplicado")]
+
+
+def test_empresas_se_crean_solas_y_descartar_una_descarta_sus_puestos(cliente):
+    from job_radar import empresas
+
+    db = almacen.abrir(cliente.app.state.ruta_db)
+    assert empresas.actualizar(db)["creadas"] == 3  # Acme (con «Acme S.L.» como alias), Beta y Gamma
+    puestos.actualizar(db)
+    lista = cliente.get("/api/empresas").json()
+    acme = next(e for e in lista["items"] if e["nombre"].startswith("Acme"))
+    assert acme["alias"] == ["Acme", "Acme S.L."] and acme["puestos_abiertos"] == 1
+    assert cliente.get("/api/puestos", params={"empresa_id": acme["id"]}).json()["total"] == 1
+    assert cliente.put(f"/api/empresas/{acme['id']}", json={"estado": "seguida"}).json()["estado"] == "seguida"
+    assert cliente.put(f"/api/empresas/{acme['id']}", json={"notas": "Hub de IA"}).json()["estado"] == "seguida"
+    assert cliente.get("/api/empresas", params={"estado": "seguida"}).json()["total"] == 1
+    assert cliente.get("/api/empresas", params={"estado": "sin_revisar"}).json()["total"] == 2  # Beta y Gamma
+    assert cliente.get("/api/puestos").json()["total"] == 2
+    cliente.put(f"/api/empresas/{acme['id']}", json={"estado": "descartada"})
+    assert cliente.get("/api/puestos").json()["total"] == 1  # su puesto pasa a Descartados
+    d = cliente.get("/api/puestos", params={"descartados": True}).json()["items"]
+    assert any(p["descarte"].startswith("empresa descartada") for p in d)
+    assert cliente.get("/api/empresas/9999").status_code == 404

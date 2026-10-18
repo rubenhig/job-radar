@@ -6,6 +6,9 @@ import {
 } from '@tanstack/react-query'
 import { client } from '../client.gen'
 import {
+  empresasDecidir,
+  empresasFicha,
+  empresasListar,
   listaMisEtiquetas,
   type Options,
   perfilGuardarPreferencias,
@@ -24,6 +27,15 @@ import {
   sistemaVivo,
 } from '../sdk.gen'
 import type {
+  EmpresasDecidirData,
+  EmpresasDecidirError,
+  EmpresasDecidirResponse,
+  EmpresasFichaData,
+  EmpresasFichaError,
+  EmpresasFichaResponse,
+  EmpresasListarData,
+  EmpresasListarError,
+  EmpresasListarResponse,
   ListaMisEtiquetasData,
   ListaMisEtiquetasResponse,
   PerfilGuardarPreferenciasData,
@@ -294,6 +306,87 @@ export const listaMisEtiquetasOptions = (
     },
     queryKey: listaMisEtiquetasQueryKey(options),
   })
+
+export const empresasListarQueryKey = (options?: Options<EmpresasListarData>) =>
+  createQueryKey('empresasListar', options)
+
+/**
+ * Listar
+ *
+ * Las empresas con algún puesto. Por defecto, las que tienen alguno abierto, de mejor a peor nota.
+ */
+export const empresasListarOptions = (options?: Options<EmpresasListarData>) =>
+  queryOptions<
+    EmpresasListarResponse,
+    EmpresasListarError,
+    EmpresasListarResponse,
+    ReturnType<typeof empresasListarQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await empresasListar({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: empresasListarQueryKey(options),
+  })
+
+export const empresasFichaQueryKey = (options: Options<EmpresasFichaData>) =>
+  createQueryKey('empresasFicha', options)
+
+/**
+ * Ficha
+ */
+export const empresasFichaOptions = (options: Options<EmpresasFichaData>) =>
+  queryOptions<
+    EmpresasFichaResponse,
+    EmpresasFichaError,
+    EmpresasFichaResponse,
+    ReturnType<typeof empresasFichaQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await empresasFicha({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: empresasFichaQueryKey(options),
+  })
+
+/**
+ * Decidir
+ *
+ * Seguir, dejar pendiente o descartar (y notas). Descartar una empresa descarta sus puestos en la criba.
+ */
+export const empresasDecidirMutation = (
+  options?: Partial<Options<EmpresasDecidirData>>
+): UseMutationOptions<
+  EmpresasDecidirResponse,
+  EmpresasDecidirError,
+  Options<EmpresasDecidirData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    EmpresasDecidirResponse,
+    EmpresasDecidirError,
+    Options<EmpresasDecidirData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await empresasDecidir({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
 
 export const sistemaVivoQueryKey = (options?: Options<SistemaVivoData>) =>
   createQueryKey('sistemaVivo', options)
