@@ -161,6 +161,7 @@ class Oferta(BaseModel):
     skills: list[str] | None = None
     ingles: str | None = None
     es_agencia: bool | None = None
+    valida_hasta: datetime | None = None   # hasta cuándo la da por abierta la fuente (caducidad o cierre)
     derivados: list[str] | None = None
 
     def fila(self) -> dict[str, Any]:

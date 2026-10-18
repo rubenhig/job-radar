@@ -189,6 +189,11 @@ MIGRACIONES: list[str] = [
     """
     ALTER TABLE evaluacion ADD COLUMN texto_sha TEXT;
     """,
+    # 9 · ciclo de vida: hasta cuándo da la fuente la oferta por abierta (LinkedIn date_valid_through,
+    # freehire closed_at). Con eso y la antigüedad se cierran ofertas y puestos (puestos.cerrar).
+    """
+    ALTER TABLE oferta ADD COLUMN valida_hasta TEXT;
+    """,
 ]
 
 

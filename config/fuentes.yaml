@@ -9,7 +9,7 @@
 fuentes:
   freehire:
     tipo: agregador
-    conector: freehire-api/2
+    conector: freehire-api/3
     acceso: API pública sin clave (freehire.me/api/v1)
     coste: gratis
     terminos: Proyecto MIT; API pública documentada en freehire.me/docs/api. Uso moderado, User-Agent identificado.
@@ -36,14 +36,14 @@ fuentes:
     # plan gratuito de RapidAPI da 250. En el plan gratuito de Apify el actor cuesta
     # 0,005 $ por oferta y 0,01 $ por ejecución, con tope duro de 5 $ al mes: Málaga a
     # diario (~10 ofertas) y remoto semanal (~120) salen por ~4,4 $/mes.
-    conector: linkedin-fantastic-apify/1
+    conector: linkedin-fantastic-apify/2
     acceso: Actor de fantastic.jobs en Apify, token en .env (APIFY_TOKEN)
     coste: Plan gratuito de Apify, 5 $ al mes; el conector no pasa de 4,8 $
     terminos: Términos de Apify y de fantastic.jobs. El scraping de LinkedIn lo hace el proveedor, no nosotros.
     frecuencia_h: 24
     frecuencia_remoto_h: 168
     plan_b:
-      - La misma API en RapidAPI (linkedin-fantastic-rapidapi/1; plan gratuito de 250 ofertas al mes)
+      - La misma API en RapidAPI (linkedin-fantastic-rapidapi/2; plan gratuito de 250 ofertas al mes)
       - JobSpy con pausas largas
       - Emails de alerta de LinkedIn (#9)
 

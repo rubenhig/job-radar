@@ -134,3 +134,25 @@ def test_la_etiqueta_pasa_al_puesto_que_queda_al_fusionar(db):
     queda = db["oferta"].get(a)["puesto_id"]
     assert db["oferta"].get(b)["puesto_id"] == queda
     assert [r["puesto_id"] for r in db["etiqueta"].rows] == [queda]
+
+
+def test_cierre_por_caducidad_antiguedad_y_reapertura(db):
+    from datetime import UTC, datetime
+
+    ahora = datetime(2026, 12, 20, tzinfo=UTC)
+    almacen.registrar_fuente(db, "f", "portal", "f/1")
+    for i, campos in enumerate([
+        {"valida_hasta": "2026-12-01T00:00:00"},                                   # la fuente dice que caducó
+        {"publicada_en": "2026-10-01T00:00:00Z"},                                  # vieja y no se ha vuelto a ver
+        {"publicada_en": "2026-12-10T00:00:00Z", "valida_hasta": "2027-01-15T00:00:00"},  # sigue abierta
+    ]):
+        o = {"fuente_id": "f", "id_externo": str(i), "titulo": f"Puesto {i} distinto {i * 'x'}", **campos}
+        e = almacen.iniciar_ejecucion(db, "f", "f/1")
+        almacen.guardar_oferta(db, o, almacen.guardar_bruto(db, e, "f", str(i), o)[0], "f/1")
+    db.execute("UPDATE oferta SET vista_ultima = '2026-11-01T00:00:00+00:00'")
+    puestos.actualizar(db, dias=3650)
+    assert puestos.cerrar(db, ahora) == {"ofertas_cerradas": 2, "puestos_cerrados": 2}
+    assert sorted(p["estado"] for p in db["puesto"].rows) == ["abierto", "cerrado", "cerrado"]
+    db.execute("UPDATE oferta SET cerrada_en = NULL WHERE id_externo = '1'")  # vuelve a aparecer
+    db.execute("UPDATE oferta SET vista_ultima = '2026-12-19T00:00:00+00:00' WHERE id_externo = '1'")
+    assert puestos.cerrar(db, ahora) == {"puestos_reabiertos": 1}

@@ -41,6 +41,8 @@ from rapidfuzz import fuzz
 from job_radar import almacen
 
 VENTANA_DIAS = 60
+CADUCIDAD_DIAS = 45   # una oferta publicada hace más y que no se ha vuelto a ver en NO_VISTA_DIAS se da por cerrada
+NO_VISTA_DIAS = 14
 UMBRAL_EMPRESA = 90
 UMBRAL_TITULO_CONSULTORAS = 80
 UMBRAL_REENVIO = 0.9
@@ -256,3 +258,29 @@ def actualizar(db, dias: int = VENTANA_DIAS) -> dict[str, int]:
                        [puesto_id, *sin_asignar])
     db.conn.commit()
     return dict(m)
+
+
+def cerrar(db, ahora: datetime | None = None) -> dict[str, int]:
+    """Ciclo de vida. Una oferta se cierra si la fuente la da por cerrada o caducada (`valida_hasta`), o si se
+    publicó hace más de CADUCIDAD_DIAS y no se ha vuelto a ver en NO_VISTA_DIAS (las búsquedas miran ventanas
+    cortas: no volver a verla no basta). Un puesto se cierra cuando lo están todas sus ofertas, y se reabre si
+    alguna vuelve (`guardar_oferta` reabre la oferta al verla de nuevo). Fechas comparadas a segundos (ISO)."""
+    ahora = ahora or datetime.now(UTC)
+    iso = lambda d: d.isoformat(timespec="seconds")[:19]  # noqa: E731 — las fuentes mezclan formatos de zona
+    m = {}
+    m["ofertas_cerradas"] = db.execute("""
+        UPDATE oferta SET cerrada_en = ? WHERE cerrada_en IS NULL AND (
+            (valida_hasta IS NOT NULL AND substr(valida_hasta, 1, 19) < ?)
+            OR (substr(COALESCE(publicada_en, vista_primera), 1, 19) < ? AND substr(vista_ultima, 1, 19) < ?))""",
+        [almacen.ahora(), iso(ahora), iso(ahora - timedelta(days=CADUCIDAD_DIAS)),
+         iso(ahora - timedelta(days=NO_VISTA_DIAS))]).rowcount
+    m["puestos_cerrados"] = db.execute("""
+        UPDATE puesto SET estado = 'cerrado', actualizado_en = ? WHERE estado = 'abierto'
+        AND NOT EXISTS (SELECT 1 FROM oferta o WHERE o.puesto_id = puesto.id AND o.cerrada_en IS NULL)""",
+        [almacen.ahora()]).rowcount
+    m["puestos_reabiertos"] = db.execute("""
+        UPDATE puesto SET estado = 'abierto', actualizado_en = ? WHERE estado = 'cerrado'
+        AND EXISTS (SELECT 1 FROM oferta o WHERE o.puesto_id = puesto.id AND o.cerrada_en IS NULL)""",
+        [almacen.ahora()]).rowcount
+    db.conn.commit()
+    return {k: v for k, v in m.items() if v}

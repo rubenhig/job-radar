@@ -114,6 +114,7 @@ class _LinkedIn:
             salario_min=s_min, salario_max=s_max, salario_moneda=moneda, salario_periodo=periodo,
             descripcion=limpio(j.get("description_text")),
             publicada_en=j.get("date_posted"),
+            valida_hasta=j.get("date_valid_through"),
             experiencia=derivado("experiencia", limpio(j.get("ai_experience_level"))),
             contrato=contrato,
             skills=derivado("skills", j.get("ai_key_skills") or None),
@@ -125,7 +126,7 @@ class _LinkedIn:
 class LinkedInRapidAPI(_LinkedIn):
     """API v4 en RapidAPI: `GET /active-jb`, clave en RAPIDAPI_KEY."""
 
-    version = "linkedin-fantastic-rapidapi/1"
+    version = "linkedin-fantastic-rapidapi/2"  # /2: valida_hasta
     HOST = "linkedin-job-search-api.p.rapidapi.com"
     POR_PAGINA = 100
     MAX_PAGINAS = 3  # en el plan gratuito cada llamada cuenta: nunca más de 300 ofertas por búsqueda
@@ -177,7 +178,7 @@ class LinkedInApify(_LinkedIn):
     a lo que queda del presupuesto (`maxTotalChargeUsd`), así que nunca se pasa.
     """
 
-    version = "linkedin-fantastic-apify/1"
+    version = "linkedin-fantastic-apify/2"  # /2: valida_hasta
     ACTOR = "fantastic-jobs~advanced-linkedin-job-search-api"
     API = "https://api.apify.com/v2"
     PRECIO_OFERTA = 0.005

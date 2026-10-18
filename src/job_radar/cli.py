@@ -113,6 +113,7 @@ def _ingesta(args) -> int:
         log.info("%-22s %-7s %4dh · recibidas %3d · nuevas %3d · errores %d%s", b.id, e["estado"], b.horas,
                  e["recibidos"], e["nuevos"], e["errores_norm"], f" · {e['error'][:120]}" if e["error"] else "")
     log.info("puestos: %s", puestos.actualizar(db) or "sin cambios")
+    log.info("cierre: %s", puestos.cerrar(db) or "nada que cerrar")
     log.info("criba: %s", dict(criba.aplicar(db, prefs)))
 
     alertas = salud.comprobar(db, registro)
@@ -209,6 +210,7 @@ def cmd_renormalizar(args) -> int:
             continue
         print(f"{fuente_id:10} {dict(ingesta.renormalizar(db, conector(f.conector)))}")
     print("puestos:", puestos.actualizar(db) or "sin cambios")
+    print("cierre:", puestos.cerrar(db) or "nada que cerrar")
     print("criba:", dict(criba.aplicar(db, cargar_preferencias(RUTA_PREFERENCIAS))))
     return 0
 

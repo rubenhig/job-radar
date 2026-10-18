@@ -56,7 +56,7 @@ def consultas(terminos: tuple[str, ...]) -> list[str]:
 
 class Freehire:
     fuente = "freehire"
-    version = "freehire-api/2"  # /2: España si está en la lista de países; modalidad del título; sin países como ciudad
+    version = "freehire-api/3"  # /2: España en la lista de países, modalidad del título; /3: valida_hasta
     personales = ()
     # Métricas del sitio, no de la oferta: cambian en cada consulta.
     volatiles = ("view_count", "applied_count", "upvote_count", "downvote_count", "my_vote", "last_seen_at")
@@ -116,6 +116,7 @@ class Freehire:
             salario_periodo=PERIODO.get(e.get("salary_period")),
             descripcion=limpio(j.get("description")),
             publicada_en=j.get("posted_at") or j.get("created_at"),
+            valida_hasta=j.get("closed_at"),  # freehire la da por cerrada desde entonces
             experiencia=limpio(e.get("seniority")),
             contrato=CONTRATO.get(e.get("employment_type")),
             skills=j.get("skills") or None,
