@@ -8,9 +8,9 @@ from typing import Annotated, Any
 import yaml
 from fastapi import APIRouter, Depends, HTTPException
 
-from job_radar import criba, puntuacion, salud
+from job_radar import almacen, criba, puntuacion, salud
 from job_radar.api.base import bd, datos
-from job_radar.api.esquemas import Acuerdo, Alerta, CasoAcuerdo, EstadoFuente, Fuentes, Resumen
+from job_radar.api.esquemas import Acuerdo, Alerta, CasoAcuerdo, EstadoFuente, Fuentes, Resumen, Visita
 from job_radar.fuentes import registro as reg
 from job_radar.preferencias import Preferencias
 
@@ -40,6 +40,23 @@ def resumen(db: Annotated[Any, Depends(bd)]):
         por_fuente=dict(db.execute("SELECT fuente_id, COUNT(*) FROM oferta GROUP BY 1").fetchall()),
         alertas=len(salud.comprobar(db, reg.cargar())),
     )
+
+
+SESION_MIN = 30  # dentro de una misma sesión, «nuevo» no cambia al navegar
+
+
+@router.post("/visita", response_model=Visita, tags=["sistema"])
+def visita(db: Annotated[Any, Depends(bd)]):
+    """Apunta una visita a la web. Si la última fue hace más de SESION_MIN, empieza una sesión nueva
+    y lo «nuevo» pasa a contarse desde ella. Se guarda en el servidor: vale igual en el móvil y en el PC."""
+    leer = lambda k: (db.execute("SELECT valor FROM ajuste WHERE clave = ?", [k]).fetchone() or [None])[0]  # noqa: E731
+    anterior, actual, ahora = leer("visita_anterior"), leer("visita_actual"), almacen.ahora()
+    if actual is None or datetime.fromisoformat(ahora) - datetime.fromisoformat(actual) > timedelta(minutes=SESION_MIN):
+        anterior = actual
+        db.execute("INSERT OR REPLACE INTO ajuste VALUES ('visita_anterior', ?, ?)", [anterior, ahora])
+    db.execute("INSERT OR REPLACE INTO ajuste VALUES ('visita_actual', ?, ?)", [ahora, ahora])
+    db.conn.commit()
+    return Visita(desde=anterior, actual=ahora)
 
 
 @router.get("/fuentes", response_model=Fuentes, tags=["sistema"])

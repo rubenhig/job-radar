@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { PerfilGuardarPreferenciasData, PerfilGuardarPreferenciasErrors, PerfilGuardarPreferenciasResponses, PerfilLeerPreferenciasData, PerfilLeerPreferenciasResponses, PerfilPerfilData, PerfilPerfilResponses, PuestosEtiquetarData, PuestosEtiquetarErrors, PuestosEtiquetarResponses, PuestosFichaData, PuestosFichaErrors, PuestosFichaResponses, PuestosListarData, PuestosListarErrors, PuestosListarResponses, PuestosQuitarEtiquetaData, PuestosQuitarEtiquetaErrors, PuestosQuitarEtiquetaResponses, PuntuacionAcuerdoData, PuntuacionAcuerdoResponses, SistemaFuentesData, SistemaFuentesResponses, SistemaResumenData, SistemaResumenResponses } from './types.gen';
+import type { PerfilGuardarPreferenciasData, PerfilGuardarPreferenciasErrors, PerfilGuardarPreferenciasResponses, PerfilLeerPreferenciasData, PerfilLeerPreferenciasResponses, PerfilPerfilData, PerfilPerfilResponses, PuestosEtiquetarData, PuestosEtiquetarErrors, PuestosEtiquetarResponses, PuestosFichaData, PuestosFichaErrors, PuestosFichaResponses, PuestosListarData, PuestosListarErrors, PuestosListarResponses, PuestosQuitarEtiquetaData, PuestosQuitarEtiquetaErrors, PuestosQuitarEtiquetaResponses, PuntuacionAcuerdoData, PuntuacionAcuerdoResponses, SistemaFuentesData, SistemaFuentesResponses, SistemaResumenData, SistemaResumenResponses, SistemaVisitaData, SistemaVisitaResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -49,6 +49,14 @@ export const puestosEtiquetar = <ThrowOnError extends boolean = false>(options: 
  * Resumen
  */
 export const sistemaResumen = <ThrowOnError extends boolean = false>(options?: Options<SistemaResumenData, ThrowOnError>): RequestResult<SistemaResumenResponses, unknown, ThrowOnError> => (options?.client ?? client).get<SistemaResumenResponses, unknown, ThrowOnError>({ url: '/api/resumen', ...options });
+
+/**
+ * Visita
+ *
+ * Apunta una visita a la web. Si la última fue hace más de SESION_MIN, empieza una sesión nueva
+ * y lo «nuevo» pasa a contarse desde ella. Se guarda en el servidor: vale igual en el móvil y en el PC.
+ */
+export const sistemaVisita = <ThrowOnError extends boolean = false>(options?: Options<SistemaVisitaData, ThrowOnError>): RequestResult<SistemaVisitaResponses, unknown, ThrowOnError> => (options?.client ?? client).post<SistemaVisitaResponses, unknown, ThrowOnError>({ url: '/api/visita', ...options });
 
 /**
  * Fuentes

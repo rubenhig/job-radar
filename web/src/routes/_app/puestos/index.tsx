@@ -21,6 +21,7 @@ const filtros = z.object({
     .optional()
     .catch(undefined),
   descartados: z.boolean().optional().catch(undefined),
+  nuevos: z.boolean().optional().catch(undefined),
   pagina: z.number().int().positive().optional().catch(undefined),
 })
 

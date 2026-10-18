@@ -9,6 +9,7 @@ import {
 } from '@/api/@tanstack/react-query.gen'
 import { FUENTES, MODALIDADES, haceCuanto, lugar, salario } from '@/lib/formato'
 import { DESTACADO, TOP } from '@/lib/puntuacion'
+import { esNuevo, useVisita } from '@/lib/visita'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -83,6 +84,7 @@ export function Puestos() {
     return () => clearTimeout(t)
   })
 
+  const visita = useVisita()
   const pagina = busqueda.pagina ?? 1
   const { data, isLoading } = useQuery({
     ...puestosListarOptions({
@@ -101,11 +103,15 @@ export function Puestos() {
               : undefined,
         puntuado: busqueda.nota === 'sin' ? false : undefined,
         descartados: busqueda.descartados,
+        nuevos_desde: busqueda.nuevos
+          ? (visita?.desde ?? undefined)
+          : undefined,
         limite: POR_PAGINA,
         desde: (pagina - 1) * POR_PAGINA,
       },
     }),
     placeholderData: keepPreviousData,
+    enabled: !busqueda.nuevos || visita !== undefined,
   })
   const { data: resumen } = useQuery(sistemaResumenOptions())
   const paginas = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA))
@@ -116,7 +122,8 @@ export function Puestos() {
     (busqueda.etiqueta && busqueda.etiqueta !== 'todas') ||
     busqueda.dias ||
     (busqueda.nota && busqueda.nota !== 'todas') ||
-    busqueda.descartados
+    busqueda.descartados ||
+    busqueda.nuevos
   )
 
   return (
@@ -228,6 +235,18 @@ export function Puestos() {
               ))}
             </SelectContent>
           </Select>
+          {visita?.desde && (
+            <Button
+              variant={busqueda.nuevos ? 'secondary' : 'outline'}
+              size='sm'
+              className='h-9'
+              onClick={() =>
+                cambiar({ nuevos: busqueda.nuevos ? undefined : true })
+              }
+            >
+              Solo nuevos
+            </Button>
+          )}
           {filtrado && (
             <Button
               variant='ghost'
@@ -265,7 +284,7 @@ export function Puestos() {
                   </TableRow>
                 ))}
               {data?.items.map((p) => (
-                <Fila key={p.id} puesto={p} />
+                <Fila key={p.id} puesto={p} desde={visita?.desde} />
               ))}
               {data && !data.items.length && (
                 <TableRow>
@@ -284,7 +303,7 @@ export function Puestos() {
           {isLoading &&
             [...Array(5)].map((_, i) => <Skeleton key={i} className='h-24' />)}
           {data?.items.map((p) => (
-            <Tarjeta key={p.id} puesto={p} />
+            <Tarjeta key={p.id} puesto={p} desde={visita?.desde} />
           ))}
         </div>
 
@@ -363,7 +382,21 @@ function Multiple({
   )
 }
 
-function Fila({ puesto: p }: { puesto: PuestoResumen }) {
+function Nuevo() {
+  return (
+    <Badge className='bg-sky-600 px-1.5 text-[10px] text-white hover:bg-sky-600'>
+      Nuevo
+    </Badge>
+  )
+}
+
+function Fila({
+  puesto: p,
+  desde,
+}: {
+  puesto: PuestoResumen
+  desde?: string | null
+}) {
   return (
     <TableRow className='relative'>
       <TableCell className='text-center'>
@@ -379,6 +412,7 @@ function Fila({ puesto: p }: { puesto: PuestoResumen }) {
         </Link>
         <div className='flex items-center gap-2 text-sm text-muted-foreground'>
           {p.empresa ?? '—'} <InsigniaEtiqueta etiqueta={p.etiqueta} />
+          {esNuevo(p.vista_primera, desde) && <Nuevo />}
         </div>
         {p.descarte && (
           <div className='text-xs text-destructive'>
@@ -407,7 +441,13 @@ function Fila({ puesto: p }: { puesto: PuestoResumen }) {
   )
 }
 
-function Tarjeta({ puesto: p }: { puesto: PuestoResumen }) {
+function Tarjeta({
+  puesto: p,
+  desde,
+}: {
+  puesto: PuestoResumen
+  desde?: string | null
+}) {
   return (
     <Link
       to='/puestos/$puestoId'
@@ -417,6 +457,7 @@ function Tarjeta({ puesto: p }: { puesto: PuestoResumen }) {
       <div className='flex items-start justify-between gap-2'>
         <span className='leading-snug font-medium'>{p.titulo}</span>
         <div className='flex shrink-0 items-center gap-1.5'>
+          {esNuevo(p.vista_primera, desde) && <Nuevo />}
           <InsigniaEtiqueta etiqueta={p.etiqueta} />
           {p.valoracion && <Nota valoracion={p.valoracion} />}
         </div>

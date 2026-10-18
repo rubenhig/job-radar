@@ -14,6 +14,7 @@ import {
 } from '@/api/@tanstack/react-query.gen'
 import { FUENTES, MODALIDADES, lugar } from '@/lib/formato'
 import { TOP } from '@/lib/puntuacion'
+import { useVisita } from '@/lib/visita'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -62,6 +63,7 @@ export function Inicio() {
           </Link>
         )}
 
+        <Novedades />
         <ParaTi sinPuntuar={r?.sin_puntuar} />
 
         <div className='grid grid-cols-2 gap-4 lg:grid-cols-4'>
@@ -146,6 +148,70 @@ export function Inicio() {
         </div>
       </Main>
     </>
+  )
+}
+
+const fecha = (iso: string) =>
+  new Date(iso).toLocaleString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+/** Lo que ha llegado desde la visita anterior: sin avisos, esto es lo primero que se mira. */
+function Novedades() {
+  const visita = useVisita()
+  const desde = visita?.desde ?? undefined
+  const { data: todos } = useQuery({
+    ...puestosListarOptions({ query: { nuevos_desde: desde, limite: 1 } }),
+    enabled: Boolean(desde),
+  })
+  const { data: buenos } = useQuery({
+    ...puestosListarOptions({
+      query: { nuevos_desde: desde, nota_min: TOP, orden: 'nota', limite: 5 },
+    }),
+    enabled: Boolean(desde),
+  })
+  if (!desde) return null
+  return (
+    <Card className='border-sky-500/40'>
+      <CardHeader>
+        <CardTitle>Desde tu última visita</CardTitle>
+        <CardDescription>
+          {todos
+            ? `${todos.total} puestos nuevos desde el ${fecha(desde)}` +
+              (buenos ? `, ${buenos.total} con nota ${TOP} o más.` : '.')
+            : 'Cargando…'}
+        </CardDescription>
+      </CardHeader>
+      {buenos && buenos.items.length > 0 && (
+        <CardContent className='flex flex-col gap-1'>
+          {buenos.items.map((p) => (
+            <Link
+              key={p.id}
+              to='/puestos/$puestoId'
+              params={{ puestoId: String(p.id) }}
+              className='-mx-2 flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-accent'
+            >
+              <Nota valoracion={p.valoracion} />
+              <span className='min-w-0 flex-1 truncate font-medium'>
+                {p.titulo}
+              </span>
+              <span className='hidden truncate text-sm text-muted-foreground sm:block'>
+                {p.empresa}
+              </span>
+            </Link>
+          ))}
+          <Button asChild variant='outline' className='mt-2 w-fit'>
+            <Link to='/puestos' search={{ nuevos: true, orden: 'nota' }}>
+              Ver los nuevos <ArrowRight />
+            </Link>
+          </Button>
+        </CardContent>
+      )}
+    </Card>
   )
 }
 

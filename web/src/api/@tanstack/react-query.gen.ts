@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { type Options, perfilGuardarPreferencias, perfilLeerPreferencias, perfilPerfil, puestosEtiquetar, puestosFicha, puestosListar, puestosQuitarEtiqueta, puntuacionAcuerdo, sistemaFuentes, sistemaResumen } from '../sdk.gen';
-import type { PerfilGuardarPreferenciasData, PerfilGuardarPreferenciasError, PerfilGuardarPreferenciasResponse, PerfilLeerPreferenciasData, PerfilLeerPreferenciasResponse, PerfilPerfilData, PerfilPerfilResponse, PuestosEtiquetarData, PuestosEtiquetarError, PuestosEtiquetarResponse, PuestosFichaData, PuestosFichaError, PuestosFichaResponse, PuestosListarData, PuestosListarError, PuestosListarResponse, PuestosQuitarEtiquetaData, PuestosQuitarEtiquetaError, PuestosQuitarEtiquetaResponse, PuntuacionAcuerdoData, PuntuacionAcuerdoResponse, SistemaFuentesData, SistemaFuentesResponse, SistemaResumenData, SistemaResumenResponse } from '../types.gen';
+import { type Options, perfilGuardarPreferencias, perfilLeerPreferencias, perfilPerfil, puestosEtiquetar, puestosFicha, puestosListar, puestosQuitarEtiqueta, puntuacionAcuerdo, sistemaFuentes, sistemaResumen, sistemaVisita } from '../sdk.gen';
+import type { PerfilGuardarPreferenciasData, PerfilGuardarPreferenciasError, PerfilGuardarPreferenciasResponse, PerfilLeerPreferenciasData, PerfilLeerPreferenciasResponse, PerfilPerfilData, PerfilPerfilResponse, PuestosEtiquetarData, PuestosEtiquetarError, PuestosEtiquetarResponse, PuestosFichaData, PuestosFichaError, PuestosFichaResponse, PuestosListarData, PuestosListarError, PuestosListarResponse, PuestosQuitarEtiquetaData, PuestosQuitarEtiquetaError, PuestosQuitarEtiquetaResponse, PuntuacionAcuerdoData, PuntuacionAcuerdoResponse, SistemaFuentesData, SistemaFuentesResponse, SistemaResumenData, SistemaResumenResponse, SistemaVisitaData, SistemaVisitaResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -126,6 +126,26 @@ export const sistemaResumenOptions = (options?: Options<SistemaResumenData>) => 
     },
     queryKey: sistemaResumenQueryKey(options)
 });
+
+/**
+ * Visita
+ *
+ * Apunta una visita a la web. Si la última fue hace más de SESION_MIN, empieza una sesión nueva
+ * y lo «nuevo» pasa a contarse desde ella. Se guarda en el servidor: vale igual en el móvil y en el PC.
+ */
+export const sistemaVisitaMutation = (options?: Partial<Options<SistemaVisitaData>>): UseMutationOptions<SistemaVisitaResponse, DefaultError, Options<SistemaVisitaData>> => {
+    const mutationOptions: UseMutationOptions<SistemaVisitaResponse, DefaultError, Options<SistemaVisitaData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await sistemaVisita({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const sistemaFuentesQueryKey = (options?: Options<SistemaFuentesData>) => createQueryKey('sistemaFuentes', options);
 

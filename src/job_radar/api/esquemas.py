@@ -162,6 +162,13 @@ class Acuerdo(BaseModel):
     coste_usd: float = 0
 
 
+class Visita(BaseModel):
+    """«Nuevo» es lo que se vio por primera vez después de `desde` (la visita anterior)."""
+
+    desde: str | None = None  # None en la primera visita
+    actual: str
+
+
 class EstadoFuente(BaseModel):
     id: str
     tipo: str

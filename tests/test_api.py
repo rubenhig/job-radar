@@ -135,3 +135,17 @@ def test_valoracion_en_lista_ficha_y_acuerdo(cliente):
     assert ev["dimensiones"]["rol_ia"]["valor"] == "ia_principal" and ev["compuertas"]["idioma"]["valor"] == "marca"
     a = cliente.get("/api/acuerdo").json()
     assert a["casos"] == [] and a["acuerdo"] is None  # sin etiquetas aún
+
+
+def test_visitas_y_nuevos_desde_la_anterior(cliente, monkeypatch):
+    from job_radar import almacen as alm
+
+    horas = iter(["2026-10-01T10:00:00+00:00", "2026-10-01T10:10:00+00:00", "2026-10-20T09:00:00+00:00"])
+    monkeypatch.setattr(alm, "ahora", lambda: next(horas))
+    primera = cliente.post("/api/visita").json()
+    assert primera["desde"] is None
+    assert cliente.post("/api/visita").json()["desde"] is None  # misma sesión: no cambia
+    otra = cliente.post("/api/visita").json()                     # días después: sesión nueva
+    assert otra["desde"] == "2026-10-01T10:10:00+00:00"
+    assert cliente.get("/api/puestos", params={"nuevos_desde": "2000-01-01"}).json()["total"] == 2
+    assert cliente.get("/api/puestos", params={"nuevos_desde": "2999-01-01"}).json()["total"] == 0

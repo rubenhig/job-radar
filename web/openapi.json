@@ -166,6 +166,22 @@
       }
      },
      {
+      "name": "nuevos_desde",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Nuevos Desde"
+      }
+     },
+     {
       "name": "orden",
       "in": "query",
       "required": false,
@@ -370,6 +386,28 @@
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/Resumen"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/visita": {
+   "post": {
+    "tags": [
+     "sistema"
+    ],
+    "summary": "Visita",
+    "description": "Apunta una visita a la web. Si la última fue hace más de SESION_MIN, empieza una sesión nueva\ny lo «nuevo» pasa a contarse desde ella. Se guarda en el servidor: vale igual en el móvil y en el PC.",
+    "operationId": "sistema-visita",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Visita"
         }
        }
       }
@@ -2178,6 +2216,31 @@
     ],
     "title": "Via",
     "description": "Por dónde llega un puesto: una fuente y quien publica (empresa o consultora)."
+   },
+   "Visita": {
+    "properties": {
+     "desde": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Desde"
+     },
+     "actual": {
+      "type": "string",
+      "title": "Actual"
+     }
+    },
+    "type": "object",
+    "required": [
+     "actual"
+    ],
+    "title": "Visita",
+    "description": "«Nuevo» es lo que se vio por primera vez después de `desde` (la visita anterior)."
    }
   }
  }

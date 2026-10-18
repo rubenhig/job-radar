@@ -72,6 +72,7 @@ def listar(db: Annotated[object, Depends(bd)],
            nota_min: Annotated[int | None, Query(ge=0, le=100)] = None,
            puntuado: bool | None = None,
            descartados: bool = False,
+           nuevos_desde: str | None = None,
            orden: Orden = "recientes",
            limite: Annotated[int, Query(gt=0, le=200)] = 50,
            desde: Annotated[int, Query(ge=0)] = 0):
@@ -100,10 +101,14 @@ def listar(db: Annotated[object, Depends(bd)],
         args.append(nota_min)
     if puntuado is not None:
         donde.append("ev.id IS NOT NULL" if puntuado else "ev.id IS NULL")
-    having, hargs = "", []
+    condiciones, hargs = [], []
     if dias:
-        having = "HAVING MAX(o.vista_ultima) >= ?"
+        condiciones.append("MAX(o.vista_ultima) >= ?")
         hargs.append((datetime.now(UTC) - timedelta(days=dias)).isoformat(timespec="seconds"))
+    if nuevos_desde:  # visto por primera vez después de esa fecha (la visita anterior)
+        condiciones.append("MIN(o.vista_primera) > ?")
+        hargs.append(nuevos_desde)
+    having = f"HAVING {' AND '.join(condiciones)}" if condiciones else ""
     base = f"{CONSULTA} WHERE {' AND '.join(donde)} GROUP BY p.id {having}"
     total = db.execute(f"SELECT COUNT(*) FROM ({base})", args + hargs).fetchone()[0]
     filas = db.query(f"{base} ORDER BY {ORDEN_SQL[orden]} LIMIT ? OFFSET ?", args + hargs + [limite, desde])

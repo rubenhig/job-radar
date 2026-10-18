@@ -172,6 +172,14 @@ MIGRACIONES: list[str] = [
     """
     ALTER TABLE puesto ADD COLUMN descarte TEXT;
     """,
+    # 6 · ajustes sueltos del sistema (p. ej. las visitas a la web: «nuevo desde tu última visita»)
+    """
+    CREATE TABLE ajuste (
+        clave           TEXT PRIMARY KEY,
+        valor           TEXT,
+        actualizado_en  TEXT NOT NULL
+    );
+    """,
 ]
 
 

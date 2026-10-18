@@ -919,6 +919,22 @@ export type Via = {
     empresa?: string | null;
 };
 
+/**
+ * Visita
+ *
+ * «Nuevo» es lo que se vio por primera vez después de `desde` (la visita anterior).
+ */
+export type Visita = {
+    /**
+     * Desde
+     */
+    desde?: string | null;
+    /**
+     * Actual
+     */
+    actual: string;
+};
+
 export type PuestosListarData = {
     body?: never;
     path?: never;
@@ -959,6 +975,10 @@ export type PuestosListarData = {
          * Descartados
          */
         descartados?: boolean;
+        /**
+         * Nuevos Desde
+         */
+        nuevos_desde?: string | null;
         /**
          * Orden
          */
@@ -1098,6 +1118,22 @@ export type SistemaResumenResponses = {
 };
 
 export type SistemaResumenResponse = SistemaResumenResponses[keyof SistemaResumenResponses];
+
+export type SistemaVisitaData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/visita';
+};
+
+export type SistemaVisitaResponses = {
+    /**
+     * Successful Response
+     */
+    200: Visita;
+};
+
+export type SistemaVisitaResponse = SistemaVisitaResponses[keyof SistemaVisitaResponses];
 
 export type SistemaFuentesData = {
     body?: never;
