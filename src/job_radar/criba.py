@@ -3,6 +3,8 @@
 Reglas deterministas y explicables, en este orden:
   1. País: el puesto está en un país que no es el de las ubicaciones ni desde el que se
      trabajaría en remoto. Un «remoto» anclado en Alemania no se puede hacer desde España.
+     Excepción: los `remoto.mercados` (p. ej. el Golfo), si el puesto es remoto; la compuerta
+     de modalidad de la puntuación decide si se puede hacer desde España.
      Sin país, no se descarta: la puntuación (compuerta de elegibilidad) lo decide leyendo el anuncio.
   2. Título excluido: contiene un término de `roles.excluir` («sales», «ai training»...).
   3. Título no técnico: no contiene ninguna palabra técnica (`roles.terminos`: principales,
@@ -29,12 +31,14 @@ def _patron(terminos: list[str]) -> re.Pattern | None:
 class Criba:
     def __init__(self, prefs: Preferencias):
         self.paises = {u.pais for u in prefs.ubicaciones} | ({prefs.remoto.desde_pais} if prefs.remoto else set())
+        self.mercados = {m.upper() for m in prefs.remoto.mercados} if prefs.remoto else set()
         t = prefs.roles.terminos
         self.excluir = _patron(prefs.roles.excluir)
         self.tecnico = _patron(t.principales + t.amplios + t.tecnicos) if t.tecnicos else None
 
     def motivo(self, puesto: dict) -> str | None:
-        if puesto.get("pais") and puesto["pais"] not in self.paises:
+        remoto_en_mercado = puesto.get("modalidad") == "remoto" and puesto.get("pais") in self.mercados
+        if puesto.get("pais") and puesto["pais"] not in self.paises and not remoto_en_mercado:
             return f"fuera de tus países ({puesto['pais']})"
         titulo = _plano(puesto["titulo"])
         if self.excluir and (m := self.excluir.search(titulo)):
@@ -48,7 +52,7 @@ def aplicar(db, prefs: Preferencias) -> Counter:
     """Recalcula el descarte de todos los puestos abiertos. Devuelve cuántos quedan por motivo."""
     criba = Criba(prefs)
     cuenta, cambios = Counter(), []
-    for p in db.query("""SELECT p.id, p.titulo, p.pais, p.descarte, e.valor AS etiqueta FROM puesto p
+    for p in db.query("""SELECT p.id, p.titulo, p.pais, p.modalidad, p.descarte, e.valor AS etiqueta FROM puesto p
                          LEFT JOIN etiqueta e ON e.puesto_id = p.id WHERE p.estado = 'abierto'"""):
         motivo = None if p["etiqueta"] == "top" else criba.motivo(p)
         cuenta[motivo.split(" (")[0].split(":")[0] if motivo else "pasan"] += 1

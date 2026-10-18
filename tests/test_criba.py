@@ -44,3 +44,11 @@ def test_aplicar_respeta_los_top_de_ruben(tmp_path, prefs):
     cuenta = criba.aplicar(db, prefs)
     assert cuenta == {"pasan": 2, "título no técnico": 1}
     assert [p["descarte"] for p in db["puesto"].rows] == [None, "título no técnico", None]
+
+
+def test_mercados_pasan_solo_en_remoto(prefs):
+    prefs.remoto.mercados = ["AE"]
+    c = criba.Criba(prefs)
+    assert c.motivo({"titulo": "AI Engineer", "pais": "AE", "modalidad": "remoto"}) is None
+    assert c.motivo({"titulo": "AI Engineer", "pais": "AE", "modalidad": "presencial"}) == "fuera de tus países (AE)"
+    assert c.motivo({"titulo": "AI Engineer", "pais": "DE", "modalidad": "remoto"}) == "fuera de tus países (DE)"

@@ -153,3 +153,14 @@ def test_frecuencia_distinta_en_remoto(prefs):
         "tipo": "portal", "conector": "falsa/1", "acceso": "-", "coste": "-", "terminos": "-",
         "frecuencia_h": 24, "frecuencia_remoto_h": 168, "plan_b": ["otra"]}}})
     assert [b.frecuencia_h for b in reg.busquedas(prefs, r, {"falsa": ConectorFalso()})] == [24, 168]
+
+
+def test_mercados_solo_en_las_fuentes_que_los_aceptan(prefs):
+    prefs.remoto.mercados = ["AE", "sa", "ES"]  # el país propio no es un mercado aparte
+    golfo = [i for i in reg.intenciones(prefs) if i.mercado]
+    assert [(i.id, i.pais, i.remota) for i in golfo] == [("remoto-ae", "AE", True), ("remoto-sa", "SA", True)]
+    base = {"tipo": "portal", "conector": "falsa/1", "acceso": "-", "coste": "-", "terminos": "-",
+            "frecuencia_h": 24, "plan_b": ["otra"]}
+    r = reg.Registro.model_validate({"fuentes": {"gratis": base | {"mercados": True}, "de_pago": base}})
+    ids = [b.id for b in reg.busquedas(prefs, r, {"gratis": ConectorFalso(), "de_pago": ConectorFalso()})]
+    assert "gratis:remoto-ae" in ids and not any(i.startswith("de_pago:remoto-a") for i in ids)

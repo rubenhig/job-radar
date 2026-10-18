@@ -57,7 +57,7 @@ class Freehire:
         if not i.remota:
             return [{"cities": i.ciudad, "is_tech": "tech"}]
         donde = {"countries": i.pais.lower(), "work_mode": "remote"}
-        if i.empresa_extranjera:
+        if i.empresa_extranjera and not i.mercado:
             donde["regions"] = "eu"  # la geografía se suma (OR): España o UE
         return [{**donde, "q": q, "q_fields": "title"} for q in consultas(i.terminos)]
 

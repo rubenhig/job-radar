@@ -14,6 +14,8 @@ remoto:
   desde_pais: ES
   empresa_local: true        # empresa española
   empresa_extranjera: true   # empresa de fuera que contrate en España
+  # Otros países cuyas ofertas en remoto se vigilan (solo en fuentes gratuitas), p. ej. [AE, SA, QA].
+  mercados: []
 
 roles:
   principales:

@@ -382,6 +382,22 @@ function Formulario({ data }: { data: Preferencias }) {
                     }
                   />
                 </Label>
+                <Campo
+                  titulo='Otros mercados en remoto'
+                  ayuda='Países cuyas ofertas en remoto se vigilan (p. ej. AE, SA, QA). Solo en fuentes gratuitas.'
+                >
+                  <ListaEditable
+                    valores={p.remoto.mercados ?? []}
+                    onChange={(v) =>
+                      set({
+                        remoto: {
+                          ...p.remoto!,
+                          mercados: v.map((x) => x.trim().toUpperCase()),
+                        },
+                      })
+                    }
+                  />
+                </Campo>
               </>
             )}
           </div>

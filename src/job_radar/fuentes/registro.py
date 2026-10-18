@@ -32,6 +32,7 @@ class Fuente(BaseModel):
     frecuencia_h: int = Field(gt=0)
     frecuencia_remoto_h: int | None = Field(None, gt=0, description="Si las búsquedas en remoto van a otro ritmo")
     plan_b: list[str] = Field(min_length=1)
+    mercados: bool = Field(False, description="Si busca también el remoto de otros países (remoto.mercados)")
     activa: bool = True
 
 
@@ -66,6 +67,9 @@ def intenciones(p: Preferencias) -> list[Intencion]:
         salida.append(Intencion(id=f"remoto-{p.remoto.desde_pais.lower()}", terminos=principales,
                                 pais=p.remoto.desde_pais, modalidades=(Modalidad.REMOTO,),
                                 empresa_extranjera=p.remoto.empresa_extranjera))
+        salida += [Intencion(id=f"remoto-{m.lower()}", terminos=principales, pais=m.upper(),
+                             modalidades=(Modalidad.REMOTO,), mercado=True)
+                   for m in p.remoto.mercados if m.upper() != p.remoto.desde_pais]
     return salida
 
 
@@ -75,6 +79,8 @@ def busquedas(p: Preferencias, registro: Registro, conectores: Mapping[str, Cone
     for fuente_id, fuente in registro.activas().items():
         conector = conectores[fuente_id]
         for intencion in intenciones(p):
+            if intencion.mercado and not fuente.mercados:
+                continue
             varias = conector.parametros(intencion)
             for n, parametros in enumerate(varias, start=1):
                 sufijo = f"-{n}" if len(varias) > 1 else ""

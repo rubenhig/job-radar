@@ -14,6 +14,7 @@ fuentes:
     coste: gratis
     terminos: Proyecto MIT; API pública documentada en freehire.me/docs/api. Uso moderado, User-Agent identificado.
     frecuencia_h: 24
+    mercados: true   # gratis: también vigila el remoto de remoto.mercados (p. ej. el Golfo)
     plan_b:
       - Active Jobs DB (fantastic.jobs), mismo agregado de ATS
       - Autoalojar freehire (MIT)

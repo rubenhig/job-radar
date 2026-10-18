@@ -101,3 +101,11 @@ def test_no_reintenta_errores_4xx(monkeypatch):
     with pytest.raises(httpx.HTTPStatusError):
         list(Freehire(cli).traer(Busqueda("freehire:x", "freehire", {}, 24)))
     assert len(intentos) == 1
+
+
+def test_parametros_de_un_mercado_sin_region_ue():
+    from job_radar.fuentes.base import Intencion
+    from job_radar.preferencias import Modalidad
+
+    golfo = Intencion(id="remoto-ae", terminos=("AI",), pais="AE", modalidades=(Modalidad.REMOTO,), mercado=True)
+    assert Freehire().parametros(golfo) == [{"countries": "ae", "work_mode": "remote", "q": "AI", "q_fields": "title"}]

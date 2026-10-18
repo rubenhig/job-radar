@@ -39,6 +39,8 @@ class Remoto(Estricto):
     desde_pais: str = Field(pattern=r"^[A-Z]{2}$", description="País desde el que se trabajaría")
     empresa_local: bool = True
     empresa_extranjera: bool = True
+    mercados: list[str] = Field(default=[], description=(
+        "Otros países cuyas ofertas en remoto se vigilan (p. ej. AE, SA, QA): un nicho, solo en fuentes gratuitas"))
 
 
 class Terminos(Estricto):

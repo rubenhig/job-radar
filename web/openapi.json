@@ -1734,6 +1734,15 @@
       "type": "boolean",
       "title": "Empresa Extranjera",
       "default": true
+     },
+     "mercados": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Mercados",
+      "description": "Otros países cuyas ofertas en remoto se vigilan (p. ej. AE, SA, QA): un nicho, solo en fuentes gratuitas",
+      "default": []
      }
     },
     "additionalProperties": false,

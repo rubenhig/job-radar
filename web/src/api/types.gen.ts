@@ -644,6 +644,12 @@ export type Remoto = {
      * Empresa Extranjera
      */
     empresa_extranjera?: boolean;
+    /**
+     * Mercados
+     *
+     * Otros países cuyas ofertas en remoto se vigilan (p. ej. AE, SA, QA): un nicho, solo en fuentes gratuitas
+     */
+    mercados?: Array<string>;
 };
 
 /**

@@ -59,6 +59,7 @@ class Intencion:
     modalidades: tuple[Modalidad, ...]
     ciudad: str | None = None                 # None en remoto
     empresa_extranjera: bool = True           # remoto: aceptar empresas de fuera que contraten en el país
+    mercado: bool = False                     # remoto en otro país (preferencias: remoto.mercados)
 
     @property
     def remota(self) -> bool:
