@@ -19,11 +19,12 @@ VIGILADOS = [c for c in Oferta.model_fields if c not in ("fuente_id", "id_extern
 log = logging.getLogger(__name__)
 
 
-def ejecutar(db, conector: Conector, busqueda: Busqueda) -> int:
+def ejecutar(db, conector: Conector, busqueda: Busqueda, tarea_id: int | None = None) -> int:
     """Devuelve el id de la Ejecución. No lanza: un fallo de la fuente queda registrado en ella."""
     # Se guarda la búsqueda tal como se lanza: la ejecución apunta a sus parámetros exactos.
     almacen.guardar_busqueda(db, busqueda.id, busqueda.fuente, busqueda.parametros, busqueda.frecuencia_h)
-    ejecucion = almacen.iniciar_ejecucion(db, conector.fuente, conector.version, busqueda.id, busqueda.horas)
+    ejecucion = almacen.iniciar_ejecucion(db, conector.fuente, conector.version, busqueda.id, busqueda.horas,
+                                          tarea_id)
     m = {"recibidos": 0, "nuevos": 0, "actualizados": 0, "errores_norm": 0}
     rellenos = Counter()
     estado, error = "ok", None
@@ -39,7 +40,8 @@ def ejecutar(db, conector: Conector, busqueda: Busqueda) -> int:
                 log.warning("%s: no se pudo normalizar %s: %s", conector.fuente, bruto.id_externo, e)
                 continue
             rellenos.update(c for c in VIGILADOS if getattr(oferta, c) not in (None, "", []))
-            _, nueva = almacen.guardar_oferta(db, oferta.fila(), bruto_id, conector.version)
+            oferta_id, nueva = almacen.guardar_oferta(db, oferta.fila(), bruto_id, conector.version)
+            db.execute("INSERT OR IGNORE INTO vista VALUES (?, ?)", [ejecucion, oferta_id])
             m["nuevos" if nueva else "actualizados"] += 1
     except Exception as e:  # noqa: BLE001
         estado = "parcial" if m["recibidos"] else "error"

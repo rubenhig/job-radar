@@ -61,6 +61,7 @@ class Intencion:
     ciudad: str | None = None                 # None en remoto
     empresa_extranjera: bool = True           # remoto: aceptar empresas de fuera que contraten en el país
     mercado: bool = False                     # remoto en otro país (preferencias: remoto.mercados)
+    por_terminos: bool = False                # en una ciudad, buscar por los términos y no «todo lo técnico»
 
     @property
     def remota(self) -> bool:

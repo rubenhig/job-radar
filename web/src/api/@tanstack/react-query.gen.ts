@@ -25,6 +25,9 @@ import {
   sistemaResumen,
   sistemaVisita,
   sistemaVivo,
+  tareasBuscar,
+  tareasFicha,
+  tareasListar,
 } from '../sdk.gen'
 import type {
   EmpresasDecidirData,
@@ -73,6 +76,14 @@ import type {
   SistemaVisitaResponse,
   SistemaVivoData,
   SistemaVivoResponse,
+  TareasBuscarData,
+  TareasBuscarError,
+  TareasBuscarResponse,
+  TareasFichaData,
+  TareasFichaError,
+  TareasFichaResponse,
+  TareasListarData,
+  TareasListarResponse,
 } from '../types.gen'
 
 export type QueryKey<TOptions extends Options> = [
@@ -387,6 +398,87 @@ export const empresasDecidirMutation = (
   }
   return mutationOptions
 }
+
+/**
+ * Buscar
+ *
+ * Lanza una búsqueda ya. Vuelve en el acto: el progreso se consulta con GET /tareas/{id}.
+ */
+export const tareasBuscarMutation = (
+  options?: Partial<Options<TareasBuscarData>>
+): UseMutationOptions<
+  TareasBuscarResponse,
+  TareasBuscarError,
+  Options<TareasBuscarData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    TareasBuscarResponse,
+    TareasBuscarError,
+    Options<TareasBuscarData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await tareasBuscar({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const tareasListarQueryKey = (options?: Options<TareasListarData>) =>
+  createQueryKey('tareasListar', options)
+
+/**
+ * Listar
+ *
+ * Las últimas búsquedas a demanda, la más reciente primero.
+ */
+export const tareasListarOptions = (options?: Options<TareasListarData>) =>
+  queryOptions<
+    TareasListarResponse,
+    DefaultError,
+    TareasListarResponse,
+    ReturnType<typeof tareasListarQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await tareasListar({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: tareasListarQueryKey(options),
+  })
+
+export const tareasFichaQueryKey = (options: Options<TareasFichaData>) =>
+  createQueryKey('tareasFicha', options)
+
+/**
+ * Ficha
+ */
+export const tareasFichaOptions = (options: Options<TareasFichaData>) =>
+  queryOptions<
+    TareasFichaResponse,
+    TareasFichaError,
+    TareasFichaResponse,
+    ReturnType<typeof tareasFichaQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await tareasFicha({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: tareasFichaQueryKey(options),
+  })
 
 export const sistemaVivoQueryKey = (options?: Options<SistemaVivoData>) =>
   createQueryKey('sistemaVivo', options)

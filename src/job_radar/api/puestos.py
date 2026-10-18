@@ -88,6 +88,7 @@ def listar(db: Annotated[object, Depends(bd)],
            estado_lista: Annotated[list[EstadoLista] | None, Query()] = None,
            mi_etiqueta: str | None = None,
            empresa_id: int | None = None,
+           tarea_id: int | None = None,
            orden: Orden = "recientes",
            limite: Annotated[int, Query(gt=0, le=200)] = 50,
            desde: Annotated[int, Query(ge=0)] = 0):
@@ -109,6 +110,10 @@ def listar(db: Annotated[object, Depends(bd)],
         args = []
         if guardado is False:
             donde.append("g.puesto_id IS NULL")
+        if tarea_id is not None:  # lo que vio una búsqueda a demanda, nuevo o no
+            donde.append("""p.id IN (SELECT o.puesto_id FROM vista v JOIN ejecucion e ON e.id = v.ejecucion_id
+                             JOIN oferta o ON o.id = v.oferta_id WHERE e.tarea_id = ?)""")
+            args.append(tarea_id)
     if q:
         donde.append("p.id IN (SELECT puesto_id FROM oferta WHERE titulo LIKE ? OR empresa LIKE ? OR descripcion LIKE ?)")
         args += [f"%{q}%"] * 3

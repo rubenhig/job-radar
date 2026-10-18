@@ -235,6 +235,29 @@ class EmpresaEntrada(BaseModel):
     notas: str | None = Field(None, max_length=5000)
 
 
+class EjecucionTarea(BaseModel):
+    busqueda_id: str | None = None
+    fuente_id: str
+    estado: str
+    recibidos: int
+    nuevos: int
+    error: str | None = None
+
+
+class Tarea(BaseModel):
+    """Una búsqueda a demanda (job_radar.tareas) y su progreso."""
+
+    id: int
+    parametros: dict[str, Any]
+    estado: Literal["en_cola", "en_curso", "ok", "error"]
+    creada_en: str
+    inicio: str | None = None
+    fin: str | None = None
+    resumen: dict[str, Any] | None = None
+    error: str | None = None
+    ejecuciones: list[EjecucionTarea] = []
+
+
 class EstadoFuente(BaseModel):
     id: str
     tipo: str

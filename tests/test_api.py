@@ -206,3 +206,34 @@ def test_empresas_se_crean_solas_y_descartar_una_descarta_sus_puestos(cliente):
     d = cliente.get("/api/puestos", params={"descartados": True}).json()["items"]
     assert any(p["descarte"].startswith("empresa descartada") for p in d)
     assert cliente.get("/api/empresas/9999").status_code == 404
+
+
+def test_busqueda_a_demanda_se_lanza_y_se_sigue(cliente, monkeypatch):
+    from job_radar import tareas
+
+    lanzadas = []
+    monkeypatch.setattr(tareas, "lanzar", lambda ruta, datos, n: lanzadas.append(n) or 4242)
+    monkeypatch.setattr(tareas, "vivo", lambda pid: True)
+    r = cliente.post("/api/tareas/busqueda", json={"modo": "puntual", "terminos": ["LLM Engineer"], "remoto": True,
+                                                   "fuentes": ["linkedin"]})
+    assert r.status_code == 201 and r.json()["estado"] == "en_cola" and lanzadas == [r.json()["id"]]
+    assert cliente.post("/api/tareas/busqueda", json={}).status_code == 409  # una a la vez
+    assert cliente.get("/api/tareas").json()[0]["parametros"]["terminos"] == ["LLM Engineer"]
+    monkeypatch.setattr(tareas, "vivo", lambda pid: False)  # el proceso murió sin cerrar la tarea
+    assert cliente.get(f"/api/tareas/{r.json()['id']}").json()["estado"] == "error"
+    assert cliente.post("/api/tareas/busqueda", json={"modo": "puntual", "terminos": ["x"]}).status_code == 422
+    assert cliente.post("/api/tareas/busqueda", json={"fuentes": ["noexiste"]}).status_code == 422
+
+
+def test_busquedas_de_una_tarea_puntual(tmp_path):
+    from job_radar import tareas
+    from job_radar.fuentes.freehire import Freehire
+    from job_radar.preferencias import cargar
+
+    prefs = cargar(RAIZ / "config" / "preferencias.ejemplo.yaml")
+    from job_radar.fuentes import registro as reg
+
+    pedido = tareas.Pedido(modo="puntual", terminos=["LLM"], ciudad="Barcelona", fuentes=["freehire"])
+    [b] = tareas.busquedas(pedido, 7, prefs, reg.cargar(), {"freehire": Freehire()})
+    assert b.id == "freehire:t7" and b.parametros == {"cities": "Barcelona", "q": "LLM", "q_fields": "title"}
+    assert b.horas == 7 * 24  # una búsqueda puntual mira la última semana

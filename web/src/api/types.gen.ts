@@ -171,6 +171,36 @@ export type Criterio = {
 }
 
 /**
+ * EjecucionTarea
+ */
+export type EjecucionTarea = {
+  /**
+   * Busqueda Id
+   */
+  busqueda_id?: string | null
+  /**
+   * Fuente Id
+   */
+  fuente_id: string
+  /**
+   * Estado
+   */
+  estado: string
+  /**
+   * Recibidos
+   */
+  recibidos: number
+  /**
+   * Nuevos
+   */
+  nuevos: number
+  /**
+   * Error
+   */
+  error?: string | null
+}
+
+/**
  * EmpresaEntrada
  *
  * Lo que se cambia; `estado: null` lo deja «sin revisar».
@@ -654,6 +684,42 @@ export type PaginaPuestos = {
 }
 
 /**
+ * Pedido
+ *
+ * Lo que se pide desde la web.
+ */
+export type Pedido = {
+  /**
+   * Modo
+   */
+  modo?: 'habitual' | 'puntual'
+  /**
+   * Fuentes
+   */
+  fuentes?: Array<string>
+  /**
+   * Terminos
+   */
+  terminos?: Array<string>
+  /**
+   * Ciudad
+   */
+  ciudad?: string | null
+  /**
+   * Remoto
+   */
+  remoto?: boolean
+  /**
+   * Pais
+   */
+  pais?: string
+  /**
+   * Puntuar
+   */
+  puntuar?: boolean
+}
+
+/**
  * Preferencias
  */
 export type Preferencias = {
@@ -1005,6 +1071,54 @@ export type SalarioDeseado = {
 }
 
 /**
+ * Tarea
+ *
+ * Una búsqueda a demanda (job_radar.tareas) y su progreso.
+ */
+export type Tarea = {
+  /**
+   * Id
+   */
+  id: number
+  /**
+   * Parametros
+   */
+  parametros: {
+    [key: string]: unknown
+  }
+  /**
+   * Estado
+   */
+  estado: 'en_cola' | 'en_curso' | 'ok' | 'error'
+  /**
+   * Creada En
+   */
+  creada_en: string
+  /**
+   * Inicio
+   */
+  inicio?: string | null
+  /**
+   * Fin
+   */
+  fin?: string | null
+  /**
+   * Resumen
+   */
+  resumen?: {
+    [key: string]: unknown
+  } | null
+  /**
+   * Error
+   */
+  error?: string | null
+  /**
+   * Ejecuciones
+   */
+  ejecuciones?: Array<EjecucionTarea>
+}
+
+/**
  * Terminos
  *
  * Con qué palabras se buscan los roles en las fuentes. Vacío → los nombres de los roles.
@@ -1211,6 +1325,10 @@ export type PuestosListarData = {
      * Empresa Id
      */
     empresa_id?: number | null
+    /**
+     * Tarea Id
+     */
+    tarea_id?: number | null
     /**
      * Orden
      */
@@ -1546,6 +1664,82 @@ export type EmpresasDecidirResponses = {
 
 export type EmpresasDecidirResponse =
   EmpresasDecidirResponses[keyof EmpresasDecidirResponses]
+
+export type TareasBuscarData = {
+  body: Pedido
+  path?: never
+  query?: never
+  url: '/api/tareas/busqueda'
+}
+
+export type TareasBuscarErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type TareasBuscarError = TareasBuscarErrors[keyof TareasBuscarErrors]
+
+export type TareasBuscarResponses = {
+  /**
+   * Successful Response
+   */
+  201: Tarea
+}
+
+export type TareasBuscarResponse =
+  TareasBuscarResponses[keyof TareasBuscarResponses]
+
+export type TareasListarData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/tareas'
+}
+
+export type TareasListarResponses = {
+  /**
+   * Response Tareas-Listar
+   *
+   * Successful Response
+   */
+  200: Array<Tarea>
+}
+
+export type TareasListarResponse =
+  TareasListarResponses[keyof TareasListarResponses]
+
+export type TareasFichaData = {
+  body?: never
+  path: {
+    /**
+     * Tarea Id
+     */
+    tarea_id: number
+  }
+  query?: never
+  url: '/api/tareas/{tarea_id}'
+}
+
+export type TareasFichaErrors = {
+  /**
+   * Validation Error
+   */
+  422: HttpValidationError
+}
+
+export type TareasFichaError = TareasFichaErrors[keyof TareasFichaErrors]
+
+export type TareasFichaResponses = {
+  /**
+   * Successful Response
+   */
+  200: Tarea
+}
+
+export type TareasFichaResponse =
+  TareasFichaResponses[keyof TareasFichaResponses]
 
 export type SistemaVivoData = {
   body?: never

@@ -2,6 +2,7 @@ import {
   Activity,
   Bookmark,
   Building2,
+  Radar,
   Gauge,
   BriefcaseBusiness,
   LayoutDashboard,
@@ -17,6 +18,7 @@ export const sidebarData: SidebarData = {
       title: 'Radar',
       items: [
         { title: 'Inicio', url: '/', icon: LayoutDashboard },
+        { title: 'Buscar', url: '/buscar', icon: Radar },
         { title: 'Puestos', url: '/puestos', icon: BriefcaseBusiness },
         { title: 'Mi lista', url: '/lista', icon: Bookmark },
         { title: 'Empresas', url: '/empresas', icon: Building2 },

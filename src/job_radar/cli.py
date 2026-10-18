@@ -65,6 +65,53 @@ def tocan(db, lista: list[Busqueda], ahora: datetime) -> list[Busqueda]:
     return salida
 
 
+def _lanzar_busquedas(db, lista: list[Busqueda], conectores: dict, tarea_id: int | None = None) -> None:
+    for b in lista:  # una fuente caída no tumba las demás: `ejecutar` no lanza
+        e = db["ejecucion"].get(ingesta.ejecutar(db, conectores[b.fuente], b, tarea_id))
+        log.info("%-22s %-7s %4dh · recibidas %3d · nuevas %3d · errores %d%s", b.id, e["estado"], b.horas,
+                 e["recibidos"], e["nuevos"], e["errores_norm"], f" · {e['error'][:120]}" if e["error"] else "")
+
+
+def _despues(db, prefs) -> None:
+    """Tras traer ofertas: agruparlas en puestos, cerrar lo caducado, enlazar empresas y pasar la criba."""
+    log.info("puestos: %s", puestos.actualizar(db) or "sin cambios")
+    log.info("cierre: %s", puestos.cerrar(db) or "nada que cerrar")
+    log.info("empresas: %s", empresas.actualizar(db) or "sin cambios")
+    log.info("criba: %s", dict(criba.aplicar(db, prefs)))
+
+
+def cmd_tarea(args) -> int:
+    """Una búsqueda a demanda lanzada desde la web (job_radar.tareas). Comparte cerrojo con la ingesta."""
+    from job_radar import tareas
+
+    db = almacen.abrir(args.db)
+    t = db["tarea"].get(args.id)
+    with cerrojo(args.db.parent / ".ingesta.lock") as libre:
+        if not libre:
+            tareas.guardar_resumen(db, args.id, "error", "ya había una búsqueda en marcha (la diaria u otra)")
+            return 1
+        db["tarea"].update(args.id, {"estado": "en_curso", "inicio": almacen.ahora(), "pid": os.getpid()})
+        db.conn.commit()
+        try:
+            pedido = tareas.Pedido.model_validate_json(t["parametros"])
+            registro = reg.cargar()
+            conectores = {k: conector(f.conector) for k, f in registro.activas().items() if k in pedido.fuentes}
+            prefs = cargar_preferencias(RUTA_PREFERENCIAS)
+            lista = tareas.busquedas(pedido, args.id, prefs, registro, conectores)
+            log.info("tarea %d (%s): %d búsquedas", args.id, pedido.modo, len(lista))
+            _lanzar_busquedas(db, lista, conectores, args.id)
+            _despues(db, prefs)
+            codigo = 0
+            if pedido.puntuar:
+                codigo = cmd_puntuar(argparse.Namespace(db=args.db, etiquetados=False, rehacer=False,
+                                                        modelo="sonnet", paralelo=3, limite=100))
+            tareas.guardar_resumen(db, args.id, "ok", None if codigo == 0 else "la puntuación falló en parte")
+            return codigo
+        except Exception as e:
+            tareas.guardar_resumen(db, args.id, "error", str(e)[:500])
+            raise
+
+
 def cerrar_colgadas(db, ahora: datetime) -> int:
     """Las ejecuciones que se quedaron «en curso» (Ctrl-C, proceso matado) pasan a error."""
     limite = (ahora - timedelta(hours=COLGADA_H)).isoformat(timespec="seconds")
@@ -120,15 +167,8 @@ def _ingesta(args) -> int:
 
     pendientes = lista if args.todas else tocan(db, lista, datetime.now(UTC))
     log.info("ingesta: %d de %d búsquedas tocan", len(pendientes), len(lista))
-    for b in pendientes:  # una fuente caída no tumba las demás: `ejecutar` no lanza
-        e = db["ejecucion"].get(ingesta.ejecutar(db, conectores[b.fuente], b))
-        log.info("%-22s %-7s %4dh · recibidas %3d · nuevas %3d · errores %d%s", b.id, e["estado"], b.horas,
-                 e["recibidos"], e["nuevos"], e["errores_norm"], f" · {e['error'][:120]}" if e["error"] else "")
-    log.info("puestos: %s", puestos.actualizar(db) or "sin cambios")
-    log.info("cierre: %s", puestos.cerrar(db) or "nada que cerrar")
-    log.info("empresas: %s", empresas.actualizar(db) or "sin cambios")
-    log.info("criba: %s", dict(criba.aplicar(db, prefs)))
-
+    _lanzar_busquedas(db, pendientes, conectores)
+    _despues(db, prefs)
     codigo = 0
     if args.puntuar:
         codigo = cmd_puntuar(argparse.Namespace(db=args.db, etiquetados=False, rehacer=False, modelo="sonnet",
@@ -275,6 +315,9 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=cmd_resumen)
     sub.add_parser("salud", help="alertas de las fuentes").set_defaults(func=cmd_salud)
     sub.add_parser("copia", help="copia de seguridad de la base").set_defaults(func=cmd_copia)
+    p = sub.add_parser("tarea", help="ejecuta una búsqueda a demanda creada desde la web")
+    p.add_argument("id", type=int)
+    p.set_defaults(func=cmd_tarea)
     p = sub.add_parser("renormalizar", help="reinterpreta las ofertas guardadas con los conectores actuales")
     p.add_argument("--fuente", action="append", help="solo esta fuente (se puede repetir)")
     p.set_defaults(func=cmd_renormalizar)

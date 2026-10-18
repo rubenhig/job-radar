@@ -54,6 +54,14 @@ import type {
   SistemaVisitaResponses,
   SistemaVivoData,
   SistemaVivoResponses,
+  TareasBuscarData,
+  TareasBuscarErrors,
+  TareasBuscarResponses,
+  TareasFichaData,
+  TareasFichaErrors,
+  TareasFichaResponses,
+  TareasListarData,
+  TareasListarResponses,
 } from './types.gen'
 
 export type Options<
@@ -240,6 +248,51 @@ export const empresasDecidir = <ThrowOnError extends boolean = false>(
       ...options.headers,
     },
   })
+
+/**
+ * Buscar
+ *
+ * Lanza una búsqueda ya. Vuelve en el acto: el progreso se consulta con GET /tareas/{id}.
+ */
+export const tareasBuscar = <ThrowOnError extends boolean = false>(
+  options: Options<TareasBuscarData, ThrowOnError>
+): RequestResult<TareasBuscarResponses, TareasBuscarErrors, ThrowOnError> =>
+  (options.client ?? client).post<
+    TareasBuscarResponses,
+    TareasBuscarErrors,
+    ThrowOnError
+  >({
+    url: '/api/tareas/busqueda',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Listar
+ *
+ * Las últimas búsquedas a demanda, la más reciente primero.
+ */
+export const tareasListar = <ThrowOnError extends boolean = false>(
+  options?: Options<TareasListarData, ThrowOnError>
+): RequestResult<TareasListarResponses, unknown, ThrowOnError> =>
+  (options?.client ?? client).get<TareasListarResponses, unknown, ThrowOnError>(
+    { url: '/api/tareas', ...options }
+  )
+
+/**
+ * Ficha
+ */
+export const tareasFicha = <ThrowOnError extends boolean = false>(
+  options: Options<TareasFichaData, ThrowOnError>
+): RequestResult<TareasFichaResponses, TareasFichaErrors, ThrowOnError> =>
+  (options.client ?? client).get<
+    TareasFichaResponses,
+    TareasFichaErrors,
+    ThrowOnError
+  >({ url: '/api/tareas/{tarea_id}', ...options })
 
 /**
  * Vivo

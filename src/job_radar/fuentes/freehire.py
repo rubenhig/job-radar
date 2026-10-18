@@ -66,8 +66,10 @@ class Freehire:
         self.cuota = None
 
     def parametros(self, i: Intencion) -> list[dict[str, Any]]:
-        if not i.remota:
+        if not i.remota and not i.por_terminos:
             return [{"cities": i.ciudad, "is_tech": "tech"}]
+        if not i.remota:  # búsqueda puntual en una ciudad: sus términos mandan
+            return [{"cities": i.ciudad, "q": q, "q_fields": "title"} for q in consultas(i.terminos)]
         donde = {"countries": i.pais.lower(), "work_mode": "remote"}
         if i.empresa_extranjera and not i.mercado:
             donde["regions"] = "eu"  # la geografía se suma (OR): España o UE

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppBuscarRouteImport } from './routes/_app/buscar'
 import { Route as AppEtiquetarRouteImport } from './routes/_app/etiquetar'
 import { Route as AppFuentesRouteImport } from './routes/_app/fuentes'
 import { Route as AppListaRouteImport } from './routes/_app/lista'
@@ -28,6 +29,11 @@ const AppRouteRoute = AppRouteRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppBuscarRoute = AppBuscarRouteImport.update({
+  id: '/buscar',
+  path: '/buscar',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppEtiquetarRoute = AppEtiquetarRouteImport.update({
@@ -78,6 +84,7 @@ const AppPuestosPuestoIdRoute = AppPuestosPuestoIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/buscar': typeof AppBuscarRoute
   '/etiquetar': typeof AppEtiquetarRoute
   '/fuentes': typeof AppFuentesRoute
   '/lista': typeof AppListaRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/puestos/': typeof AppPuestosIndexRoute
 }
 export interface FileRoutesByTo {
+  '/buscar': typeof AppBuscarRoute
   '/etiquetar': typeof AppEtiquetarRoute
   '/fuentes': typeof AppFuentesRoute
   '/lista': typeof AppListaRoute
@@ -103,6 +111,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteRouteWithChildren
+  '/_app/buscar': typeof AppBuscarRoute
   '/_app/etiquetar': typeof AppEtiquetarRoute
   '/_app/fuentes': typeof AppFuentesRoute
   '/_app/lista': typeof AppListaRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/buscar'
     | '/etiquetar'
     | '/fuentes'
     | '/lista'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/puestos/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/buscar'
     | '/etiquetar'
     | '/fuentes'
     | '/lista'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/_app/buscar'
     | '/_app/etiquetar'
     | '/_app/fuentes'
     | '/_app/lista'
@@ -172,6 +184,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/buscar': {
+      id: '/_app/buscar'
+      path: '/buscar'
+      fullPath: '/buscar'
+      preLoaderRoute: typeof AppBuscarRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/etiquetar': {
@@ -241,6 +260,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteRouteChildren {
+  AppBuscarRoute: typeof AppBuscarRoute
   AppEtiquetarRoute: typeof AppEtiquetarRoute
   AppFuentesRoute: typeof AppFuentesRoute
   AppListaRoute: typeof AppListaRoute
@@ -254,6 +274,7 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppBuscarRoute: AppBuscarRoute,
   AppEtiquetarRoute: AppEtiquetarRoute,
   AppFuentesRoute: AppFuentesRoute,
   AppListaRoute: AppListaRoute,

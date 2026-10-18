@@ -216,6 +216,28 @@ MIGRACIONES: list[str] = [
     CREATE INDEX oferta_empresa ON oferta (empresa_id);
     CREATE INDEX puesto_empresa ON puesto (empresa_id);
     """,
+    # 12 · búsquedas a demanda (job_radar.tareas): la tarea que lanza la web, a qué tarea pertenece cada
+    # ejecución y qué ofertas vio cada ejecución (también las que ya existían: «lo que encontró esta búsqueda»)
+    """
+    CREATE TABLE tarea (
+        id              INTEGER PRIMARY KEY,
+        tipo            TEXT NOT NULL,              -- busqueda
+        parametros      TEXT NOT NULL,              -- JSON
+        estado          TEXT NOT NULL DEFAULT 'en_cola' CHECK (estado IN ('en_cola', 'en_curso', 'ok', 'error')),
+        pid             INTEGER,
+        creada_en       TEXT NOT NULL,
+        inicio          TEXT,
+        fin             TEXT,
+        resumen         TEXT,                       -- JSON
+        error           TEXT
+    );
+    ALTER TABLE ejecucion ADD COLUMN tarea_id INTEGER REFERENCES tarea(id);
+    CREATE TABLE vista (
+        ejecucion_id    INTEGER NOT NULL REFERENCES ejecucion(id),
+        oferta_id       INTEGER NOT NULL REFERENCES oferta(id),
+        PRIMARY KEY (ejecucion_id, oferta_id)
+    );
+    """,
 ]
 
 
@@ -272,9 +294,9 @@ def guardar_busqueda(db, id: str, fuente_id: str, parametros: dict, frecuencia_h
 
 
 def iniciar_ejecucion(db, fuente_id: str, conector: str, busqueda_id: str | None = None,
-                      ventana_h: int | None = None) -> int:
+                      ventana_h: int | None = None, tarea_id: int | None = None) -> int:
     return db["ejecucion"].insert({"fuente_id": fuente_id, "busqueda_id": busqueda_id, "conector": conector,
-                                   "inicio": ahora(), "ventana_h": ventana_h}).last_pk
+                                   "inicio": ahora(), "ventana_h": ventana_h, "tarea_id": tarea_id}).last_pk
 
 
 def cerrar_ejecucion(db, ejecucion_id: int, estado: str, **metricas) -> None:

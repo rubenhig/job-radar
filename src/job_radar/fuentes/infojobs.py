@@ -101,7 +101,7 @@ class InfoJobs:
         self.cuota = None
 
     def parametros(self, i: Intencion) -> list[dict[str, Any]]:
-        if i.pais != "ES":
+        if i.pais != "ES" or i.por_terminos:  # el listado no filtra por términos: no sirve para búsquedas puntuales
             return []
         if i.remota:
             return [{"teleworkingIds": SOLO_TELETRABAJO, "categoryIds": INFORMATICA}]

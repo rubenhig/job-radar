@@ -109,6 +109,7 @@ export function Puestos() {
               : undefined,
         puntuado: busqueda.nota === 'sin' ? false : undefined,
         descartados: busqueda.descartados,
+        tarea_id: busqueda.tarea,
         nuevos_desde: busqueda.nuevos
           ? (visita?.desde ?? undefined)
           : undefined,
@@ -129,7 +130,8 @@ export function Puestos() {
     busqueda.dias ||
     (busqueda.nota && busqueda.nota !== 'todas') ||
     busqueda.descartados ||
-    busqueda.nuevos
+    busqueda.nuevos ||
+    busqueda.tarea
   )
 
   return (
@@ -139,7 +141,11 @@ export function Puestos() {
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>
-              {busqueda.descartados ? 'Descartados' : 'Puestos'}
+              {busqueda.tarea
+                ? 'Resultados de la búsqueda'
+                : busqueda.descartados
+                  ? 'Descartados'
+                  : 'Puestos'}
             </h2>
             <p className='text-muted-foreground'>
               {busqueda.descartados

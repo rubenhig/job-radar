@@ -257,6 +257,22 @@
       }
      },
      {
+      "name": "tarea_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Tarea Id"
+      }
+     },
+     {
       "name": "orden",
       "in": "query",
       "required": false,
@@ -800,6 +816,116 @@
     }
    }
   },
+  "/api/tareas/busqueda": {
+   "post": {
+    "tags": [
+     "tareas"
+    ],
+    "summary": "Buscar",
+    "description": "Lanza una búsqueda ya. Vuelve en el acto: el progreso se consulta con GET /tareas/{id}.",
+    "operationId": "tareas-buscar",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Pedido"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Tarea"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/tareas": {
+   "get": {
+    "tags": [
+     "tareas"
+    ],
+    "summary": "Listar",
+    "description": "Las últimas búsquedas a demanda, la más reciente primero.",
+    "operationId": "tareas-listar",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/Tarea"
+         },
+         "type": "array",
+         "title": "Response Tareas-Listar"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/tareas/{tarea_id}": {
+   "get": {
+    "tags": [
+     "tareas"
+    ],
+    "summary": "Ficha",
+    "operationId": "tareas-ficha",
+    "parameters": [
+     {
+      "name": "tarea_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Tarea Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Tarea"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/vivo": {
    "get": {
     "tags": [
@@ -1265,6 +1391,56 @@
      "motivo"
     ],
     "title": "Criterio"
+   },
+   "EjecucionTarea": {
+    "properties": {
+     "busqueda_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Busqueda Id"
+     },
+     "fuente_id": {
+      "type": "string",
+      "title": "Fuente Id"
+     },
+     "estado": {
+      "type": "string",
+      "title": "Estado"
+     },
+     "recibidos": {
+      "type": "integer",
+      "title": "Recibidos"
+     },
+     "nuevos": {
+      "type": "integer",
+      "title": "Nuevos"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     }
+    },
+    "type": "object",
+    "required": [
+     "fuente_id",
+     "estado",
+     "recibidos",
+     "nuevos"
+    ],
+    "title": "EjecucionTarea"
    },
    "EmpresaEntrada": {
     "properties": {
@@ -2164,6 +2340,67 @@
     ],
     "title": "PaginaPuestos"
    },
+   "Pedido": {
+    "properties": {
+     "modo": {
+      "type": "string",
+      "enum": [
+       "habitual",
+       "puntual"
+      ],
+      "title": "Modo",
+      "default": "habitual"
+     },
+     "fuentes": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "minItems": 1,
+      "title": "Fuentes"
+     },
+     "terminos": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 10,
+      "title": "Terminos",
+      "default": []
+     },
+     "ciudad": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 80
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ciudad"
+     },
+     "remoto": {
+      "type": "boolean",
+      "title": "Remoto",
+      "default": false
+     },
+     "pais": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "title": "Pais",
+      "default": "ES"
+     },
+     "puntuar": {
+      "type": "boolean",
+      "title": "Puntuar",
+      "default": true
+     }
+    },
+    "type": "object",
+    "title": "Pedido",
+    "description": "Lo que se pide desde la web."
+   },
    "Preferencias": {
     "properties": {
      "version": {
@@ -2878,6 +3115,95 @@
     "type": "object",
     "title": "SalarioDeseado",
     "description": "Bruto anual en euros. Cuenta en la nota cuando la oferta da salario (job_radar.puntuacion)."
+   },
+   "Tarea": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "parametros": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Parametros"
+     },
+     "estado": {
+      "type": "string",
+      "enum": [
+       "en_cola",
+       "en_curso",
+       "ok",
+       "error"
+      ],
+      "title": "Estado"
+     },
+     "creada_en": {
+      "type": "string",
+      "title": "Creada En"
+     },
+     "inicio": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Inicio"
+     },
+     "fin": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fin"
+     },
+     "resumen": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Resumen"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     },
+     "ejecuciones": {
+      "items": {
+       "$ref": "#/components/schemas/EjecucionTarea"
+      },
+      "type": "array",
+      "title": "Ejecuciones",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "parametros",
+     "estado",
+     "creada_en"
+    ],
+    "title": "Tarea",
+    "description": "Una búsqueda a demanda (job_radar.tareas) y su progreso."
    },
    "Terminos": {
     "properties": {

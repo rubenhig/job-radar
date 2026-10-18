@@ -63,7 +63,9 @@ def comprobar(db, registro: reg.Registro, ahora: datetime | None = None) -> list
     alertas = []
     for fuente_id, fuente in registro.activas().items():
         ejecuciones = [dict(r) for r in db.query(
-            "SELECT * FROM ejecucion WHERE fuente_id = ? AND fin IS NOT NULL ORDER BY inicio DESC", [fuente_id])]
+            # las búsquedas puntuales (tareas desde la web) no cuentan para la salud de la fuente
+            """SELECT * FROM ejecucion WHERE fuente_id = ? AND fin IS NOT NULL
+               AND (tarea_id IS NULL OR busqueda_id NOT GLOB '*:t[0-9]*') ORDER BY inicio DESC""", [fuente_id])]
         if not ejecuciones:
             alertas.append(Alerta(fuente_id, "no ha corrido", "ninguna ejecución registrada"))
             continue
