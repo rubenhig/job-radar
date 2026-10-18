@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Radar personal de empleo guiado por el CV: fuentes de calidad, puntuación con Claude y avisos por Telegram"
 readme = "README.md"
 authors = [
-    { name = "Ruben", email = "54994920+rubenhig@users.noreply.github.com" }
+    { name = "rubenhig", email = "54994920+rubenhig@users.noreply.github.com" }
 ]
 requires-python = ">=3.12"
 dependencies = [

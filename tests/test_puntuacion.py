@@ -115,9 +115,9 @@ def test_la_huella_ignora_lo_que_no_ve_el_modelo():
 
 
 @pytest.mark.parametrize("salario, estimado, puntos, techo", [
-    ({"salario_min": 25000, "salario_max": 35000, "salario_moneda": "EUR", "salario_periodo": "ano"}, False, 0, 45),
-    ({"salario_max": 35000, "salario_periodo": "ano"}, True, -15, None),        # estimado: resta, sin techo
-    ({"salario_min": 40000, "salario_max": 43500, "salario_periodo": "ano"}, False, 5, None),
+    ({"salario_min": 22000, "salario_max": 28000, "salario_moneda": "EUR", "salario_periodo": "ano"}, False, 0, 45),
+    ({"salario_max": 28000, "salario_periodo": "ano"}, True, -15, None),        # estimado: resta, sin techo
+    ({"salario_min": 32000, "salario_max": 35000, "salario_periodo": "ano"}, False, 5, None),
     ({"salario_max": 4500, "salario_moneda": "EUR", "salario_periodo": "mes"}, False, 10, None),  # 54k
     ({"salario_max": 60, "salario_moneda": "USD", "salario_periodo": "hora"}, False, 10, None),
 ])
@@ -164,8 +164,8 @@ def test_salario_citado_del_texto_y_cita_falsa():
     from job_radar.preferencias import SalarioDeseado
 
     deseado = SalarioDeseado(actual=30000, objetivo=40000)
-    texto = OFERTA + "\nSalario: 25.000€ - 35.000€ brutos/año"
-    dicho = {"minimo": 25000, "maximo": 35000, "moneda": "EUR", "periodo": "ano", "cita": "25.000€ - 35.000€"}
+    texto = OFERTA + "\nSalario: 22.000€ - 28.000€ brutos/año"
+    dicho = {"minimo": 22000, "maximo": 28000, "moneda": "EUR", "periodo": "ano", "cita": "22.000€ - 28.000€"}
     r = calcular(veredictos(salario=dicho), texto, (None, False), deseado)
     assert r.salario.techo == 45 and r.nota == 45
     falso = calcular(veredictos(salario=dicho | {"cita": "60.000 €"}), texto, (None, False), deseado)

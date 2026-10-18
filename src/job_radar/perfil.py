@@ -5,7 +5,7 @@ copia citas literales del CV. Después Python comprueba que cada cita existe de
 verdad en el texto del CV: lo que no se puede comprobar se marca, no se cree.
 
 Uso:
-    uv run python -m job_radar.perfil --cv ~/projects/CV/mi-cv.pdf
+    uv run python -m job_radar.perfil --cv ~/ruta/a/mi-cv.pdf
 """
 
 import argparse
