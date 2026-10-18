@@ -231,7 +231,10 @@ class Resultado(BaseModel):
 
 # --- el salario, en Python: no lo ve el modelo, así que se recalcula gratis ----------
 
-CAMBIO_EUR = {"EUR": 1.0, "USD": 0.92, "GBP": 1.17}  # aproximado (oct-2026): basta para comparar con el salario deseado
+# Aproximado (oct-2026): basta para comparar con el salario deseado. AED, SAR y QAR van ligados al dólar.
+CAMBIO_EUR = {"EUR": 1.0, "USD": 0.92, "GBP": 1.17, "CHF": 1.06, "PLN": 0.235, "AED": 0.242, "SAR": 0.237,
+              "QAR": 0.243}
+POR_HORAS = ("hora", "dia")  # tarifas de freelance o de plataforma: no son un sueldo anual comparable
 AL_ANO = {"ano": 1, "mes": 12, "semana": 46, "dia": 220, "hora": 1760}
 BONUS_SALARIO = 10      # puntos al llegar al objetivo
 TECHO_REBAJA = 45       # una rebaja no llega al corte de top (50)
@@ -259,6 +262,11 @@ def ajuste_salario(s: dict | None, estimado: bool, deseado) -> AjusteSalario | N
     anual = salario_anual(s)
     if anual is None or not deseado.actual:
         return None
+    if s.get("salario_periodo") in POR_HORAS:  # «$20-100/h» × 1760 no es un sueldo: se avisa, no puntúa
+        tope = s.get("salario_max") or s.get("salario_min")
+        unidad = "h" if s["salario_periodo"] == "hora" else "día"
+        return AjusteSalario(anual_eur=anual, estimado=estimado, puntos=0,
+                             marca=f"salario: tarifa de {tope:g} {s.get('salario_moneda') or ''}/{unidad}".replace(" /", "/"))
     objetivo = deseado.objetivo or deseado.actual
     k = f"{anual / 1000:.0f}k" + (" estimado" if estimado else "")
     if anual < deseado.actual:
@@ -295,19 +303,19 @@ def _cifra_en_texto(valor: float, texto: str) -> bool:
     return any(re.search(rf"(?<![\d.,]){re.escape(f)}(?![\d])", t) for f in formas)
 
 
-def salario_de(db, puesto_id: int) -> tuple[dict | None, bool]:
-    """El salario fusionado del puesto y si es estimado. Una fuente puede marcarlo como inferido por su
-    modelo (`derivados`) y aun así venir del texto: si la cifra está en el anuncio, cuenta como dicha."""
+def salario_de(db, puesto_id: int) -> tuple[dict | None, str | None]:
+    """El salario fusionado del puesto y de dónde sale: «fuente» (dato de la fuente), «texto» (lo infirió
+    el modelo de la fuente y la cifra está en el anuncio) o «estimado» (inferido y no está en el anuncio)."""
     fusion = json.loads(db["puesto"].get(puesto_id)["fusion"] or "{}").get("salario")
     if not fusion:
-        return None, False
+        return None, None
     oferta = db.execute("SELECT derivados, descripcion FROM oferta WHERE id = ?", [fusion.get("oferta_id")]).fetchone()
     derivados = json.loads(oferta[0]) if oferta and oferta[0] else []
-    estimado = any(c.startswith("salario") for c in derivados)
+    if not any(c.startswith("salario") for c in derivados):
+        return fusion["valor"], "fuente"
     tope = fusion["valor"].get("salario_max") or fusion["valor"].get("salario_min")
-    if estimado and tope and oferta and oferta[1] and _cifra_en_texto(tope, oferta[1]):
-        estimado = False
-    return fusion["valor"], estimado
+    en_texto = tope and oferta and oferta[1] and _cifra_en_texto(tope, oferta[1])
+    return fusion["valor"], "texto" if en_texto else "estimado"
 
 
 def cobertura(requisitos: list[Requisito]) -> float:
@@ -318,38 +326,52 @@ def cobertura(requisitos: list[Requisito]) -> float:
     return round(sum(p * c for p, c in pesados) / total, 3) if total else 0.5
 
 
-def elegir_salario(fuente: tuple[dict | None, bool], v: Veredictos) -> tuple[dict | None, bool]:
-    """El dato de la fuente si es real; si no, el que el modelo citó del texto; si no, el estimado."""
-    datos, estimado = fuente
-    if datos and not estimado:
-        return fuente
+def elegir_salario(fuente: tuple[dict | None, str | None], v: Veredictos) -> tuple[dict | None, bool]:
+    """(salario, estimado). Primero el dato real de la fuente; después el que el modelo citó del texto
+    (lee el de la ubicación del puesto: un anuncio puede dar la horquilla de Londres y la de Madrid); y si
+    no, el inferido por la fuente, dicho si la cifra está en el anuncio y estimado si no."""
+    datos, origen = fuente
+    if datos and origen == "fuente":
+        return datos, False
     if v.salario and (v.salario.maximo or v.salario.minimo):
         return {"salario_min": v.salario.minimo, "salario_max": v.salario.maximo,
                 "salario_moneda": v.salario.moneda, "salario_periodo": v.salario.periodo}, False
-    return fuente
+    return (datos, origen == "estimado") if datos else (None, False)
 
 
-def calcular(v: Veredictos, texto_oferta: str, fuente_salario: tuple[dict | None, bool] = (None, False),
+NUMEROS = re.compile(r"\d+")
+# Un veto exige certeza (SISTEMA): si el motivo expresa duda, el «no pasa» solo marca.
+DUDA = re.compile(r"no indica|no consta|no aclara|no queda claro|no est[aá] (claro|claramente)|no especifica|"
+                  r"no dice|sin indicar|indicios|probablemente|posiblemente|podr[ií]a|parece|garantizad", re.I)
+
+
+def cita_valida(cita: str, texto: str) -> bool:
+    """Como `verificar_cita`, pero sin tolerar cifras cambiadas: «55.000» no vale si el anuncio dice «35.000»."""
+    return verificar_cita(cita, texto) and set(NUMEROS.findall(cita)) <= set(NUMEROS.findall(texto))
+
+
+def calcular(v: Veredictos, texto_oferta: str, fuente_salario: tuple[dict | None, str | None] = (None, None),
              deseado=None) -> Resultado:
     falsas = []
     for nombre in ("modalidad", "elegibilidad", "idioma", "funcion", "rol_ia", "seniority", "fuente"):
         criterio = getattr(v, nombre)
-        if criterio.cita and not verificar_cita(criterio.cita, texto_oferta):
+        if criterio.cita and not cita_valida(criterio.cita, texto_oferta):
             falsas.append(nombre)
             criterio.cita = None  # no cuenta como evidencia
-    if v.salario and not verificar_cita(v.salario.cita, texto_oferta):
-        falsas.append("salario")
+    if v.salario and not (cita_valida(v.salario.cita, texto_oferta) and all(
+            _cifra_en_texto(x, v.salario.cita) for x in (v.salario.minimo, v.salario.maximo) if x)):
+        falsas.append("salario")  # la cita no está en el anuncio, o sus cifras no son las que dice el modelo
         v.salario = None
-    requisitos = [r for r in v.requisitos if verificar_cita(r.requisito, texto_oferta) or r.origen == "inferido"]
+    requisitos = [r for r in v.requisitos if cita_valida(r.requisito, texto_oferta) or r.origen == "inferido"]
     if len(requisitos) < len(v.requisitos):
         falsas.append(f"requisitos ({len(v.requisitos) - len(requisitos)})")
 
     marcas, veto = [], None
     for nombre in ("modalidad", "elegibilidad", "idioma"):
         g: Compuerta = getattr(v, nombre)
-        if g.veredicto == "no_pasa" and g.cita:
+        if g.veredicto == "no_pasa" and g.cita and not DUDA.search(g.motivo):
             veto = veto or f"{nombre}: {g.motivo}"
-        elif g.veredicto in ("no_pasa", "marca"):  # sin cita comprobada, un "no pasa" solo marca
+        elif g.veredicto in ("no_pasa", "marca"):  # sin cita comprobada, o con duda, un "no pasa" solo marca
             marcas.append(f"{nombre}: {g.motivo}")
     if v.funcion.valor == "no_construye_software":
         veto = veto or f"función: {v.funcion.motivo}"
@@ -432,22 +454,21 @@ def guardar(db, puesto_id: int, r: Resultado, uso: Uso, perfil: str, texto_ofert
 
 
 def recalcular(db, prefs: Preferencias) -> int:
-    """Rehace la parte en Python de la última evaluación de cada puesto (hoy, el salario) sin llamar al
-    modelo: cambiar el salario deseado, o que una oferta lo publique, no cuesta nada. Devuelve cuántas cambian."""
+    """Rehace toda la parte en Python de la última evaluación de cada puesto (verificación de citas, vetos,
+    salario, techos) con los veredictos guardados y el texto actual, sin llamar al modelo: cambiar las
+    reglas, el salario deseado o que una oferta publique su salario no cuesta nada. Devuelve cuántas cambian."""
     cambios = 0
     for ev in db.query("""SELECT * FROM evaluacion WHERE id IN (SELECT MAX(id) FROM evaluacion
                           WHERE rubrica = ? GROUP BY puesto_id)""", [RUBRICA]):
         r = Resultado.model_validate_json(ev["resultado"])
-        # La cita del salario ya se comprobó al evaluar: si era falsa, no está en los veredictos guardados.
-        salario = ajuste_salario(*elegir_salario(salario_de(db, ev["puesto_id"]), r.veredictos), prefs.salario)
-        marcas = [m for m in r.marcas if not m.startswith("salario:")] + ([salario.marca] if salario and not r.vetado
-                                                                          else [])
-        nueva = r.model_copy(update={"salario": salario, "marcas": marcas,
-                                     "nota": nota_final(r.parciales, r.vetado, salario,
-                                                          r.veredictos.rol_ia.valor)})
+        nueva = calcular(r.veredictos.model_copy(deep=True), _texto(db, ev["puesto_id"]),
+                         salario_de(db, ev["puesto_id"]), prefs.salario)
+        nueva.citas_falsas = list(dict.fromkeys(r.citas_falsas + nueva.citas_falsas))
         if nueva != r:
-            db["evaluacion"].update(ev["id"], {"resultado": nueva.model_dump_json(), "nota": nueva.nota,
-                                               "marcas": json.dumps(marcas, ensure_ascii=False) if marcas else None})
+            db["evaluacion"].update(ev["id"], {
+                "resultado": nueva.model_dump_json(), "nota": nueva.nota, "vetado": int(nueva.vetado),
+                "motivo_veto": nueva.motivo_veto,
+                "marcas": json.dumps(nueva.marcas, ensure_ascii=False) if nueva.marcas else None})
             cambios += 1
     db.conn.commit()
     return cambios

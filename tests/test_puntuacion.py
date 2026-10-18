@@ -120,7 +120,7 @@ def test_la_huella_ignora_lo_que_no_ve_el_modelo():
     ({"salario_max": 28000, "salario_periodo": "ano"}, True, -15, None),        # estimado: resta, sin techo
     ({"salario_min": 32000, "salario_max": 35000, "salario_periodo": "ano"}, False, 5, None),
     ({"salario_max": 4500, "salario_moneda": "EUR", "salario_periodo": "mes"}, False, 10, None),  # 54k
-    ({"salario_max": 60, "salario_moneda": "USD", "salario_periodo": "hora"}, False, 10, None),
+    ({"salario_max": 60, "salario_moneda": "USD", "salario_periodo": "hora"}, False, 0, None),  # por horas: avisa
 ])
 def test_ajuste_salario(salario, estimado, puntos, techo):
     from job_radar.preferencias import SalarioDeseado
@@ -167,12 +167,12 @@ def test_salario_citado_del_texto_y_cita_falsa():
     deseado = SalarioDeseado(actual=30000, objetivo=40000)
     texto = OFERTA + "\nSalario: 22.000€ - 28.000€ brutos/año"
     dicho = {"minimo": 22000, "maximo": 28000, "moneda": "EUR", "periodo": "ano", "cita": "22.000€ - 28.000€"}
-    r = calcular(veredictos(salario=dicho), texto, (None, False), deseado)
+    r = calcular(veredictos(salario=dicho), texto, (None, None), deseado)
     assert r.salario.techo == 45 and r.nota == 45
-    falso = calcular(veredictos(salario=dicho | {"cita": "60.000 €"}), texto, (None, False), deseado)
+    falso = calcular(veredictos(salario=dicho | {"cita": "60.000 €"}), texto, (None, None), deseado)
     assert falso.salario is None and "salario" in falso.citas_falsas
     # el dato real de la fuente manda sobre el del texto
-    fuente = ({"salario_max": 55000, "salario_periodo": "ano"}, False)
+    fuente = ({"salario_max": 55000, "salario_periodo": "ano"}, "fuente")
     assert calcular(veredictos(salario=dicho), texto, fuente, deseado).salario.anual_eur == 55000
 
 
@@ -200,3 +200,28 @@ def test_se_repuntua_si_cambia_el_texto_del_puesto(tmp_path):
     assert puntuacion.pendientes(db, cv, prefs) == []
     db.execute("UPDATE oferta SET descripcion = 'Agentes LLM y RAG.'")  # la descripción cambia
     assert puntuacion.pendientes(db, cv, prefs) == [pid]
+
+
+def test_citas_con_cifras_cambiadas_no_valen():
+    texto = OFERTA + "\nSalario: 35.000 - 45.000 EUR. Al menos 3 años de experiencia."
+    assert puntuacion.cita_valida("Salario: 35.000 - 45.000 EUR", texto)
+    assert not puntuacion.cita_valida("Salario: 55.000 - 65.000 EUR", texto)
+    assert not puntuacion.cita_valida("Al menos 7 años de experiencia", texto)
+    # las cifras del modelo tienen que ser las de su cita
+    dicho = {"minimo": 55000, "maximo": 65000, "moneda": "EUR", "periodo": "ano", "cita": "35.000 - 45.000 EUR"}
+    assert calcular(veredictos(salario=dicho), texto).veredictos.salario is None
+
+
+def test_un_veto_con_duda_solo_marca():
+    duda = {"veredicto": "no_pasa", "cita": "Trabajo 100% remoto desde España",
+            "motivo": "Remoto, pero no indica que contraten desde España"}
+    r = calcular(veredictos(modalidad=duda), OFERTA)
+    assert not r.vetado and any("no indica" in m for m in r.marcas)
+
+
+def test_el_salario_del_modelo_manda_sobre_el_inferido_por_la_fuente():
+    modelo = {"minimo": 40000, "maximo": 50000, "moneda": "EUR", "periodo": "ano", "cita": "x"}
+    v = veredictos(salario=modelo)
+    londres = ({"salario_max": 151436, "salario_moneda": "GBP", "salario_periodo": "ano"}, "texto")
+    assert puntuacion.elegir_salario(londres, v)[0]["salario_max"] == 50000
+    assert puntuacion.elegir_salario((londres[0], "fuente"), v)[0]["salario_max"] == 151436
