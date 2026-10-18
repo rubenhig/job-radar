@@ -93,3 +93,15 @@ def test_el_error_de_una_busqueda_semanal_avisa(db):
                             "inicio": (AHORA - timedelta(hours=40)).isoformat(), "fin": AHORA.isoformat(),
                             "error": "Apify: RUNNING"})
     assert "error" in senales(db)  # antes, a las 36 h ya no estaba en «la última tanda»
+
+
+def test_puntuacion_atascada(db):
+    historia(db)
+    ahora = almacen.ahora()
+    db["puesto"].insert({"id": 1, "titulo": "AI Engineer", "estado": "abierto", "creado_en": ahora,
+                         "actualizado_en": ahora})
+    almacen.guardar_bruto(db, 1, "f", "1", {})
+    db["oferta"].insert({"fuente_id": "f", "id_externo": "1", "bruto_id": 1, "conector": "f/1", "titulo": "x",
+                         "publicada_en": AHORA.isoformat(), "puesto_id": 1,
+                         "vista_primera": (AHORA - timedelta(hours=40)).isoformat(), "vista_ultima": "x"})
+    assert "atascada" in senales(db)

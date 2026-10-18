@@ -207,6 +207,7 @@ def abrir(ruta: Path | str = RUTA_DB) -> sqlite_utils.Database:
         Path(ruta).parent.mkdir(parents=True, exist_ok=True)
     db = sqlite_utils.Database(ruta)
     db.execute("PRAGMA foreign_keys = ON")
+    db.execute("PRAGMA busy_timeout = 15000")  # la API, la ingesta y la puntuación esperan su turno
     db.execute("PRAGMA journal_mode = WAL")  # la web leerá mientras la ingesta escribe
     migrar(db)
     return db
@@ -220,10 +221,19 @@ def version(db: sqlite_utils.Database) -> int:
 
 def migrar(db: sqlite_utils.Database) -> int:
     db.execute("CREATE TABLE IF NOT EXISTS _migracion (version INTEGER PRIMARY KEY, aplicada_en TEXT NOT NULL)")
-    actual = version(db)
-    for n, sql in enumerate(MIGRACIONES[actual:], start=actual + 1):
-        with db.conn:
-            db.conn.executescript(f"BEGIN;\n{sql}\nINSERT INTO _migracion VALUES ({n}, '{ahora()}');\nCOMMIT;")
+    for n, sql in enumerate(MIGRACIONES, start=1):
+        if n <= version(db):
+            continue
+        # Un solo script, todo o nada (si falla a mitad, `with` lo revierte entero). Se apunta antes de
+        # aplicarla: si la API y el worker arrancan a la vez, el segundo espera (IMMEDIATE + busy_timeout) y
+        # choca con la clave primaria en vez de repetir la migración.
+        try:
+            with db.conn:
+                db.conn.executescript(
+                    f"BEGIN IMMEDIATE;\nINSERT INTO _migracion VALUES ({n}, '{ahora()}');\n{sql}\nCOMMIT;")
+        except sqlite3.IntegrityError:
+            if db.conn.in_transaction:
+                db.conn.rollback()
     return version(db)
 
 

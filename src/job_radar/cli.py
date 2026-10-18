@@ -18,8 +18,10 @@ import contextlib
 import dataclasses
 import fcntl
 import logging
+import logging.handlers
 import math
 import os
+import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -89,7 +91,15 @@ def cmd_ingesta(args) -> int:
         if not libre:
             log.warning("ingesta: ya hay otra en marcha; no se lanza")
             return 0
-        return _ingesta(args)
+        _avisar_healthchecks("/start")
+        try:
+            codigo, alertas = _ingesta(args)
+        except Exception as e:
+            _avisar_healthchecks("/fail", f"la ingesta se cayó: {e}")
+            raise
+        # Al final, después de puntuar: un «ok» de Healthchecks quiere decir que todo el día fue bien.
+        _avisar_healthchecks("/fail" if alertas or codigo else "", "\n".join(map(str, alertas)))
+        return codigo
 
 
 def _ingesta(args) -> int:
@@ -116,23 +126,24 @@ def _ingesta(args) -> int:
     log.info("cierre: %s", puestos.cerrar(db) or "nada que cerrar")
     log.info("criba: %s", dict(criba.aplicar(db, prefs)))
 
+    codigo = 0
+    if args.puntuar:
+        codigo = cmd_puntuar(argparse.Namespace(db=args.db, etiquetados=False, rehacer=False, modelo="sonnet",
+                                                paralelo=3, limite=args.limite_puntuar))
     alertas = salud.comprobar(db, registro)
     for a in alertas:
         log.warning("salud: %s", a)
-    _avisar_healthchecks(alertas)
-    if args.puntuar:
-        cmd_puntuar(argparse.Namespace(db=args.db, etiquetados=False, rehacer=False, modelo="sonnet", paralelo=3,
-                                       limite=args.limite_puntuar))
-    return 0
+    return codigo, alertas
 
 
-def _avisar_healthchecks(alertas) -> None:
-    """Ping a Healthchecks (si HEALTHCHECKS_URL está en .env): avisa si la ingesta deja de correr."""
+def _avisar_healthchecks(sufijo: str = "", texto: str = "") -> None:
+    """Ping a Healthchecks (si HEALTHCHECKS_URL está en .env). Sin Telegram, es el aviso de que algo falla:
+    «/start» al empezar (detecta las que se cuelgan), y al final «ok» o «/fail» con las alertas."""
     url = os.environ.get("HEALTHCHECKS_URL")
     if not url:
         return
     try:
-        httpx.post(url + ("/fail" if alertas else ""), content="\n".join(map(str, alertas))[:10000], timeout=10)
+        httpx.post(url + sufijo, content=texto[:10000], timeout=10)
     except httpx.HTTPError as e:
         log.warning("healthchecks: %s", e)
 
@@ -189,7 +200,11 @@ def cmd_puntuar(args) -> int:
             log.info("puesto %-5s nota %3d%s", pid, e["nota"], f" · vetado: {e['motivo_veto']}" if e["vetado"] else "")
 
     motor = ClaudeCLI(modelo=args.modelo, timeout_s=300)
-    puntuacion.evaluar_varios(db, ids, motor, perfil_cv, prefs, paralelo=args.paralelo, al_terminar=informar)
+    hechos = puntuacion.evaluar_varios(db, ids, motor, perfil_cv, prefs, paralelo=args.paralelo,
+                                       al_terminar=informar)
+    if ids and len(hechos) < len(ids) / 2:  # p. ej. `claude` sin sesión o sin cuota: que se note
+        log.error("puntuar: fallaron %d de %d puestos", len(ids) - len(hechos), len(ids))
+        return 1
     return 0
 
 
@@ -279,8 +294,12 @@ def main(argv: list[str] | None = None) -> int:
 
     cargar_env()
     RUTA_LOG.parent.mkdir(parents=True, exist_ok=True)
+    # Un fichero por día, 30 días: en la Pi los logs no pueden crecer sin control.
+    rotado = logging.handlers.TimedRotatingFileHandler(RUTA_LOG, when="midnight", backupCount=30, encoding="utf-8")
+    # Por pantalla solo si hay alguien mirando: con launchd o Docker, el log ya está en el fichero.
+    pantalla = [logging.StreamHandler()] if sys.stderr.isatty() else []
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
-                        handlers=[logging.StreamHandler(), logging.FileHandler(RUTA_LOG, encoding="utf-8")])
+                        handlers=[*pantalla, rotado])
     for ruidoso in ("httpx", "httpcore", "JobSpy"):
         logging.getLogger(ruidoso).setLevel(logging.WARNING)
     return args.func(args)

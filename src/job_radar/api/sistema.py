@@ -30,6 +30,13 @@ def _sin_puntuar(db, carpeta: Path) -> int | None:
         return None
 
 
+@router.get("/vivo", tags=["sistema"])
+def vivo(db: Annotated[Any, Depends(bd)]) -> dict[str, bool]:
+    """Para el healthcheck de Docker: la API responde y la base se abre. Barato (no calcula nada)."""
+    db.execute("SELECT 1")
+    return {"ok": True}
+
+
 @router.get("/resumen", response_model=Resumen, tags=["sistema"])
 def resumen(db: Annotated[Any, Depends(bd)], carpeta: Annotated[Path, Depends(datos)]):
     uno = lambda sql, *a: db.execute(sql, a).fetchone()[0]  # noqa: E731

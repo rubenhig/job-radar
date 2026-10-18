@@ -15,11 +15,18 @@ services:
     ports:
       - "127.0.0.1:8000:8000"   # solo local: el acceso desde fuera lo da Tailscale
     volumes:
-      - ./data:/app/data        # SQLite, perfil y logs: nunca dentro de la imagen
+      - ./data:/app/data        # SQLite, perfil, logs y copias: nunca dentro de la imagen (dueño: uid 1000)
     env_file:
       - path: .env
         required: false
+    environment:
+      TZ: Europe/Madrid
     restart: unless-stopped
+    logging:                    # que los logs de Docker no crezcan sin control en la Pi
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # worker: la cola de tareas (huey) y la ingesta programada. Llega al cerrar la
   # semana de prueba de la Fase 3; hasta entonces la ingesta sigue en launchd.

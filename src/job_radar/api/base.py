@@ -14,6 +14,7 @@ def bd(request: Request) -> Iterator[sqlite_utils.Database]:
     conexion.row_factory = sqlite3.Row
     db = sqlite_utils.Database(conexion)
     db.execute("PRAGMA foreign_keys = ON")
+    db.execute("PRAGMA busy_timeout = 15000")  # si la ingesta está escribiendo, espera en vez de fallar
     try:
         yield db
     finally:

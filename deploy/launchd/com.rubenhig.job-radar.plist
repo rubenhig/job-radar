@@ -13,7 +13,7 @@
   <key>Label</key><string>com.rubenhig.job-radar</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/rubenhig/.local/bin/uv</string><string>run</string><string>job-radar</string><string>ingesta</string><string>--puntuar</string>
+    <string>/Users/rubenhig/.local/bin/uv</string><string>run</string><string>--frozen</string><string>job-radar</string><string>ingesta</string><string>--puntuar</string>
   </array>
   <!-- launchd arranca con un PATH mínimo: `claude` (puntuación con la suscripción) vive en ~/.local/bin -->
   <key>EnvironmentVariables</key>
@@ -21,7 +21,8 @@
   <key>WorkingDirectory</key><string>/Users/rubenhig/projects/malaga</string>
   <key>StartCalendarInterval</key>
   <dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>30</integer></dict>
-  <key>StandardOutPath</key><string>/Users/rubenhig/projects/malaga/data/logs/launchd.log</string>
+  <!-- El log de verdad es data/logs/ingesta.log (rota cada día). Aquí solo lo que se escape: un error al arrancar. -->
+  <key>StandardOutPath</key><string>/dev/null</string>
   <key>StandardErrorPath</key><string>/Users/rubenhig/projects/malaga/data/logs/launchd.log</string>
 </dict>
 </plist>

@@ -1,3 +1,4 @@
+import re
 import json
 from pathlib import Path
 
@@ -178,3 +179,14 @@ def test_renormalizar_desde_el_bruto_sin_pedir_nada(db_falsa):
     despues = [dict(o) for o in db_falsa["oferta"].rows]
     assert all(d["titulo"] == a["titulo"].upper() and d["vista_primera"] == a["vista_primera"]
                and d["conector"] == "falsa/2" for a, d in zip(antes, despues))
+
+
+@pytest.mark.parametrize("fichero", sorted(p.name for p in FIXTURES.glob("*.json")))
+def test_fixtures_sin_emails_ni_telefonos_personales(fichero):
+    """Las fixtures son anuncios reales: que no lleven el correo o el móvil de un reclutador."""
+    texto = (FIXTURES / fichero).read_text()
+    emails = set(re.findall(r"[\w.+-]+@[\w-]+\.[\w.]+", texto))
+    genericos = re.compile(r"^(empleo|jobs?|careers?|rrhh|talent|recruiting|info|hello|hola|privacy|correo|"
+                           r"seleccion|cv|people|hr|contacto|noreply)[\w.-]*@|@ejemplo\.", re.I)
+    assert {e for e in emails if not genericos.search(e)} == set()
+    assert not re.search(r"(?<![\w/])(?:\+34[ .]?)?[67]\d{2}[ .]?\d{3}[ .]?\d{3}(?!\w)", texto)  # móviles de España

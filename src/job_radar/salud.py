@@ -25,6 +25,7 @@ CUOTA_MIN = 0.2          # cuota restante
 COMPLETITUD_CAIDA = 0.5  # un campo por debajo de la mitad de su línea base…
 COMPLETITUD_BASE = 20    # …si la línea base es de al menos un 20 %
 RETRASO = 1.5            # una fuente "no ha corrido" si pasa 1,5 veces su frecuencia
+ATASCO_H = 36            # un puesto que pasa la criba y sigue sin nota tras esto: la puntuación no va
 
 
 @dataclass
@@ -111,7 +112,19 @@ def comprobar(db, registro: reg.Registro, ahora: datetime | None = None) -> list
             for cosa, fraccion in cuota_restante(json.loads(ultima["cuota"])).items():
                 if fraccion < CUOTA_MIN:
                     alertas.append(Alerta(fuente_id, "cuota", f"queda el {fraccion:.0%} de «{cosa}»"))
-    return alertas
+    return alertas + puntuacion_atascada(db, ahora)
+
+
+def puntuacion_atascada(db, ahora: datetime) -> list[Alerta]:
+    """Puestos visibles sin ninguna nota desde hace más de ATASCO_H: `claude` sin sesión, sin cuota…"""
+    if "evaluacion" not in db.table_names():
+        return []
+    limite = (ahora - timedelta(hours=ATASCO_H)).isoformat(timespec="seconds")
+    n = db.execute("""SELECT COUNT(*) FROM puesto p WHERE p.estado = 'abierto' AND p.descarte IS NULL
+                      AND p.id NOT IN (SELECT puesto_id FROM evaluacion)
+                      AND (SELECT MIN(vista_primera) FROM oferta o WHERE o.puesto_id = p.id) < ?""",
+                   [limite]).fetchone()[0]
+    return [Alerta("puntuacion", "atascada", f"{n} puestos llevan más de {ATASCO_H} h sin nota")] if n else []
 
 
 def exclusividad(db, dias: int = 30) -> dict[str, dict[str, float]]:

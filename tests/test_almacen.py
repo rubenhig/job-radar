@@ -87,3 +87,11 @@ def test_copias_diarias_con_rotacion(tmp_path):
     assert all(d.weekday() == 0 for d in dias[:-7]) and len(dias[:-7]) == 4           # y 4 lunes anteriores
     copia = almacen.abrir(carpeta / f"job_radar-{hoy}.db")
     assert copia["fuente"].count == 1 and not list(carpeta.glob("*.tmp"))
+
+
+def test_dos_procesos_que_migran_a_la_vez_no_repiten_la_migracion(tmp_path, monkeypatch):
+    db = almacen.abrir(tmp_path / "x.db")
+    n = len(almacen.MIGRACIONES)
+    lecturas = iter([n - 1])  # el otro proceso leyó la versión justo antes de que este migrara
+    monkeypatch.setattr(almacen, "version", lambda d: next(lecturas, n))
+    assert almacen.migrar(db) == n  # choca con la clave de _migracion y sigue, sin repetir el ALTER
