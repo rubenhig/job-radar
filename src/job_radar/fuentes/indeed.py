@@ -6,11 +6,12 @@ la puntuación). En Indeed, `hours_old` no se puede combinar con `is_remote`,
 así que el remoto se pide con términos (remoto, teletrabajo, remote).
 """
 
+import re
 from collections.abc import Iterator
 from datetime import date, datetime
 from typing import Any
 
-from job_radar.fuentes.base import Bruto, Busqueda, Intencion, Oferta, limpio, numero
+from job_radar.fuentes.base import Bruto, Busqueda, Intencion, Oferta, limpio, modalidad_en, numero
 from job_radar.preferencias import Modalidad
 
 MARGEN_H = 12
@@ -19,6 +20,7 @@ PERIODO = {"hourly": "hora", "daily": "dia", "weekly": "semana", "monthly": "mes
 CONTRATO = {"fulltime": "tiempo_completo", "parttime": "tiempo_parcial", "contract": "autonomo",
             "internship": "practicas", "temporary": "temporal"}
 PAISES = {"spain": "ES", "es": "ES", "españa": "ES"}
+REMOTO_COMO_CIUDAD = re.compile(r"(en )?remot[oa]|remote", re.I)
 INDEED_PAIS = {"ES": ("spain", "España")}
 
 
@@ -39,7 +41,7 @@ def _a_json(v: Any) -> Any:
 
 class Indeed:
     fuente = "indeed"
-    version = "indeed-jobspy/1"
+    version = "indeed-jobspy/2"  # /2: modalidad del título; «En remoto» y «AN» no son ciudades
     personales = ("emails",)
     # Valoraciones de la empresa en Indeed: cambian sin que cambie la oferta.
     volatiles = ("company_rating", "company_reviews_count")
@@ -76,8 +78,12 @@ class Indeed:
             modalidad = Modalidad.HIBRIDO
         elif j.get("is_remote") is True or "remote" in tipo or "remoto" in tipo:
             modalidad = Modalidad.REMOTO
-        else:
-            modalidad = None  # Indeed no distingue presencial de «no lo dice»
+        else:  # Indeed no distingue presencial de «no lo dice»: se mira el título
+            modalidad = modalidad_en(j["title"])
+        if ciudad and REMOTO_COMO_CIUDAD.fullmatch(ciudad):  # «En remoto, ES»: modalidad, no ciudad
+            ciudad, modalidad = None, modalidad or Modalidad.REMOTO
+        elif ciudad and re.fullmatch(r"[A-Z]{2}", ciudad):  # «AN», «CT»: códigos de región, no ciudades
+            ciudad = None
         contrato = next((CONTRATO[t.strip()] for t in (j.get("job_type") or "").split(",") if t.strip() in CONTRATO),
                         None)
         return Oferta(

@@ -41,7 +41,15 @@ def test_normaliza_remoto_y_ubicacion():
     o = Freehire().normalizar(por_titulo("Application Support"))
     assert o.modalidad == Modalidad.REMOTO
     o = Freehire().normalizar(por_titulo("Python Developer – AI Agents"))
-    assert o.ciudad == "Málaga" and o.pais == "ES" and o.modalidad is None  # no lo dice: vacío, no inventado
+    # freehire no da la modalidad, pero el título dice «( Hibrido)»: se lee de ahí, no se inventa.
+    assert o.ciudad == "Málaga" and o.pais == "ES" and o.modalidad == Modalidad.HIBRIDO
+
+
+def test_espana_en_la_lista_de_paises_y_paises_que_no_son_ciudades():
+    base = dict(por_titulo("Application Support"))
+    o = Freehire().normalizar(base | {"countries": ["pt", "es", "fr"], "cities": ["Spain"], "work_mode": None,
+                                      "title": "AI Engineer"})
+    assert o.pais == "ES" and o.ciudad is None and o.modalidad is None
 
 
 @pytest.mark.parametrize("j", FIXTURE, ids=lambda j: j["public_slug"][:30])

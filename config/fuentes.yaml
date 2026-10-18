@@ -9,7 +9,7 @@
 fuentes:
   freehire:
     tipo: agregador
-    conector: freehire-api/1
+    conector: freehire-api/2
     acceso: API pública sin clave (freehire.me/api/v1)
     coste: gratis
     terminos: Proyecto MIT; API pública documentada en freehire.me/docs/api. Uso moderado, User-Agent identificado.
@@ -49,7 +49,7 @@ fuentes:
 
   indeed:
     tipo: portal
-    conector: indeed-jobspy/1
+    conector: indeed-jobspy/2
     acceso: JobSpy (python-jobspy)
     coste: gratis
     terminos: Scraping de páginas públicas a través de JobSpy. Fuente secundaria, baja frecuencia.

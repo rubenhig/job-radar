@@ -5,6 +5,7 @@ si se entiende, su Oferta. Un bruto que no se puede normalizar no para la
 ejecución: se cuenta como error de normalización y se reprocesa más adelante.
 """
 
+import json
 import logging
 import traceback
 from collections import Counter
@@ -51,3 +52,20 @@ def ejecutar(db, conector: Conector, busqueda: Busqueda) -> int:
     almacen.cerrar_ejecucion(db, ejecucion, estado, error=error, cuota=conector.cuota, completitud=completitud,
                              coste_usd=getattr(conector, "coste_usd", None), **m)
     return ejecucion
+
+
+def renormalizar(db, conector: Conector) -> Counter:
+    """Vuelve a interpretar las ofertas guardadas de la fuente desde su bruto, con la versión actual del
+    conector, sin pedir nada a la fuente. Conserva cuándo se vieron y a qué puesto pertenecen."""
+    cuenta = Counter()
+    for o in db.query("""SELECT o.id, b.payload FROM oferta o JOIN bruto b ON b.id = o.bruto_id
+                         WHERE o.fuente_id = ?""", [conector.fuente]):
+        try:
+            nueva = conector.normalizar(json.loads(o["payload"])).fila()
+        except Exception as e:  # noqa: BLE001
+            log.warning("%s: no se pudo renormalizar la oferta %s: %s", conector.fuente, o["id"], e)
+            cuenta["errores"] += 1
+            continue
+        cuenta["cambiadas" if almacen.reescribir_oferta(db, o["id"], nueva, conector.version) else "iguales"] += 1
+    db.conn.commit()
+    return cuenta

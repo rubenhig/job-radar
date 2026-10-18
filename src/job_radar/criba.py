@@ -1,10 +1,10 @@
 """Criba: descarta sin coste lo que no puede ser un puesto para Rubén, antes de puntuar.
 
 Reglas deterministas y explicables, en este orden:
-  1. País: el puesto está en un país que no es el de las ubicaciones ni desde el que se
-     trabajaría en remoto. Un «remoto» anclado en Alemania no se puede hacer desde España.
-     Excepción: los `remoto.mercados` (p. ej. el Golfo), si el puesto es remoto; la compuerta
-     de modalidad de la puntuación decide si se puede hacer desde España.
+  1. País: un puesto presencial o híbrido en un país que no es el de las ubicaciones.
+     Los remotos no se descartan por país (decisión de Rubén, 18-oct): muchos «remoto en
+     Alemania» admiten toda la UE, y eso solo se sabe leyendo el anuncio. Lo decide la
+     compuerta de modalidad de la puntuación.
      Sin país, no se descarta: la puntuación (compuerta de elegibilidad) lo decide leyendo el anuncio.
   2. Título excluido: contiene un término de `roles.excluir` («sales», «ai training»...).
   3. Título no técnico: no contiene ninguna palabra técnica (`roles.terminos`: principales,
@@ -31,14 +31,12 @@ def _patron(terminos: list[str]) -> re.Pattern | None:
 class Criba:
     def __init__(self, prefs: Preferencias):
         self.paises = {u.pais for u in prefs.ubicaciones} | ({prefs.remoto.desde_pais} if prefs.remoto else set())
-        self.mercados = {m.upper() for m in prefs.remoto.mercados} if prefs.remoto else set()
         t = prefs.roles.terminos
         self.excluir = _patron(prefs.roles.excluir)
         self.tecnico = _patron(t.principales + t.amplios + t.tecnicos) if t.tecnicos else None
 
     def motivo(self, puesto: dict) -> str | None:
-        remoto_en_mercado = puesto.get("modalidad") == "remoto" and puesto.get("pais") in self.mercados
-        if puesto.get("pais") and puesto["pais"] not in self.paises and not remoto_en_mercado:
+        if puesto.get("modalidad") != "remoto" and puesto.get("pais") and puesto["pais"] not in self.paises:
             return f"fuera de tus países ({puesto['pais']})"
         titulo = _plano(puesto["titulo"])
         if self.excluir and (m := self.excluir.search(titulo)):

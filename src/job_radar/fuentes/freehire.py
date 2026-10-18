@@ -14,12 +14,14 @@ Ventana: `open_within_days` (cuándo lo vio freehire por primera vez), no
 
 import math
 import time
+import unicodedata
 from collections.abc import Iterator
 from typing import Any
 
 import httpx
 
-from job_radar.fuentes.base import UA, Bruto, Busqueda, ErrorFuente, Intencion, Oferta, limpio, numero, reintentar
+from job_radar.fuentes.base import (UA, Bruto, Busqueda, ErrorFuente, Intencion, Oferta, limpio, modalidad_en, numero,
+                                    reintentar)
 from job_radar.preferencias import Modalidad
 
 URL = "https://freehire.me/api/v1/agent/jobs/search"  # la de /agent trae la descripción completa
@@ -35,6 +37,16 @@ AGENCIA = {"agency": True, "outstaff": True, "product": False, "inhouse": False,
            "outsource": False, "government": False}
 
 
+# freehire mete a veces el país en `cities` («United Arab Emirates», «Germany»): no es una ciudad.
+NOMBRES_PAIS = {"spain", "espana", "germany", "deutschland", "poland", "france", "portugal", "italy", "ireland",
+                "netherlands", "belgium", "united kingdom", "united states", "usa", "united arab emirates", "uae",
+                "saudi arabia", "qatar", "jamaica", "ukraine", "romania", "greece", "europe", "remote"}
+
+
+def _plano(texto: str) -> str:
+    return unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode().lower().strip()
+
+
 def consultas(terminos: tuple[str, ...]) -> list[str]:
     """Una consulta por término; las frases que ya cubre un término suelto sobran ('AI agents' ⊂ 'AI')."""
     sueltos = {t.lower() for t in terminos if " " not in t}
@@ -44,7 +56,7 @@ def consultas(terminos: tuple[str, ...]) -> list[str]:
 
 class Freehire:
     fuente = "freehire"
-    version = "freehire-api/1"
+    version = "freehire-api/2"  # /2: España si está en la lista de países; modalidad del título; sin países como ciudad
     personales = ()
     # Métricas del sitio, no de la oferta: cambian en cada consulta.
     volatiles = ("view_count", "applied_count", "upvote_count", "downvote_count", "my_vote", "last_seen_at")
@@ -94,9 +106,10 @@ class Freehire:
             url=limpio(j.get("url")),
             titulo=j["title"].strip(),
             empresa=limpio(j.get("company")),
-            ciudad=ciudades[0] if len(ciudades) == 1 else None,
-            pais=paises[0].upper() if len(paises) == 1 else None,
-            modalidad=MODALIDAD.get(j.get("work_mode")),
+            ciudad=ciudades[0] if len(ciudades) == 1 and _plano(ciudades[0]) not in NOMBRES_PAIS else None,
+            # Si España está en la lista, la oferta es de España (un remoto «Spain, Portugal…» se puede hacer aquí).
+            pais="ES" if "es" in paises else (paises[0].upper() if len(paises) == 1 else None),
+            modalidad=MODALIDAD.get(j.get("work_mode")) or modalidad_en(j["title"]),
             salario_min=numero(e.get("salary_min")),
             salario_max=numero(e.get("salary_max")),
             salario_moneda=limpio(e.get("salary_currency")),

@@ -164,3 +164,17 @@ def test_mercados_solo_en_las_fuentes_que_los_aceptan(prefs):
     r = reg.Registro.model_validate({"fuentes": {"gratis": base | {"mercados": True}, "de_pago": base}})
     ids = [b.id for b in reg.busquedas(prefs, r, {"gratis": ConectorFalso(), "de_pago": ConectorFalso()})]
     assert "gratis:remoto-ae" in ids and not any(i.startswith("de_pago:remoto-a") for i in ids)
+
+
+def test_renormalizar_desde_el_bruto_sin_pedir_nada(db_falsa):
+    from job_radar import ingesta
+
+    conector = ConectorDePrueba([{"id": 1, "title": "AI Engineer"}, {"id": 2, "title": "LLM Engineer"}])
+    ingesta.ejecutar(db_falsa, conector, reg.Busqueda("falsa:x", "falsa", {}, 24))
+    antes = [dict(o) for o in db_falsa["oferta"].rows]
+    conector.version = "falsa/2"
+    conector.normalizar = lambda p: Oferta(fuente_id="falsa", id_externo=str(p["id"]), titulo=p["title"].upper())
+    assert ingesta.renormalizar(db_falsa, conector)["cambiadas"] == 2
+    despues = [dict(o) for o in db_falsa["oferta"].rows]
+    assert all(d["titulo"] == a["titulo"].upper() and d["vista_primera"] == a["vista_primera"]
+               and d["conector"] == "falsa/2" for a, d in zip(antes, despues))

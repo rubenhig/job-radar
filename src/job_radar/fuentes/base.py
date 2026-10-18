@@ -11,6 +11,7 @@ Busqueda, Bruto y Oferta. Diseño en docs/modelo.md.
 """
 
 import os
+import re
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -106,6 +107,18 @@ class Bruto:
         limpio = {k: v for k, v in payload.items() if k not in set(volatiles)}
         eliminados = [c for c in personales if c in limpio and _tiene_valor(limpio.pop(c))]
         return cls(str(id_externo), limpio, eliminados)
+
+
+MODALIDAD_EN_TEXTO = [
+    (Modalidad.HIBRIDO, re.compile(r"\bh[ií]brid[oa]\b|\bhybrid\b", re.I)),
+    (Modalidad.REMOTO, re.compile(r"\bremot[oa]\b|\bremote\b|\bteletrabajo\b|\bwork from home\b", re.I)),
+    (Modalidad.PRESENCIAL, re.compile(r"\bpresencial\b|\bon-?site\b", re.I)),
+]
+
+
+def modalidad_en(titulo: str) -> Modalidad | None:
+    """La modalidad que dice el título («… | Híbrido Málaga»), para cuando la fuente no la da."""
+    return next((m for m, patron in MODALIDAD_EN_TEXTO if patron.search(titulo or "")), None)
 
 
 def _tiene_valor(v: Any) -> bool:

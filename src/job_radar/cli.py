@@ -7,6 +7,7 @@
     uv run job-radar resumen            # ofertas y puestos por fuente, exclusividad y salud
     uv run job-radar salud              # solo las alertas; sale con 1 si hay alguna
     uv run job-radar copia              # copia de seguridad de la base (también al empezar cada ingesta)
+    uv run job-radar renormalizar       # reinterpreta lo guardado con la versión actual de los conectores
     uv run job-radar cribar             # recalcula los descartes (tras cambiar las preferencias)
     uv run job-radar puntuar            # puntúa los puestos nuevos que pasan la criba
     uv run job-radar recalcular         # rehace la nota sin llamar al modelo (p. ej. tras cambiar el salario)
@@ -200,6 +201,18 @@ def cmd_medir(args) -> int:
     return 0
 
 
+def cmd_renormalizar(args) -> int:
+    db = almacen.abrir(args.db)
+    registro = reg.cargar()
+    for fuente_id, f in registro.activas().items():
+        if args.fuente and fuente_id not in args.fuente:
+            continue
+        print(f"{fuente_id:10} {dict(ingesta.renormalizar(db, conector(f.conector)))}")
+    print("puestos:", puestos.actualizar(db) or "sin cambios")
+    print("criba:", dict(criba.aplicar(db, cargar_preferencias(RUTA_PREFERENCIAS))))
+    return 0
+
+
 def cmd_copia(args) -> int:
     print(almacen.copiar(almacen.abrir(args.db), args.db.parent / "copias"))
     return 0
@@ -241,6 +254,9 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=cmd_resumen)
     sub.add_parser("salud", help="alertas de las fuentes").set_defaults(func=cmd_salud)
     sub.add_parser("copia", help="copia de seguridad de la base").set_defaults(func=cmd_copia)
+    p = sub.add_parser("renormalizar", help="reinterpreta las ofertas guardadas con los conectores actuales")
+    p.add_argument("--fuente", action="append", help="solo esta fuente (se puede repetir)")
+    p.set_defaults(func=cmd_renormalizar)
     p = sub.add_parser("cribar", help="recalcula qué puestos se descartan sin puntuar")
     p.add_argument("--preferencias", type=Path, default=RUTA_PREFERENCIAS)
     p.set_defaults(func=cmd_cribar)

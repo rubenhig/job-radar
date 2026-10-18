@@ -285,6 +285,17 @@ def guardar_oferta(db, oferta: dict, bruto_id: int, conector: str) -> tuple[int,
     return db["oferta"].insert(fila | {"vista_primera": fila["vista_ultima"]}).last_pk, True
 
 
+def reescribir_oferta(db, oferta_id: int, oferta: dict, conector: str) -> bool:
+    """Sustituye los campos normalizados de una oferta (renormalizar). Devuelve si ha cambiado algo."""
+    fila = {k: (json.dumps(v, ensure_ascii=False) if k in CAMPOS_JSON and v is not None else v)
+            for k, v in oferta.items() if k not in ("fuente_id", "id_externo")}
+    previa = db["oferta"].get(oferta_id)
+    cambia = any(previa.get(k) != v for k, v in fila.items())
+    if cambia or previa["conector"] != conector:
+        db["oferta"].update(oferta_id, fila | {"conector": conector})
+    return cambia
+
+
 # --- copias de seguridad -----------------------------------------------------------
 
 DIARIAS, SEMANALES = 7, 4

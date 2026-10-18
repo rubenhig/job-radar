@@ -57,3 +57,15 @@ def test_traer_convierte_el_dataframe_y_quita_emails():
 def test_cada_fuente_del_registro_tiene_su_conector():
     r = reg.cargar()
     assert {f.conector for f in r.fuentes.values()} <= set(CONECTORES)
+
+
+def test_remoto_y_codigos_de_region_no_son_ciudades():
+    from job_radar.fuentes.indeed import Indeed
+    from job_radar.preferencias import Modalidad
+
+    base = {"id": "x", "title": "AI Engineer", "company": "Acme", "job_url": "https://x", "description": "d"}
+    o = Indeed().normalizar(base | {"location": "En remoto, ES"})
+    assert o.ciudad is None and o.modalidad == Modalidad.REMOTO
+    assert Indeed().normalizar(base | {"location": "AN, ES"}).ciudad is None
+    o = Indeed().normalizar(base | {"location": "Málaga, AN, ES", "title": "Python Developer | Híbrido Málaga"})
+    assert o.ciudad == "Málaga" and o.modalidad == Modalidad.HIBRIDO
