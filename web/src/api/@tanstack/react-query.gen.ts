@@ -186,7 +186,8 @@ export const perfilLeerPreferenciasOptions = (options?: Options<PerfilLeerPrefer
 /**
  * Guardar Preferencias
  *
- * Guarda las preferencias (ya validadas). La versión anterior queda en `preferencias.anterior.yaml`.
+ * Guarda las preferencias (ya validadas) y rehace la criba con ellas.
+ * La versión anterior queda en `preferencias.anterior.yaml`.
  */
 export const perfilGuardarPreferenciasMutation = (options?: Partial<Options<PerfilGuardarPreferenciasData>>): UseMutationOptions<PerfilGuardarPreferenciasResponse, PerfilGuardarPreferenciasError, Options<PerfilGuardarPreferenciasData>> => {
     const mutationOptions: UseMutationOptions<PerfilGuardarPreferenciasResponse, PerfilGuardarPreferenciasError, Options<PerfilGuardarPreferenciasData>> = {

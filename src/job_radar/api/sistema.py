@@ -8,7 +8,7 @@ from typing import Annotated, Any
 import yaml
 from fastapi import APIRouter, Depends, HTTPException
 
-from job_radar import salud
+from job_radar import criba, salud
 from job_radar.api.base import bd, datos
 from job_radar.api.esquemas import Acuerdo, Alerta, CasoAcuerdo, EstadoFuente, Fuentes, Resumen
 from job_radar.fuentes import registro as reg
@@ -26,7 +26,8 @@ def resumen(db: Annotated[Any, Depends(bd)]):
     uno = lambda sql, *a: db.execute(sql, a).fetchone()[0]  # noqa: E731
     primera = "SELECT puesto_id FROM oferta GROUP BY puesto_id HAVING MIN(vista_primera) >= ?"
     return Resumen(
-        puestos=uno("SELECT COUNT(*) FROM puesto WHERE estado = 'abierto'"),
+        puestos=uno("SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NULL"),
+        descartados=uno("SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NOT NULL"),
         puestos_nuevos_24h=uno(f"SELECT COUNT(*) FROM ({primera})", _hace(days=1)),
         puestos_nuevos_7d=uno(f"SELECT COUNT(*) FROM ({primera})", _hace(days=7)),
         ofertas=uno("SELECT COUNT(*) FROM oferta"),
@@ -79,14 +80,17 @@ def leer_preferencias(carpeta: Annotated[Path, Depends(datos)]):
 
 
 @router.put("/preferencias", response_model=Preferencias, tags=["perfil"])
-def guardar_preferencias(nuevas: Preferencias, carpeta: Annotated[Path, Depends(datos)]):
-    """Guarda las preferencias (ya validadas). La versión anterior queda en `preferencias.anterior.yaml`."""
+def guardar_preferencias(nuevas: Preferencias, carpeta: Annotated[Path, Depends(datos)],
+                         db: Annotated[Any, Depends(bd)]):
+    """Guarda las preferencias (ya validadas) y rehace la criba con ellas.
+    La versión anterior queda en `preferencias.anterior.yaml`."""
     ruta = carpeta / "perfil" / "preferencias.yaml"
     if ruta.exists():
         ruta.with_name("preferencias.anterior.yaml").write_text(ruta.read_text(encoding="utf-8"), encoding="utf-8")
     ruta.parent.mkdir(parents=True, exist_ok=True)
     ruta.write_text(yaml.safe_dump(nuevas.model_dump(mode="json"), allow_unicode=True, sort_keys=False),
                     encoding="utf-8")
+    criba.aplicar(db, nuevas)
     return nuevas
 
 

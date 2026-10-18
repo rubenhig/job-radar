@@ -543,6 +543,10 @@ export type PuestoDetalle = {
     etiqueta?: Etiqueta | null;
     valoracion?: Valoracion | null;
     /**
+     * Descarte
+     */
+    descarte?: string | null;
+    /**
      * Estado
      */
     estado: string;
@@ -610,6 +614,10 @@ export type PuestoResumen = {
     ofertas: number;
     etiqueta?: Etiqueta | null;
     valoracion?: Valoracion | null;
+    /**
+     * Descarte
+     */
+    descarte?: string | null;
 };
 
 /**
@@ -675,6 +683,10 @@ export type Resumen = {
      */
     puestos: number;
     /**
+     * Descartados
+     */
+    descartados: number;
+    /**
      * Puestos Nuevos 24H
      */
     puestos_nuevos_24h: number;
@@ -725,7 +737,7 @@ export type Roles = {
     /**
      * Excluir
      *
-     * Términos que descartan un puesto
+     * Términos que, en el título, descartan un puesto
      */
     excluir?: Array<string>;
     terminos?: Terminos;
@@ -771,6 +783,12 @@ export type Terminos = {
      * Solo en las ubicaciones presenciales, donde el volumen es menor
      */
     amplios?: Array<string>;
+    /**
+     * Tecnicos
+     *
+     * No se buscan: con los demás términos, deciden si un título es técnico. Vacío → no se filtra por título
+     */
+    tecnicos?: Array<string>;
 };
 
 /**
@@ -907,6 +925,10 @@ export type PuestosListarData = {
          * Puntuado
          */
         puntuado?: boolean | null;
+        /**
+         * Descartados
+         */
+        descartados?: boolean;
         /**
          * Orden
          */

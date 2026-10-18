@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, getRouteApi } from '@tanstack/react-router'
 import type { PuestoResumen } from '@/api'
-import { ChevronLeft, ChevronRight, Filter, X } from 'lucide-react'
-import { puestosListarOptions } from '@/api/@tanstack/react-query.gen'
+import { ChevronLeft, ChevronRight, Filter, Trash2, X } from 'lucide-react'
+import {
+  puestosListarOptions,
+  sistemaResumenOptions,
+} from '@/api/@tanstack/react-query.gen'
 import { FUENTES, MODALIDADES, haceCuanto, lugar, salario } from '@/lib/formato'
 import { DESTACADO, TOP } from '@/lib/puntuacion'
 import { Badge } from '@/components/ui/badge'
@@ -97,12 +100,14 @@ export function Puestos() {
               ? TOP
               : undefined,
         puntuado: busqueda.nota === 'sin' ? false : undefined,
+        descartados: busqueda.descartados,
         limite: POR_PAGINA,
         desde: (pagina - 1) * POR_PAGINA,
       },
     }),
     placeholderData: keepPreviousData,
   })
+  const { data: resumen } = useQuery(sistemaResumenOptions())
   const paginas = Math.max(1, Math.ceil((data?.total ?? 0) / POR_PAGINA))
   const filtrado = Boolean(
     busqueda.q ||
@@ -110,7 +115,8 @@ export function Puestos() {
     busqueda.modalidad?.length ||
     (busqueda.etiqueta && busqueda.etiqueta !== 'todas') ||
     busqueda.dias ||
-    (busqueda.nota && busqueda.nota !== 'todas')
+    (busqueda.nota && busqueda.nota !== 'todas') ||
+    busqueda.descartados
   )
 
   return (
@@ -119,12 +125,27 @@ export function Puestos() {
       <Main className='flex flex-1 flex-col gap-4'>
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight'>Puestos</h2>
+            <h2 className='text-2xl font-bold tracking-tight'>
+              {busqueda.descartados ? 'Descartados' : 'Puestos'}
+            </h2>
             <p className='text-muted-foreground'>
-              {data ? `${data.total} puestos` : 'Cargando…'}: la misma vacante,
-              venga de la fuente o la consultora que venga.
+              {busqueda.descartados
+                ? `${data?.total ?? '…'} puestos que la criba deja fuera sin puntuarlos: otro país o un título que no es técnico. Se ajusta en Perfil.`
+                : `${data ? `${data.total} puestos` : 'Cargando…'}: la misma vacante, venga de la fuente o la consultora que venga.`}
             </p>
           </div>
+          <Button
+            variant={busqueda.descartados ? 'secondary' : 'ghost'}
+            size='sm'
+            onClick={() =>
+              cambiar({ descartados: busqueda.descartados ? undefined : true })
+            }
+          >
+            <Trash2 />
+            {busqueda.descartados
+              ? 'Volver a los puestos'
+              : `Descartados (${resumen?.descartados ?? '…'})`}
+          </Button>
         </div>
 
         <div className='flex flex-wrap items-center gap-2'>
@@ -359,6 +380,11 @@ function Fila({ puesto: p }: { puesto: PuestoResumen }) {
         <div className='flex items-center gap-2 text-sm text-muted-foreground'>
           {p.empresa ?? '—'} <InsigniaEtiqueta etiqueta={p.etiqueta} />
         </div>
+        {p.descarte && (
+          <div className='text-xs text-destructive'>
+            Descartado: {p.descarte}
+          </div>
+        )}
       </TableCell>
       <TableCell className='text-sm whitespace-normal'>
         {lugar(p.ciudad, p.pais)}
@@ -405,6 +431,9 @@ function Tarjeta({ puesto: p }: { puesto: PuestoResumen }) {
           .filter(Boolean)
           .join(' · ')}
       </div>
+      {p.descarte && (
+        <div className='text-xs text-destructive'>Descartado: {p.descarte}</div>
+      )}
       <div className='flex items-center justify-between'>
         <Vias vias={p.vias} />
         <span className='text-xs text-muted-foreground'>

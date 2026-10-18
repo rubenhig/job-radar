@@ -22,13 +22,24 @@ roles:
     - Agentes de IA en producción
   secundarios:
     - Software Engineer      # puntúa más si el puesto tiene componente de IA
-  excluir: []
+  # Si el título contiene alguno, el puesto se descarta sin puntuarlo (criba).
+  excluir: [trainer, "ai training", tutor, teacher, profesor, docente, lecturer, instructor, physician, medical,
+            higienista, video, filmmaker, illustrat, ilustrador, "graphic designer", sales, ventas, vendedor,
+            comercial, sdr, recruiter, "talent acquisition", marketing, accountant, contable, transcription,
+            "language expert", "customer care", "customer service", "growth hacker", "paid media", "media planner"]
   # Palabras con las que se busca en las fuentes. Las principales se buscan en
   # todas partes (también en remoto); las amplias, solo en las ubicaciones
   # presenciales, donde hay menos volumen y conviene ver todo lo técnico.
   terminos:
     principales: [AI, IA, LLM, GenAI, "machine learning", "inteligencia artificial", "AI agents", "agentes IA"]
     amplios: [software, developer, desarrollador, programador, engineer, ingeniero, python, data, datos, backend, "full stack", devops, cloud]
+    # No se buscan: junto a los anteriores, deciden si un título es técnico. Si no
+    # tiene ninguno («Limpiador/a», «Host/Hostess»), el puesto se descarta.
+    tecnicos: [agent, agentes, full-stack, fullstack, frontend, front-end, "front end", "back end", ml, sre, qa,
+               tester, test, informatic, sistemas, system, architect, arquitect, java, php, node, react, angular,
+               .net, android, ios, mobile, dba, database, tech, tecnic, cto, scientist, cientific, programmer, it,
+               sap, linux, kubernetes, ciberseguridad, security, snowflake, databricks, automation, automatizacion,
+               platform, plataforma, "computer vision", nlp, mlops, analyst, analista, consultor, consultant]
 
 # Si un puesto pide más nivel: "marcar" (avisa igual, con la advertencia) o "excluir".
 idiomas:

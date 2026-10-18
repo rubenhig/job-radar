@@ -5,8 +5,9 @@ import pytest
 import yaml
 from fastapi.testclient import TestClient
 
-from job_radar import almacen, puestos
+from job_radar import almacen, criba, puestos
 from job_radar.api import crear
+from job_radar.preferencias import cargar as cargar_preferencias
 
 RAIZ = Path(__file__).resolve().parents[1]
 
@@ -27,12 +28,14 @@ def cliente(tmp_path):
         almacen.registrar_fuente(db, f, "portal", f"{f}/1")
     for o in [oferta("infojobs", "1", salario_min=40000, salario_moneda="EUR", salario_periodo="ano"),
               oferta("linkedin", "2", empresa="Acme S.L.", skills=["Python"]),
-              oferta("linkedin", "3", titulo="Data Engineer", empresa="Beta", modalidad="remoto", ciudad=None)]:
+              oferta("linkedin", "3", titulo="Data Engineer", empresa="Beta", modalidad="remoto", ciudad=None),
+              oferta("linkedin", "4", titulo="Electricista", empresa="Gamma")]:
         e = almacen.iniciar_ejecucion(db, o["fuente_id"], "x/1")
         b, _ = almacen.guardar_bruto(db, e, o["fuente_id"], o["id_externo"], o)
         almacen.guardar_oferta(db, o, b, "x/1")
         almacen.cerrar_ejecucion(db, e, "ok", recibidos=1, nuevos=1)
     puestos.actualizar(db)
+    criba.aplicar(db, cargar_preferencias(datos / "perfil" / "preferencias.yaml"))
     return TestClient(crear(datos / "job_radar.db", datos, web=tmp_path / "sin-web"))
 
 
@@ -45,6 +48,14 @@ def test_lista_de_puestos_agrupa_y_filtra(cliente):
     assert cliente.get("/api/puestos", params={"modalidad": "remoto"}).json()["total"] == 1
     assert cliente.get("/api/puestos", params={"q": "Data"}).json()["items"][0]["titulo"] == "Data Engineer"
     assert cliente.get("/api/puestos", params={"fuente": "infojobs"}).json()["total"] == 1
+
+
+def test_los_descartados_se_ven_aparte_y_un_top_los_rescata(cliente):
+    d = cliente.get("/api/puestos", params={"descartados": True}).json()
+    assert d["total"] == 1 and d["items"][0]["descarte"] == "título no técnico"
+    assert cliente.get("/api/resumen").json()["descartados"] == 1
+    cliente.put(f"/api/puestos/{d['items'][0]['id']}/etiqueta", json={"valor": "top"})
+    assert cliente.get("/api/puestos").json()["total"] == 3
 
 
 def test_ficha_con_ofertas_y_procedencia(cliente):
@@ -69,7 +80,7 @@ def test_etiquetar_y_filtrar_por_etiqueta(cliente):
 
 def test_resumen_y_fuentes(cliente):
     r = cliente.get("/api/resumen").json()
-    assert r["puestos"] == 2 and r["ofertas"] == 3 and r["varias_vias"] == 1
+    assert r["puestos"] == 2 and r["ofertas"] == 4 and r["varias_vias"] == 1
     f = cliente.get("/api/fuentes").json()
     assert {x["id"] for x in f["fuentes"]} == {"infojobs", "linkedin"}
 

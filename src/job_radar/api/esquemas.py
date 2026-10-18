@@ -58,6 +58,7 @@ class PuestoResumen(BaseModel):
     ofertas: int
     etiqueta: Etiqueta | None = None
     valoracion: Valoracion | None = None
+    descarte: str | None = None  # por qué la criba lo deja fuera (job_radar.criba); None = pasa
 
 
 class PaginaPuestos(BaseModel):
@@ -190,6 +191,7 @@ class Resumen(BaseModel):
     """La portada: lo que ha pasado y lo que queda por hacer."""
 
     puestos: int
+    descartados: int
     puestos_nuevos_24h: int
     puestos_nuevos_7d: int
     ofertas: int

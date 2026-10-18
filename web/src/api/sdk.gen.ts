@@ -70,7 +70,8 @@ export const perfilLeerPreferencias = <ThrowOnError extends boolean = false>(opt
 /**
  * Guardar Preferencias
  *
- * Guarda las preferencias (ya validadas). La versión anterior queda en `preferencias.anterior.yaml`.
+ * Guarda las preferencias (ya validadas) y rehace la criba con ellas.
+ * La versión anterior queda en `preferencias.anterior.yaml`.
  */
 export const perfilGuardarPreferencias = <ThrowOnError extends boolean = false>(options: Options<PerfilGuardarPreferenciasData, ThrowOnError>): RequestResult<PerfilGuardarPreferenciasResponses, PerfilGuardarPreferenciasErrors, ThrowOnError> => (options.client ?? client).put<PerfilGuardarPreferenciasResponses, PerfilGuardarPreferenciasErrors, ThrowOnError>({
     url: '/api/preferencias',

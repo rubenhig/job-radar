@@ -439,8 +439,21 @@ function Formulario({ data }: { data: Preferencias }) {
             />
           </Campo>
           <Campo
-            titulo='Descartar si aparece'
-            ayuda='Términos que eliminan un puesto.'
+            titulo='Términos técnicos'
+            ayuda='No se buscan: un título sin ninguno de estos ni de los anteriores se descarta.'
+          >
+            <ListaEditable
+              valores={terminos.tecnicos ?? []}
+              onChange={(v) =>
+                set({
+                  roles: { ...roles, terminos: { ...terminos, tecnicos: v } },
+                })
+              }
+            />
+          </Campo>
+          <Campo
+            titulo='Descartar si el título contiene'
+            ayuda='Lo descartado no se puntúa; se ve en Puestos → Descartados.'
           >
             <ListaEditable
               valores={roles.excluir ?? []}

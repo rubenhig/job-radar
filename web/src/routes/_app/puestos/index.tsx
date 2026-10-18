@@ -20,6 +20,7 @@ const filtros = z.object({
     .enum(['todas', 'destacados', 'top', 'sin'])
     .optional()
     .catch(undefined),
+  descartados: z.boolean().optional().catch(undefined),
   pagina: z.number().int().positive().optional().catch(undefined),
 })
 

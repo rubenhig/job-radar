@@ -46,12 +46,14 @@ class Terminos(Estricto):
 
     principales: list[str] = Field(default=[], description="Se buscan en todas partes, también en remoto")
     amplios: list[str] = Field(default=[], description="Solo en las ubicaciones presenciales, donde el volumen es menor")
+    tecnicos: list[str] = Field(default=[], description=(
+        "No se buscan: con los demás términos, deciden si un título es técnico. Vacío → no se filtra por título"))
 
 
 class Roles(Estricto):
     principales: list[str] = Field(min_length=1)
     secundarios: list[str] = []
-    excluir: list[str] = Field(default=[], description="Términos que descartan un puesto")
+    excluir: list[str] = Field(default=[], description="Términos que, en el título, descartan un puesto")
     terminos: Terminos = Terminos()
 
 

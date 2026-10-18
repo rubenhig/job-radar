@@ -5,6 +5,8 @@
     uv run job-radar ingesta --fuente freehire
     uv run job-radar resumen            # ofertas y puestos por fuente, exclusividad y salud
     uv run job-radar salud              # solo las alertas; sale con 1 si hay alguna
+    uv run job-radar cribar             # recalcula los descartes (tras cambiar las preferencias)
+    uv run job-radar puntuar            # puntúa los puestos nuevos que pasan la criba
 """
 
 import argparse
@@ -15,7 +17,7 @@ from pathlib import Path
 
 import httpx
 
-from job_radar import almacen, ingesta, puestos, salud
+from job_radar import almacen, criba, ingesta, puestos, salud
 from job_radar.fuentes import conector
 from job_radar.fuentes import registro as reg
 from job_radar.fuentes.base import Busqueda, cargar_env
@@ -45,7 +47,8 @@ def cmd_ingesta(args) -> int:
     if args.fuente:
         activas = {k: v for k, v in activas.items() if k in args.fuente}
     conectores = {k: conector(f.conector) for k, f in activas.items()}
-    lista = reg.busquedas(cargar_preferencias(args.preferencias), reg.Registro(fuentes=activas), conectores)
+    prefs = cargar_preferencias(args.preferencias)
+    lista = reg.busquedas(prefs, reg.Registro(fuentes=activas), conectores)
     reg.sincronizar(db, registro, lista)
 
     pendientes = lista if args.todas else tocan(db, lista, datetime.now(UTC))
@@ -55,6 +58,7 @@ def cmd_ingesta(args) -> int:
         log.info("%-22s %-7s recibidas %3d · nuevas %3d · errores %d%s", b.id, e["estado"], e["recibidos"],
                  e["nuevos"], e["errores_norm"], f" · {e['error'][:120]}" if e["error"] else "")
     log.info("puestos: %s", puestos.actualizar(db) or "sin cambios")
+    log.info("criba: %s", dict(criba.aplicar(db, prefs)))
 
     alertas = salud.comprobar(db, registro)
     for a in alertas:
@@ -113,6 +117,8 @@ def cmd_puntuar(args) -> int:
     base = "SELECT p.id FROM puesto p WHERE p.estado = 'abierto'"
     if args.etiquetados:
         base += " AND p.id IN (SELECT puesto_id FROM etiqueta)"
+    else:  # lo que la criba descarta no se paga
+        base += " AND p.descarte IS NULL"
     if not args.rehacer:  # solo lo que no tiene evaluación con esta rúbrica y este perfil
         base += " AND p.id NOT IN (SELECT puesto_id FROM evaluacion WHERE rubrica = ? AND perfil = ?)"
     ids = [r[0] for r in db.execute(base, [] if args.rehacer else [puntuacion.RUBRICA, huella]).fetchall()]
@@ -139,6 +145,12 @@ def cmd_medir(args) -> int:
     return 0
 
 
+def cmd_cribar(args) -> int:
+    cuenta = criba.aplicar(almacen.abrir(args.db), cargar_preferencias(args.preferencias))
+    print("\n".join(f"{n:5} {motivo}" for motivo, n in cuenta.most_common()))
+    return 0
+
+
 def cmd_salud(args) -> int:
     alertas = salud.comprobar(almacen.abrir(args.db), reg.cargar())
     print("\n".join(map(str, alertas)) or "Todas las fuentes, bien.")
@@ -158,6 +170,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--dias", type=int, default=7)
     p.set_defaults(func=cmd_resumen)
     sub.add_parser("salud", help="alertas de las fuentes").set_defaults(func=cmd_salud)
+    p = sub.add_parser("cribar", help="recalcula qué puestos se descartan sin puntuar")
+    p.add_argument("--preferencias", type=Path, default=RUTA_PREFERENCIAS)
+    p.set_defaults(func=cmd_cribar)
     p = sub.add_parser("puntuar", help="evalúa puestos contra el perfil (Fase 4)")
     p.add_argument("--etiquetados", action="store_true", help="solo los que Rubén ha etiquetado")
     p.add_argument("--rehacer", action="store_true", help="también los ya evaluados con esta rúbrica")

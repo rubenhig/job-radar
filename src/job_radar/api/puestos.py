@@ -38,11 +38,12 @@ def _resumen(fila: dict) -> dict:
         salario=_salario((fusion.get("salario") or {}).get("valor")),
         publicada_en=(fusion.get("publicada_en") or {}).get("valor"),
         vista_primera=fila["vista_primera"], vista_ultima=fila["vista_ultima"],
-        vias=[Via(fuente=f, empresa=e or None) for f, e in vias], ofertas=fila["ofertas"], etiqueta=etiqueta)
+        vias=[Via(fuente=f, empresa=e or None) for f, e in vias], ofertas=fila["ofertas"], etiqueta=etiqueta,
+        descarte=fila["descarte"])
 
 
 CONSULTA = """
-    SELECT p.id, p.titulo, p.ciudad, p.pais, p.modalidad, p.fusion, p.estado,
+    SELECT p.id, p.titulo, p.ciudad, p.pais, p.modalidad, p.fusion, p.estado, p.descarte,
            MIN(o.vista_primera) AS vista_primera, MAX(o.vista_ultima) AS vista_ultima, COUNT(o.id) AS ofertas,
            GROUP_CONCAT(o.fuente_id || char(31) || COALESCE(o.empresa, ''), char(30)) AS vias,
            e.valor AS etiqueta, e.motivo, e.actualizada_en AS etiquetada_en,
@@ -70,10 +71,13 @@ def listar(db: Annotated[object, Depends(bd)],
            dias: Annotated[int | None, Query(gt=0)] = None,
            nota_min: Annotated[int | None, Query(ge=0, le=100)] = None,
            puntuado: bool | None = None,
+           descartados: bool = False,
            orden: Orden = "recientes",
            limite: Annotated[int, Query(gt=0, le=200)] = 50,
            desde: Annotated[int, Query(ge=0)] = 0):
-    donde, args = ["p.estado = 'abierto'"], []
+    # Por defecto, lo que pasa la criba; con `descartados`, solo lo descartado.
+    donde = ["p.estado = 'abierto'", "p.descarte IS NOT NULL" if descartados else "p.descarte IS NULL"]
+    args = []
     if q:
         donde.append("p.id IN (SELECT puesto_id FROM oferta WHERE titulo LIKE ? OR empresa LIKE ? OR descripcion LIKE ?)")
         args += [f"%{q}%"] * 3
@@ -154,6 +158,8 @@ def etiquetar(puesto_id: int, entrada: EtiquetaEntrada, db: Annotated[object, De
                   ON CONFLICT (puesto_id) DO UPDATE SET valor = excluded.valor, motivo = excluded.motivo,
                                                         actualizada_en = excluded.actualizada_en""",
                [puesto_id, entrada.valor, entrada.motivo, ahora, ahora])
+    if entrada.valor == "top":  # lo que Rubén marca como top no lo descarta la criba (job_radar.criba)
+        db.execute("UPDATE puesto SET descarte = NULL WHERE id = ?", [puesto_id])
     db.conn.commit()
     return Etiqueta(valor=entrada.valor, motivo=entrada.motivo, actualizada_en=ahora)
 

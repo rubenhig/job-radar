@@ -107,6 +107,12 @@ export function FichaPuesto() {
               </Badge>
             ))}
           </div>
+          {p.descarte && (
+            <p className='text-sm text-destructive'>
+              Descartado sin puntuar: {p.descarte}. Si es un error, márcalo como
+              top y volverá a la lista.
+            </p>
+          )}
         </div>
 
         <div className='grid gap-6 lg:grid-cols-[1fr_22rem]'>

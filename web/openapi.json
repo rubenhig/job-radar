@@ -156,6 +156,16 @@
       }
      },
      {
+      "name": "descartados",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": false,
+       "title": "Descartados"
+      }
+     },
+     {
       "name": "orden",
       "in": "query",
       "required": false,
@@ -437,7 +447,7 @@
      "perfil"
     ],
     "summary": "Guardar Preferencias",
-    "description": "Guarda las preferencias (ya validadas). La versión anterior queda en `preferencias.anterior.yaml`.",
+    "description": "Guarda las preferencias (ya validadas) y rehace la criba con ellas.\nLa versión anterior queda en `preferencias.anterior.yaml`.",
     "operationId": "perfil-guardar_preferencias",
     "requestBody": {
      "content": {
@@ -1513,6 +1523,17 @@
        }
       ]
      },
+     "descarte": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Descarte"
+     },
      "estado": {
       "type": "string",
       "title": "Estado"
@@ -1669,6 +1690,17 @@
         "type": "null"
        }
       ]
+     },
+     "descarte": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Descarte"
      }
     },
     "type": "object",
@@ -1759,6 +1791,10 @@
       "type": "integer",
       "title": "Puestos"
      },
+     "descartados": {
+      "type": "integer",
+      "title": "Descartados"
+     },
      "puestos_nuevos_24h": {
       "type": "integer",
       "title": "Puestos Nuevos 24H"
@@ -1798,6 +1834,7 @@
     "type": "object",
     "required": [
      "puestos",
+     "descartados",
      "puestos_nuevos_24h",
      "puestos_nuevos_7d",
      "ofertas",
@@ -1834,14 +1871,15 @@
       },
       "type": "array",
       "title": "Excluir",
-      "description": "Términos que descartan un puesto",
+      "description": "Términos que, en el título, descartan un puesto",
       "default": []
      },
      "terminos": {
       "$ref": "#/components/schemas/Terminos",
       "default": {
        "principales": [],
-       "amplios": []
+       "amplios": [],
+       "tecnicos": []
       }
      }
     },
@@ -1920,6 +1958,15 @@
       "type": "array",
       "title": "Amplios",
       "description": "Solo en las ubicaciones presenciales, donde el volumen es menor",
+      "default": []
+     },
+     "tecnicos": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Tecnicos",
+      "description": "No se buscan: con los demás términos, deciden si un título es técnico. Vacío → no se filtra por título",
       "default": []
      }
     },

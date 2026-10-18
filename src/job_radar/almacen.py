@@ -168,6 +168,10 @@ MIGRACIONES: list[str] = [
     );
     CREATE INDEX evaluacion_puesto ON evaluacion (puesto_id, rubrica, creada_en);
     """,
+    # 5 · criba: por qué se descarta un puesto sin puntuarlo (NULL = pasa)
+    """
+    ALTER TABLE puesto ADD COLUMN descarte TEXT;
+    """,
 ]
 
 
