@@ -9,11 +9,15 @@ wheels/
 # Virtual environments
 .venv
 
-# Datos personales y secretos (nunca al repo público)
-data/
+# Datos personales y secretos (nunca al repo público). Anclado a la raíz:
+# un `data/` sin barra ignoraba también web/src/components/layout/data/.
+/data/
 .env
 
 # Investigación en bruto (el informe final está en docs/estado-del-arte.md)
 research_notes/
 reports/
 .playwright-mcp/
+
+# Herramientas
+.coverage
