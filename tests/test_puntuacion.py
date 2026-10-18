@@ -225,3 +225,15 @@ def test_el_salario_del_modelo_manda_sobre_el_inferido_por_la_fuente():
     londres = ({"salario_max": 151436, "salario_moneda": "GBP", "salario_periodo": "ano"}, "texto")
     assert puntuacion.elegir_salario(londres, v)[0]["salario_max"] == 50000
     assert puntuacion.elegir_salario((londres[0], "fuente"), v)[0]["salario_max"] == 151436
+
+
+def test_recalcular_ignora_los_puestos_fusionados(tmp_path):
+    from job_radar.preferencias import cargar
+
+    db = almacen.abrir(tmp_path / "x.db")
+    ahora = almacen.ahora()
+    pid = db["puesto"].insert({"titulo": "AI Engineer", "estado": "fusionado:9", "creado_en": ahora,
+                               "actualizado_en": ahora}).last_pk  # sin ofertas: se fusionó en otro
+    puntuacion.guardar(db, pid, calcular(veredictos(), OFERTA), Uso(motor="m", modelo="s"), "p")
+    prefs = cargar(Path(__file__).resolve().parents[1] / "config" / "preferencias.ejemplo.yaml")
+    assert puntuacion.recalcular(db, prefs) == 0

@@ -459,7 +459,9 @@ def recalcular(db, prefs: Preferencias) -> int:
     reglas, el salario deseado o que una oferta publique su salario no cuesta nada. Devuelve cuántas cambian."""
     cambios = 0
     for ev in db.query("""SELECT * FROM evaluacion WHERE id IN (SELECT MAX(id) FROM evaluacion
-                          WHERE rubrica = ? GROUP BY puesto_id)""", [RUBRICA]):
+                          WHERE rubrica = ? GROUP BY puesto_id)
+                          AND puesto_id IN (SELECT id FROM puesto WHERE estado = 'abierto')""", [RUBRICA]):
+        # (los puestos fusionados en otro ya no tienen ofertas: su evaluación es historia)
         r = Resultado.model_validate_json(ev["resultado"])
         nueva = calcular(r.veredictos.model_copy(deep=True), _texto(db, ev["puesto_id"]),
                          salario_de(db, ev["puesto_id"]), prefs.salario)
