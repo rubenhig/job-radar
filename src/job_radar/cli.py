@@ -6,6 +6,7 @@
     uv run job-radar ingesta --puntuar  # y después puntúa los puestos nuevos que pasan la criba
     uv run job-radar resumen            # ofertas y puestos por fuente, exclusividad y salud
     uv run job-radar salud              # solo las alertas; sale con 1 si hay alguna
+    uv run job-radar copia              # copia de seguridad de la base (también al empezar cada ingesta)
     uv run job-radar cribar             # recalcula los descartes (tras cambiar las preferencias)
     uv run job-radar puntuar            # puntúa los puestos nuevos que pasan la criba
     uv run job-radar recalcular         # rehace la nota sin llamar al modelo (p. ej. tras cambiar el salario)
@@ -44,6 +45,7 @@ def tocan(db, lista: list[Busqueda], ahora: datetime) -> list[Busqueda]:
 
 def cmd_ingesta(args) -> int:
     db = almacen.abrir(args.db)
+    log.info("copia: %s", almacen.copiar(db, args.db.parent / "copias").name)  # antes de cambiar nada
     registro = reg.cargar()
     activas = registro.activas()
     if args.fuente:
@@ -152,6 +154,11 @@ def cmd_medir(args) -> int:
     return 0
 
 
+def cmd_copia(args) -> int:
+    print(almacen.copiar(almacen.abrir(args.db), args.db.parent / "copias"))
+    return 0
+
+
 def cmd_cribar(args) -> int:
     cuenta = criba.aplicar(almacen.abrir(args.db), cargar_preferencias(args.preferencias))
     print("\n".join(f"{n:5} {motivo}" for motivo, n in cuenta.most_common()))
@@ -187,6 +194,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--dias", type=int, default=7)
     p.set_defaults(func=cmd_resumen)
     sub.add_parser("salud", help="alertas de las fuentes").set_defaults(func=cmd_salud)
+    sub.add_parser("copia", help="copia de seguridad de la base").set_defaults(func=cmd_copia)
     p = sub.add_parser("cribar", help="recalcula qué puestos se descartan sin puntuar")
     p.add_argument("--preferencias", type=Path, default=RUTA_PREFERENCIAS)
     p.set_defaults(func=cmd_cribar)

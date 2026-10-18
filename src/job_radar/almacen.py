@@ -12,7 +12,8 @@ Diseño en docs/modelo.md.
 import hashlib
 import json
 import os
-from datetime import UTC, datetime
+import sqlite3
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import sqlite_utils
@@ -273,3 +274,32 @@ def guardar_oferta(db, oferta: dict, bruto_id: int, conector: str) -> tuple[int,
         db["oferta"].update(previa[0], fila)
         return previa[0], False
     return db["oferta"].insert(fila | {"vista_primera": fila["vista_ultima"]}).last_pk, True
+
+
+# --- copias de seguridad -----------------------------------------------------------
+
+DIARIAS, SEMANALES = 7, 4
+
+
+def copiar(db: sqlite_utils.Database, carpeta: Path, hoy: date | None = None) -> Path:
+    """Copia consistente de la base (API de backup de SQLite: vale con la web leyendo y en modo WAL).
+
+    Una por día: las de los últimos DIARIAS días y, de antes, la de cada lunes de las últimas
+    SEMANALES semanas. Lo irrecuperable son las etiquetas de Rubén y las evaluaciones pagadas.
+    """
+    hoy = hoy or datetime.now(UTC).date()
+    carpeta.mkdir(parents=True, exist_ok=True)
+    destino = carpeta / f"job_radar-{hoy.isoformat()}.db"
+    if not destino.exists():
+        temporal = destino.with_suffix(".tmp")
+        with sqlite3.connect(temporal) as copia:
+            db.conn.backup(copia)
+        copia.close()
+        temporal.rename(destino)
+    for f in carpeta.glob("job_radar-*.db"):
+        dia = date.fromisoformat(f.stem.removeprefix("job_radar-"))
+        reciente = (hoy - dia).days < DIARIAS
+        lunes = dia.weekday() == 0 and (hoy - dia).days < 7 * (SEMANALES + 1)
+        if not (reciente or lunes):
+            f.unlink()
+    return destino

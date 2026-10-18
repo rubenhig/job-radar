@@ -71,3 +71,19 @@ def test_cerrar_ejecucion_con_metricas(db):
     almacen.cerrar_ejecucion(db, e, "ok", recibidos=20, nuevos=5, cuota={"restantes": 22})
     fila = db["ejecucion"].get(e)
     assert fila["estado"] == "ok" and fila["nuevos"] == 5 and fila["fin"] and fila["cuota"] == '{"restantes": 22}'
+
+
+def test_copias_diarias_con_rotacion(tmp_path):
+    from datetime import date, timedelta
+
+    db = almacen.abrir(tmp_path / "job_radar.db")
+    almacen.registrar_fuente(db, "freehire", "agregador", "freehire-api/1")
+    carpeta = tmp_path / "copias"
+    hoy = date(2026, 10, 18)  # sábado
+    for d in range(60):
+        almacen.copiar(db, carpeta, hoy - timedelta(days=59 - d))
+    dias = sorted(date.fromisoformat(f.stem.removeprefix("job_radar-")) for f in carpeta.glob("*.db"))
+    assert dias[-7:] == [hoy - timedelta(days=i) for i in range(6, -1, -1)]          # la última semana entera
+    assert all(d.weekday() == 0 for d in dias[:-7]) and len(dias[:-7]) == 4           # y 4 lunes anteriores
+    copia = almacen.abrir(carpeta / f"job_radar-{hoy}.db")
+    assert copia["fuente"].count == 1 and not list(carpeta.glob("*.tmp"))
