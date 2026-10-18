@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Check, X } from 'lucide-react'
 import { puntuacionAcuerdoOptions } from '@/api/@tanstack/react-query.gen'
+import { humanizar } from '@/lib/puntuacion'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -90,7 +91,7 @@ export function Puntuacion() {
                       {c.titulo}
                     </Link>
                     <div className='truncate text-xs text-muted-foreground'>
-                      {c.explicacion}
+                      {humanizar(c.explicacion)}
                     </div>
                   </div>
                   <Badge

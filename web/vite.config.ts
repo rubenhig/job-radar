@@ -16,7 +16,9 @@ export default defineConfig({
     tailwindcss(),
     // Instalable en el móvil. La API nunca se sirve desde la caché ni cae en index.html.
     VitePWA({
+      // Se registra desde main.tsx (registerSW): con autoUpdate, la página se recarga al activarse una versión nueva.
       registerType: 'autoUpdate',
+      injectRegister: false,
       includeAssets: ['images/favicon.svg'],
       manifest: {
         name: 'job-radar',
@@ -35,7 +37,10 @@ export default defineConfig({
       },
       workbox: {
         navigateFallbackDenylist: [/^\/api\//],
-        runtimeCaching: [{ urlPattern: /^\/api\//, handler: 'NetworkOnly' }],
+        // urlPattern recibe la URL completa: se compara la ruta, no el texto («http://…/api/» no empieza por «/api/»).
+        runtimeCaching: [
+          { urlPattern: ({ url }) => url.pathname.startsWith('/api/'), handler: 'NetworkOnly' },
+        ],
       },
     }),
   ],

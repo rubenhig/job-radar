@@ -44,8 +44,7 @@ export function TarjetaPuntuacion({
             <Sparkles className='size-4' /> Puntuación
           </CardTitle>
           <CardDescription>
-            Aún sin puntuar: se puntúa tras la ingesta (o con `job-radar
-            puntuar`).
+            Aún sin puntuar: se puntúa en la próxima ingesta.
           </CardDescription>
         </CardHeader>
       </Card>

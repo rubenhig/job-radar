@@ -9,7 +9,7 @@ hace falta CORS. Diseño en docs/arquitectura.md#cómo-se-interactúa.
 import os
 from pathlib import Path
 
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
@@ -41,6 +41,8 @@ def crear(ruta_db: Path = almacen.RUTA_DB, datos: Path = almacen.DATOS, web: Pat
 
         @app.get("/{ruta:path}", include_in_schema=False)
         def app_web(ruta: str):
+            if ruta == "api" or ruta.startswith("api/"):  # una ruta de API que no existe es un 404, no la web
+                raise HTTPException(404, "No existe esa ruta de la API")
             fichero = (web / ruta).resolve()
             if ruta and fichero.is_file() and web.resolve() in fichero.parents:
                 return FileResponse(fichero)

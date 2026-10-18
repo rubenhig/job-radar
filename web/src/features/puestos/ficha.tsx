@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, getRouteApi } from '@tanstack/react-router'
+import { Link, getRouteApi, useRouter } from '@tanstack/react-router'
 import type { Oferta } from '@/api'
 import { ArrowLeft, ExternalLink } from 'lucide-react'
 import { puestosFichaOptions } from '@/api/@tanstack/react-query.gen'
@@ -50,12 +50,38 @@ const NOMBRES: Record<string, string> = {
 
 export function FichaPuesto() {
   const { puestoId } = ruta.useParams()
-  const { data: p, isLoading } = useQuery(
-    puestosFichaOptions({ path: { puesto_id: Number(puestoId) } })
-  )
+  const id = Number(puestoId)
+  const { data: p, isError } = useQuery({
+    ...puestosFichaOptions({ path: { puesto_id: id } }),
+    enabled: Number.isInteger(id),
+  })
   const [elegida, setElegida] = useState<number | null>(null)
+  const router = useRouter()
+  const volver = () =>
+    router.history.canGoBack()
+      ? router.history.back()
+      : router.navigate({ to: '/puestos' })
 
-  if (isLoading || !p) {
+  if (isError || !Number.isInteger(id)) {
+    return (
+      <>
+        <Cabecera />
+        <Main className='flex flex-col items-start gap-3'>
+          <h1 className='text-xl font-semibold'>No existe ese puesto</h1>
+          <p className='text-muted-foreground'>
+            Puede que se haya fusionado con otro o que el enlace esté mal.
+          </p>
+          <Button asChild variant='outline'>
+            <Link to='/puestos'>
+              <ArrowLeft /> Ir a Puestos
+            </Link>
+          </Button>
+        </Main>
+      </>
+    )
+  }
+
+  if (!p) {
     return (
       <>
         <Cabecera />
@@ -86,13 +112,16 @@ export function FichaPuesto() {
       <Cabecera />
       <Main className='flex flex-col gap-6'>
         <div className='flex flex-col gap-2'>
-          <Link
-            to='/puestos'
+          <button
+            type='button'
+            onClick={volver}
             className='flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground'
           >
             <ArrowLeft className='size-4' /> Puestos
-          </Link>
-          <h1 className='text-2xl font-bold tracking-tight'>{p.titulo}</h1>
+          </button>
+          <h1 className='text-2xl font-bold tracking-tight break-words'>
+            {p.titulo}
+          </h1>
           <div className='text-muted-foreground'>
             {p.empresa ?? 'Empresa sin indicar'}
           </div>
@@ -115,8 +144,8 @@ export function FichaPuesto() {
           )}
         </div>
 
-        <div className='grid gap-6 lg:grid-cols-[1fr_22rem]'>
-          <div className='flex flex-col gap-6 lg:order-1'>
+        <div className='grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]'>
+          <div className='flex min-w-0 flex-col gap-6 break-words lg:order-1'>
             <TarjetaPuntuacion evaluacion={p.evaluacion} />
             <Card>
               <CardHeader>

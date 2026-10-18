@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import { registerSW } from 'virtual:pwa-register'
 import { client } from './api/client.gen'
 import { DirectionProvider } from './context/direction-provider'
 import { FontProvider } from './context/font-provider'
@@ -29,7 +30,11 @@ function mensaje(error: unknown) {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: import.meta.env.PROD ? 2 : false,
+      // Un error de la API (404, 422…) llega con «detail» y no se arregla reintentando; la red, sí.
+      retry: (n, e) =>
+        import.meta.env.PROD &&
+        n < 2 &&
+        !(e && typeof e === 'object' && 'detail' in e),
       refetchOnWindowFocus: import.meta.env.PROD,
       staleTime: 30 * 1000,
     },
@@ -51,6 +56,11 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
+
+// Tras desplegar: el service worker nuevo recarga la página al activarse (autoUpdate), y una pestaña
+// vieja que pide trozos de página que ya no existen también se recarga sola.
+if (import.meta.env.PROD) registerSW({ immediate: true })
+window.addEventListener('vite:preloadError', () => window.location.reload())
 
 const rootElement = document.getElementById('root')!
 if (!rootElement.innerHTML) {

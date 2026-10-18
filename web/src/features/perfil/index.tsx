@@ -246,7 +246,8 @@ function Formulario({ data }: { data: Preferencias }) {
       toast.success(
         'Preferencias guardadas. Las búsquedas cambian en la próxima ingesta.'
       )
-      qc.invalidateQueries()
+      // todo menos la visita: guardar el perfil no es volver a entrar
+      qc.invalidateQueries({ predicate: (q) => q.queryKey[0] !== 'visita' })
     },
   })
 
@@ -481,7 +482,7 @@ function Formulario({ data }: { data: Preferencias }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Inglés, salario y avisos</CardTitle>
+          <CardTitle>Inglés y salario</CardTitle>
         </CardHeader>
         <CardContent className='grid gap-5 md:grid-cols-2'>
           <Campo
@@ -557,44 +558,6 @@ function Formulario({ data }: { data: Preferencias }) {
                   />
                 </label>
               ))}
-            </div>
-          </Campo>
-          <Campo
-            titulo='Aviso inmediato desde'
-            ayuda='Puntuación (0–100) para avisar al momento; el resto va al resumen.'
-          >
-            <div className='flex gap-2'>
-              <Input
-                type='number'
-                min={0}
-                max={100}
-                className='w-24'
-                value={p.avisos?.inmediato_desde ?? 85}
-                onChange={(e) =>
-                  set({
-                    avisos: {
-                      ...p.avisos,
-                      inmediato_desde: Number(e.target.value),
-                    },
-                  })
-                }
-              />
-              <Select
-                value={p.avisos?.resumen ?? 'semanal'}
-                onValueChange={(v) =>
-                  set({
-                    avisos: { ...p.avisos, resumen: v as 'diario' | 'semanal' },
-                  })
-                }
-              >
-                <SelectTrigger className='w-44'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='diario'>Resumen diario</SelectItem>
-                  <SelectItem value='semanal'>Resumen semanal</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </Campo>
         </CardContent>

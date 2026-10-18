@@ -56,9 +56,12 @@ export function haceCuanto(iso?: string | null): string {
   return fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
 }
 
-export function lugar(ciudad?: string | null, pais?: string | null): string {
+export function lugar(
+  ciudad?: string | null,
+  pais?: string | null
+): string | null {
   return (
     [ciudad, pais && pais !== 'ES' ? pais : null].filter(Boolean).join(', ') ||
-    '—'
+    null
   )
 }

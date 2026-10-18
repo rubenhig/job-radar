@@ -1,6 +1,7 @@
 """Portada, fuentes y perfil: lo que no es un puesto."""
 
 import json
+import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Annotated, Any
@@ -32,7 +33,10 @@ def _sin_puntuar(db, carpeta: Path) -> int | None:
 @router.get("/resumen", response_model=Resumen, tags=["sistema"])
 def resumen(db: Annotated[Any, Depends(bd)], carpeta: Annotated[Path, Depends(datos)]):
     uno = lambda sql, *a: db.execute(sql, a).fetchone()[0]  # noqa: E731
-    primera = "SELECT puesto_id FROM oferta GROUP BY puesto_id HAVING MIN(vista_primera) >= ?"
+    # Los contadores miran lo mismo que la lista de Puestos: abiertos y que pasan la criba.
+    visibles = "SELECT id FROM puesto WHERE estado = 'abierto' AND descarte IS NULL"
+    primera = f"""SELECT puesto_id FROM oferta WHERE puesto_id IN ({visibles})
+                  GROUP BY puesto_id HAVING MIN(vista_primera) >= ?"""
     return Resumen(
         puestos=uno("SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NULL"),
         descartados=uno("SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NOT NULL"),
@@ -40,8 +44,8 @@ def resumen(db: Annotated[Any, Depends(bd)], carpeta: Annotated[Path, Depends(da
         puestos_nuevos_24h=uno(f"SELECT COUNT(*) FROM ({primera})", _hace(days=1)),
         puestos_nuevos_7d=uno(f"SELECT COUNT(*) FROM ({primera})", _hace(days=7)),
         ofertas=uno("SELECT COUNT(*) FROM oferta"),
-        varias_vias=uno("""SELECT COUNT(*) FROM (SELECT puesto_id FROM oferta WHERE puesto_id IS NOT NULL
-                           GROUP BY puesto_id HAVING COUNT(*) > 1)"""),
+        varias_vias=uno(f"""SELECT COUNT(*) FROM (SELECT puesto_id FROM oferta WHERE puesto_id IN ({visibles})
+                            GROUP BY puesto_id HAVING COUNT(*) > 1)"""),
         etiquetados=uno("SELECT COUNT(*) FROM etiqueta"),
         etiquetados_top=uno("SELECT COUNT(*) FROM etiqueta WHERE valor = 'top'"),
         por_fuente=dict(db.execute("SELECT fuente_id, COUNT(*) FROM oferta GROUP BY 1").fetchall()),
@@ -114,8 +118,12 @@ def guardar_preferencias(nuevas: Preferencias, carpeta: Annotated[Path, Depends(
     if ruta.exists():
         ruta.with_name("preferencias.anterior.yaml").write_text(ruta.read_text(encoding="utf-8"), encoding="utf-8")
     ruta.parent.mkdir(parents=True, exist_ok=True)
-    ruta.write_text(yaml.safe_dump(nuevas.model_dump(mode="json"), allow_unicode=True, sort_keys=False),
-                    encoding="utf-8")
+    # Escritura atómica: un fallo a mitad no deja el fichero truncado. (Los comentarios del YAML se pierden:
+    # la explicación de cada opción está en config/preferencias.ejemplo.yaml y en la propia pantalla.)
+    temporal = ruta.with_suffix(".tmp")
+    temporal.write_text(yaml.safe_dump(nuevas.model_dump(mode="json"), allow_unicode=True, sort_keys=False),
+                        encoding="utf-8")
+    os.replace(temporal, ruta)
     criba.aplicar(db, nuevas)
     puntuacion.recalcular(db, nuevas)
     return nuevas

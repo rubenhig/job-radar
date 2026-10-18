@@ -54,9 +54,7 @@ export function ConfigDrawer() {
       <SheetContent className='flex flex-col'>
         <SheetHeader className='pb-0 text-start'>
           <SheetTitle>Apariencia</SheetTitle>
-          <SheetDescription>
-            Tema, menú lateral y disposición.
-          </SheetDescription>
+          <SheetDescription>Tema, menú lateral y disposición.</SheetDescription>
         </SheetHeader>
         <div className='space-y-6 overflow-y-auto px-4'>
           <ThemeConfig />
@@ -315,4 +313,3 @@ function LayoutConfig() {
     </div>
   )
 }
-

@@ -47,7 +47,7 @@ const ruta = getRouteApi('/_app/puestos/')
 const POR_PAGINA = 25
 
 const ETIQUETAS = {
-  todas: 'Todas',
+  todas: 'Cualquier etiqueta',
   sin: 'Sin etiquetar',
   top: 'Top',
   no_top: 'No top',
@@ -59,8 +59,8 @@ const NOTAS = {
   sin: 'Sin puntuar',
 } as const
 const ORDENES = {
-  nota: 'Mejor nota',
-  recientes: 'Más recientes',
+  nota: 'Orden: mejor nota',
+  recientes: 'Orden: más recientes',
   publicadas: 'Fecha de publicación',
   vias: 'Más vías',
 } as const
@@ -74,15 +74,20 @@ export function Puestos() {
       replace: true,
     })
 
-  // El texto se busca al dejar de escribir.
+  // El texto se busca al dejar de escribir; si la URL cambia por fuera (el menú, «Quitar filtros»), manda la URL.
   const [texto, setTexto] = useState(busqueda.q ?? '')
+  const [qVista, setQVista] = useState(busqueda.q)
+  if (busqueda.q !== qVista) {
+    // ajustar el estado al cambiar la URL, durante el render (sin un efecto que repinte dos veces)
+    setQVista(busqueda.q)
+    setTexto(busqueda.q ?? '')
+  }
   useEffect(() => {
-    const t = setTimeout(
-      () => texto !== (busqueda.q ?? '') && cambiar({ q: texto || undefined }),
-      350
-    )
+    if (texto === (busqueda.q ?? '')) return
+    const t = setTimeout(() => cambiar({ q: texto || undefined }), 350)
     return () => clearTimeout(t)
-  })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [texto])
 
   const visita = useVisita()
   const pagina = busqueda.pagina ?? 1
@@ -180,7 +185,7 @@ export function Puestos() {
               cambiar({ etiqueta: v as keyof typeof ETIQUETAS })
             }
           >
-            <SelectTrigger className='h-9 w-36'>
+            <SelectTrigger aria-label='Etiqueta' className='h-9 w-36'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -195,7 +200,7 @@ export function Puestos() {
             value={String(busqueda.dias ?? 0)}
             onValueChange={(v) => cambiar({ dias: Number(v) || undefined })}
           >
-            <SelectTrigger className='h-9 w-40'>
+            <SelectTrigger aria-label='Fecha' className='h-9 w-40'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -209,7 +214,7 @@ export function Puestos() {
             value={busqueda.nota ?? 'todas'}
             onValueChange={(v) => cambiar({ nota: v as keyof typeof NOTAS })}
           >
-            <SelectTrigger className='h-9 w-40'>
+            <SelectTrigger aria-label='Nota' className='h-9 w-40'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -224,7 +229,7 @@ export function Puestos() {
             value={busqueda.orden ?? 'nota'}
             onValueChange={(v) => cambiar({ orden: v as keyof typeof ORDENES })}
           >
-            <SelectTrigger className='h-9 w-44'>
+            <SelectTrigger aria-label='Orden' className='h-9 w-44'>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -305,6 +310,11 @@ export function Puestos() {
           {data?.items.map((p) => (
             <Tarjeta key={p.id} puesto={p} desde={visita?.desde} />
           ))}
+          {data && !data.items.length && (
+            <p className='py-10 text-center text-muted-foreground'>
+              Ningún puesto con estos filtros.
+            </p>
+          )}
         </div>
 
         <div className='flex items-center justify-between gap-2'>
@@ -421,7 +431,7 @@ function Fila({
         )}
       </TableCell>
       <TableCell className='text-sm whitespace-normal'>
-        {lugar(p.ciudad, p.pais)}
+        {lugar(p.ciudad, p.pais) ?? '—'}
         {p.modalidad && (
           <div className='text-muted-foreground'>
             {MODALIDADES[p.modalidad]}

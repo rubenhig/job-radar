@@ -81,3 +81,9 @@ export function citasDe(e?: Evaluacion | null): string[] {
     ...e.requisitos.filter((q) => q.origen === 'dicho').map((q) => q.requisito),
   ].filter((c): c is string => Boolean(c))
 }
+
+/** «rol software_con_ia, función ingenieria» → «rol Software con IA, función Ingeniería». */
+export const humanizar = (texto: string) =>
+  texto.replace(/\b[a-z]+(?:_[a-z]+)+\b|\b[a-z]+\b/g, (w) =>
+    w in VALORES ? VALORES[w as keyof typeof VALORES] : w
+  )

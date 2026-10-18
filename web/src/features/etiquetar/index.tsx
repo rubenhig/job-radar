@@ -24,9 +24,6 @@ import { Main } from '@/components/layout/main'
 import { BotonesEtiqueta } from '@/features/puestos/componentes/etiqueta'
 import { Vias } from '@/features/puestos/componentes/vias'
 
-/** Puestos que hay que etiquetar para poder medir la puntuación de la Fase 4. */
-export const OBJETIVO = 30
-
 export function Etiquetar() {
   const [saltados, setSaltados] = useState(0)
   const { data: resumen } = useQuery(sistemaResumenOptions())
@@ -59,30 +56,31 @@ export function Etiquetar() {
         <div>
           <h2 className='text-2xl font-bold tracking-tight'>Etiquetar</h2>
           <p className='text-muted-foreground'>
-            ¿Te presentarías? Con {OBJETIVO} etiquetas mediremos si la
-            puntuación automática acierta.
+            ¿Te presentarías? Cada etiqueta sirve para medir si la nota
+            automática piensa como tú (pantalla Puntuación). No ves la nota aquí
+            a propósito: así la medida es honesta.
           </p>
         </div>
 
-        <div className='flex flex-col gap-1.5'>
-          <div className='flex justify-between text-sm'>
-            <span>
-              {hechos} de {OBJETIVO}
-            </span>
-            <span className='text-muted-foreground'>
-              {resumen?.etiquetados_top ?? 0} top
-            </span>
-          </div>
-          <div className='h-2 overflow-hidden rounded-full bg-muted'>
-            <div
-              className='h-full rounded-full bg-primary transition-all'
-              style={{ width: `${Math.min(100, (100 * hechos) / OBJETIVO)}%` }}
-            />
-          </div>
+        <div className='flex justify-between text-sm'>
+          <span>{hechos} etiquetados</span>
+          <span className='text-muted-foreground'>
+            {resumen?.etiquetados_top ?? 0} top
+          </span>
         </div>
 
         {isLoading && <Skeleton className='h-96' />}
-        {lista && !siguiente && (
+        {lista && !siguiente && lista.total > 0 && (
+          <Card className='items-center py-12 text-center'>
+            <CardTitle>
+              Has saltado todos los que quedan ({lista.total})
+            </CardTitle>
+            <Button variant='outline' onClick={() => setSaltados(0)}>
+              Empezar de nuevo
+            </Button>
+          </Card>
+        )}
+        {lista && !siguiente && lista.total === 0 && (
           <Card className='items-center py-12 text-center'>
             <PartyPopper className='size-10 text-primary' />
             <CardTitle>No queda nada sin etiquetar</CardTitle>

@@ -117,6 +117,7 @@ def test_sirve_la_web_y_resuelve_rutas_de_la_app(tmp_path, cliente):
     assert c.get("/assets/app.js").text == "js"
     assert c.get("/../pyproject.toml").text == "<html>app</html>"
     assert c.get("/api/resumen").status_code == 200
+    assert c.get("/api/noexiste").status_code == 404  # no la web con un 200
 
 
 def test_valoracion_en_lista_ficha_y_acuerdo(cliente):

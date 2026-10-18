@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import {
   puestosListarOptions,
+  puntuacionAcuerdoOptions,
   sistemaResumenOptions,
 } from '@/api/@tanstack/react-query.gen'
 import { FUENTES, MODALIDADES, lugar } from '@/lib/formato'
@@ -26,7 +27,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Cabecera } from '@/components/layout/cabecera'
 import { Main } from '@/components/layout/main'
-import { OBJETIVO } from '@/features/etiquetar'
 import { Nota } from '@/features/puestos/componentes/nota'
 
 export function Inicio() {
@@ -87,7 +87,7 @@ export function Inicio() {
           />
           <Kpi
             titulo='Etiquetados'
-            valor={r && `${r.etiquetados}/${OBJETIVO}`}
+            valor={r?.etiquetados}
             detalle={r && `${r.etiquetados_top} top`}
             icono={Tags}
           />
@@ -124,27 +124,7 @@ export function Inicio() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Siguiente paso</CardTitle>
-              <CardDescription>
-                Etiqueta {OBJETIVO} puestos como top o no top. Con eso se mide
-                si la puntuación automática de la Fase 4 piensa como tú.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='flex flex-wrap gap-2'>
-              <Button asChild>
-                <Link to='/etiquetar'>
-                  <Tags /> Etiquetar
-                </Link>
-              </Button>
-              <Button asChild variant='outline'>
-                <Link to='/puestos' search={{ dias: 1 }}>
-                  Ver lo nuevo
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <Acuerdo />
         </div>
       </Main>
     </>
@@ -268,6 +248,59 @@ function ParaTi({ sinPuntuar }: { sinPuntuar?: number }) {
             </Link>
           </Button>
         )}
+      </CardContent>
+    </Card>
+  )
+}
+
+/** Cuánto se fía uno de la nota: el acuerdo con tus etiquetas (pantalla Puntuación). */
+function Acuerdo() {
+  const { data: a } = useQuery(puntuacionAcuerdoOptions())
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>¿Piensa como tú?</CardTitle>
+        <CardDescription>
+          La nota frente a tus etiquetas. Cada etiqueta nueva afina la medida.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className='flex flex-col gap-4'>
+        {!a && <Skeleton className='h-16' />}
+        {a && a.acuerdo != null && (
+          <div className='flex gap-6'>
+            <div>
+              <div className='text-2xl font-bold tabular-nums'>
+                {Math.round(a.acuerdo * 100)} %
+              </div>
+              <p className='text-xs text-muted-foreground'>
+                de acuerdo en {a.casos.length} puestos
+              </p>
+            </div>
+            {a.kappa != null && (
+              <div>
+                <div className='text-2xl font-bold tabular-nums'>
+                  {a.kappa.toFixed(2)}
+                </div>
+                <p className='text-xs text-muted-foreground'>κ de Cohen</p>
+              </div>
+            )}
+          </div>
+        )}
+        {a && a.acuerdo == null && (
+          <p className='text-sm text-muted-foreground'>
+            Hacen falta al menos 5 puestos etiquetados y puntuados.
+          </p>
+        )}
+        <div className='flex flex-wrap gap-2'>
+          <Button asChild variant='outline'>
+            <Link to='/puntuacion'>Ver el detalle</Link>
+          </Button>
+          <Button asChild variant='ghost'>
+            <Link to='/etiquetar'>
+              <Tags /> Etiquetar más
+            </Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )

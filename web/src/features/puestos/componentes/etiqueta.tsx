@@ -3,7 +3,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Etiqueta } from '@/api'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
 import { toast } from 'sonner'
-import { puestosEtiquetarMutation } from '@/api/@tanstack/react-query.gen'
+import {
+  puestosEtiquetarMutation,
+  puestosQuitarEtiquetaMutation,
+} from '@/api/@tanstack/react-query.gen'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,15 +52,29 @@ export function BotonesEtiqueta({
     actual?.valor ?? null
   )
   const [motivo, setMotivo] = useState(actual?.motivo ?? '')
+  const refrescar = () =>
+    qc.invalidateQueries({
+      predicate: (q) =>
+        [
+          'puestosListar',
+          'puestosFicha',
+          'sistemaResumen',
+          'puntuacionAcuerdo',
+        ].includes((q.queryKey[0] as { _id?: string })?._id ?? ''),
+    })
+  const quitar = useMutation({
+    ...puestosQuitarEtiquetaMutation(),
+    onSuccess: () => {
+      refrescar()
+      setValor(null)
+      setMotivo('')
+      toast.success('Etiqueta quitada')
+    },
+  })
   const guardar = useMutation({
     ...puestosEtiquetarMutation(),
     onSuccess: (e) => {
-      qc.invalidateQueries({
-        predicate: (q) =>
-          ['puestosListar', 'puestosFicha', 'sistemaResumen'].includes(
-            (q.queryKey[0] as { _id?: string })?._id ?? ''
-          ),
-      })
+      refrescar()
       toast.success(
         e.valor === 'top' ? 'Marcado como top' : 'Marcado como no top'
       )
@@ -104,6 +121,17 @@ export function BotonesEtiqueta({
           <ThumbsDown /> No top
         </Button>
       </div>
+      {valor && !conMotivos && (
+        <Button
+          variant='ghost'
+          size='sm'
+          className='w-fit text-muted-foreground'
+          disabled={quitar.isPending}
+          onClick={() => quitar.mutate({ path: { puesto_id: puestoId } })}
+        >
+          Quitar etiqueta
+        </Button>
+      )}
       {conMotivos && valor && (
         <>
           <div className='flex flex-wrap gap-1.5'>
