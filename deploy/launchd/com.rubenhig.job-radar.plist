@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  Ingesta diaria en el Mac (Fase 3, semana de prueba). Instalar:
+  Ingesta y puntuación diarias en el Mac (Fase 3, semana de prueba). Instalar:
     cp deploy/launchd/com.rubenhig.job-radar.plist ~/Library/LaunchAgents/
     launchctl load ~/Library/LaunchAgents/com.rubenhig.job-radar.plist
   Quitar:
@@ -13,8 +13,11 @@
   <key>Label</key><string>com.rubenhig.job-radar</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/rubenhig/.local/bin/uv</string><string>run</string><string>job-radar</string><string>ingesta</string>
+    <string>/Users/rubenhig/.local/bin/uv</string><string>run</string><string>job-radar</string><string>ingesta</string><string>--puntuar</string>
   </array>
+  <!-- launchd arranca con un PATH mínimo: `claude` (puntuación con la suscripción) vive en ~/.local/bin -->
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/Users/rubenhig/.local/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string></dict>
   <key>WorkingDirectory</key><string>/Users/rubenhig/projects/malaga</string>
   <key>StartCalendarInterval</key>
   <dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>30</integer></dict>

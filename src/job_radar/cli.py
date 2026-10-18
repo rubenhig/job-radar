@@ -3,6 +3,7 @@
     uv run job-radar ingesta            # lanza las búsquedas que tocan según su frecuencia
     uv run job-radar ingesta --todas    # todas, toque o no (cuidado con InfoJobs y la cuota de LinkedIn)
     uv run job-radar ingesta --fuente freehire
+    uv run job-radar ingesta --puntuar  # y después puntúa los puestos nuevos que pasan la criba
     uv run job-radar resumen            # ofertas y puestos por fuente, exclusividad y salud
     uv run job-radar salud              # solo las alertas; sale con 1 si hay alguna
     uv run job-radar cribar             # recalcula los descartes (tras cambiar las preferencias)
@@ -64,6 +65,9 @@ def cmd_ingesta(args) -> int:
     for a in alertas:
         log.warning("salud: %s", a)
     _avisar_healthchecks(alertas)
+    if args.puntuar:
+        cmd_puntuar(argparse.Namespace(db=args.db, etiquetados=False, rehacer=False, modelo="sonnet", paralelo=3,
+                                       limite=args.limite_puntuar))
     return 0
 
 
@@ -165,6 +169,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--todas", action="store_true", help="todas, toque o no")
     p.add_argument("--fuente", action="append", help="solo esta fuente (se puede repetir)")
     p.add_argument("--preferencias", type=Path, default=RUTA_PREFERENCIAS)
+    p.add_argument("--puntuar", action="store_true", help="después, puntúa los puestos nuevos")
+    p.add_argument("--limite-puntuar", type=int, default=150, help="tope de puestos a puntuar por ejecución")
     p.set_defaults(func=cmd_ingesta)
     p = sub.add_parser("resumen", help="ofertas y puestos por fuente, exclusividad y salud")
     p.add_argument("--dias", type=int, default=7)

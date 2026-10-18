@@ -8,8 +8,12 @@ import {
   Sparkles,
   Tags,
 } from 'lucide-react'
-import { sistemaResumenOptions } from '@/api/@tanstack/react-query.gen'
-import { FUENTES } from '@/lib/formato'
+import {
+  puestosListarOptions,
+  sistemaResumenOptions,
+} from '@/api/@tanstack/react-query.gen'
+import { FUENTES, MODALIDADES, lugar } from '@/lib/formato'
+import { TOP } from '@/lib/puntuacion'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -22,6 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Cabecera } from '@/components/layout/cabecera'
 import { Main } from '@/components/layout/main'
 import { OBJETIVO } from '@/features/etiquetar'
+import { Nota } from '@/features/puestos/componentes/nota'
 
 export function Inicio() {
   const { data: r } = useQuery({
@@ -56,6 +61,8 @@ export function Inicio() {
             <ArrowRight className='size-4' />
           </Link>
         )}
+
+        <ParaTi sinPuntuar={r?.sin_puntuar} />
 
         <div className='grid grid-cols-2 gap-4 lg:grid-cols-4'>
           <Kpi
@@ -139,6 +146,64 @@ export function Inicio() {
         </div>
       </Main>
     </>
+  )
+}
+
+/** Lo mejor puntuado: lo primero que hay que mirar. */
+function ParaTi({ sinPuntuar }: { sinPuntuar?: number }) {
+  const { data } = useQuery(
+    puestosListarOptions({
+      query: { nota_min: TOP, orden: 'nota', limite: 8 },
+    })
+  )
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Para ti</CardTitle>
+        <CardDescription>
+          {data ? `${data.total} puestos` : 'Puestos'} con nota {TOP} o más, de
+          mejor a peor.
+          {!!sinPuntuar && ` Faltan ${sinPuntuar} por puntuar.`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className='flex flex-col gap-1'>
+        {!data && <Skeleton className='h-48' />}
+        {data && !data.items.length && (
+          <p className='text-sm text-muted-foreground'>
+            Todavía no hay ninguno.
+          </p>
+        )}
+        {data?.items.map((p) => (
+          <Link
+            key={p.id}
+            to='/puestos/$puestoId'
+            params={{ puestoId: String(p.id) }}
+            className='-mx-2 flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-accent'
+          >
+            <Nota valoracion={p.valoracion} />
+            <div className='min-w-0 flex-1'>
+              <div className='truncate font-medium'>{p.titulo}</div>
+              <div className='truncate text-sm text-muted-foreground'>
+                {[
+                  p.empresa,
+                  lugar(p.ciudad, p.pais),
+                  p.modalidad && MODALIDADES[p.modalidad],
+                ]
+                  .filter((d) => d && d !== '—')
+                  .join(' · ')}
+              </div>
+            </div>
+          </Link>
+        ))}
+        {data && data.total > data.items.length && (
+          <Button asChild variant='outline' className='mt-2 w-fit'>
+            <Link to='/puestos' search={{ nota: 'top', orden: 'nota' }}>
+              Ver los {data.total} <ArrowRight />
+            </Link>
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 

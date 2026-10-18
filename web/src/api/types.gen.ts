@@ -687,6 +687,10 @@ export type Resumen = {
      */
     descartados: number;
     /**
+     * Sin Puntuar
+     */
+    sin_puntuar: number;
+    /**
      * Puestos Nuevos 24H
      */
     puestos_nuevos_24h: number;

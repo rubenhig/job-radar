@@ -13,6 +13,7 @@ from job_radar.api.base import bd, datos
 from job_radar.api.esquemas import Acuerdo, Alerta, CasoAcuerdo, EstadoFuente, Fuentes, Resumen
 from job_radar.fuentes import registro as reg
 from job_radar.preferencias import Preferencias
+from job_radar.puntuacion import RUBRICA
 
 router = APIRouter()
 
@@ -28,6 +29,8 @@ def resumen(db: Annotated[Any, Depends(bd)]):
     return Resumen(
         puestos=uno("SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NULL"),
         descartados=uno("SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NOT NULL"),
+        sin_puntuar=uno("""SELECT COUNT(*) FROM puesto WHERE estado = 'abierto' AND descarte IS NULL
+                           AND id NOT IN (SELECT puesto_id FROM evaluacion WHERE rubrica = ?)""", RUBRICA),
         puestos_nuevos_24h=uno(f"SELECT COUNT(*) FROM ({primera})", _hace(days=1)),
         puestos_nuevos_7d=uno(f"SELECT COUNT(*) FROM ({primera})", _hace(days=7)),
         ofertas=uno("SELECT COUNT(*) FROM oferta"),
@@ -98,7 +101,6 @@ def guardar_preferencias(nuevas: Preferencias, carpeta: Annotated[Path, Depends(
 def acuerdo(db: Annotated[Any, Depends(bd)]):
     """La puntuación frente a las etiquetas de Rubén (ver job_radar.medir)."""
     from job_radar import medir
-    from job_radar.puntuacion import RUBRICA
 
     cs = medir.casos(db, RUBRICA)
     salida = Acuerdo(rubrica=RUBRICA, casos=[], coste_usd=round(sum(c.coste_usd or 0 for c in cs), 4))

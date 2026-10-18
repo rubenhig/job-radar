@@ -1795,6 +1795,10 @@
       "type": "integer",
       "title": "Descartados"
      },
+     "sin_puntuar": {
+      "type": "integer",
+      "title": "Sin Puntuar"
+     },
      "puestos_nuevos_24h": {
       "type": "integer",
       "title": "Puestos Nuevos 24H"
@@ -1835,6 +1839,7 @@
     "required": [
      "puestos",
      "descartados",
+     "sin_puntuar",
      "puestos_nuevos_24h",
      "puestos_nuevos_7d",
      "ofertas",

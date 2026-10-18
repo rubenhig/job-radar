@@ -80,7 +80,7 @@ def test_etiquetar_y_filtrar_por_etiqueta(cliente):
 
 def test_resumen_y_fuentes(cliente):
     r = cliente.get("/api/resumen").json()
-    assert r["puestos"] == 2 and r["ofertas"] == 4 and r["varias_vias"] == 1
+    assert r["puestos"] == 2 and r["ofertas"] == 4 and r["varias_vias"] == 1 and r["sin_puntuar"] == 2
     f = cliente.get("/api/fuentes").json()
     assert {x["id"] for x in f["fuentes"]} == {"infojobs", "linkedin"}
 

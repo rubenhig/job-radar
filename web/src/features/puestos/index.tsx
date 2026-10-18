@@ -58,8 +58,8 @@ const NOTAS = {
   sin: 'Sin puntuar',
 } as const
 const ORDENES = {
-  recientes: 'Más recientes',
   nota: 'Mejor nota',
+  recientes: 'Más recientes',
   publicadas: 'Fecha de publicación',
   vias: 'Más vías',
 } as const
@@ -92,7 +92,7 @@ export function Puestos() {
         modalidad: busqueda.modalidad,
         etiqueta: busqueda.etiqueta === 'todas' ? undefined : busqueda.etiqueta,
         dias: busqueda.dias,
-        orden: busqueda.orden,
+        orden: busqueda.orden ?? 'nota',
         nota_min:
           busqueda.nota === 'destacados'
             ? DESTACADO
@@ -214,7 +214,7 @@ export function Puestos() {
             </SelectContent>
           </Select>
           <Select
-            value={busqueda.orden ?? 'recientes'}
+            value={busqueda.orden ?? 'nota'}
             onValueChange={(v) => cambiar({ orden: v as keyof typeof ORDENES })}
           >
             <SelectTrigger className='h-9 w-44'>
